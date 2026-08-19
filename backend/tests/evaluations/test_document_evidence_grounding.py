@@ -195,14 +195,25 @@ def _write_report(results: dict, usage: UsageLog, model: str) -> Path:
             if needle is None
             else ("✅" if any(needle in i.verbatim_excerpt for i in extraction.evidence) else "❌")
         )
+        gate = "✅ pass" if not validation.reasons else "❌ " + "; ".join(validation.reasons)[:80]
+        gaps = [p for p in result["required_pages"] if p not in anchored]
+        pages = "✅" if covered else f"❌ missing {gaps}"
         lines.append(
-            f"| {artifact_id} | {len(extraction.evidence)} | "
-            f"{'✅ pass' if not validation.reasons else '❌ ' + '; '.join(validation.reasons)[:80]} | "
-            f"{'✅' if covered else '❌ missing ' + str([p for p in result['required_pages'] if p not in anchored])} | "
-            f"{quoted} |"
+            f"| {artifact_id} | {len(extraction.evidence)} | {gate} | {pages} | {quoted} |"
         )
     lines += ["", "Raw usage rows:", "```json"]
-    lines += [json.dumps({"artifact_id": r.artifact_id, "in": r.input_tokens, "out": r.output_tokens, "ms": r.latency_ms, "usd": round(r.estimated_usd(), 5)}) for r in usage.records]
+    lines += [
+        json.dumps(
+            {
+                "artifact_id": r.artifact_id,
+                "in": r.input_tokens,
+                "out": r.output_tokens,
+                "ms": r.latency_ms,
+                "usd": round(r.estimated_usd(), 5),
+            }
+        )
+        for r in usage.records
+    ]
     lines += ["```", ""]
     path = RUNS_DIR / f"{date}-document-evidence.md"
     path.write_text("\n".join(lines))

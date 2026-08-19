@@ -1,4 +1,4 @@
-"""MOO-691 boundaries, provable without a network: schema gate, retry cap, tool fence, usage rows."""
+"""MOO-691 boundaries, provable offline: schema gate, retry cap, tool fence, usage rows."""
 
 from __future__ import annotations
 
@@ -41,7 +41,10 @@ def _stub(responses: list[str]) -> Any:
 
 def _runner(responses: list[str], usage: UsageLog) -> GoogleAdkStructuredRunner:
     return GoogleAdkStructuredRunner(
-        model="gemini-test", page_reader_factory=_reader, usage_log=usage, run_agent=_stub(responses)
+        model="gemini-test",
+        page_reader_factory=_reader,
+        usage_log=usage,
+        run_agent=_stub(responses),
     )
 
 
@@ -97,15 +100,19 @@ def test_routing_runner_sends_roles_to_the_right_runner() -> None:
         def __init__(self, tag: str) -> None:
             self._tag = tag
 
-        async def run(self, definition: AgentDefinition, payload: BaseModel, *, trace_id: str) -> BaseModel:
+        async def run(
+            self, definition: AgentDefinition, payload: BaseModel, *, trace_id: str
+        ) -> BaseModel:
             calls.append(f"{self._tag}:{definition.role}")
             return payload
 
-    routing = RoleRoutingRunner(
-        {"document_evidence": Recorder("adk")}, default=Recorder("fake")
+    routing = RoleRoutingRunner({"document_evidence": Recorder("adk")}, default=Recorder("fake"))
+    doc = AgentDefinition(
+        name="d", role="document_evidence", model="m", output_model=Echo, tools=()
     )
-    doc = AgentDefinition(name="d", role="document_evidence", model="m", output_model=Echo, tools=())
-    delta = AgentDefinition(name="e", role="delta_investigator", model="m", output_model=Echo, tools=())
+    delta = AgentDefinition(
+        name="e", role="delta_investigator", model="m", output_model=Echo, tools=()
+    )
     asyncio.run(routing.run(doc, Echo(), trace_id="t"))
     asyncio.run(routing.run(delta, Echo(), trace_id="t"))
     assert calls == ["adk:document_evidence", "fake:delta_investigator"]
@@ -120,4 +127,14 @@ def test_usage_log_writes_jsonl(tmp_path: Path) -> None:
     out = tmp_path / "usage.jsonl"
     usage.write_jsonl(out)
     row = json.loads(out.read_text().splitlines()[0])
-    assert set(row) >= {"model", "trace_id", "artifact_id", "latency_ms", "input_tokens", "output_tokens", "tool_calls", "estimated_usd"}
+    expected = {
+        "model",
+        "trace_id",
+        "artifact_id",
+        "latency_ms",
+        "input_tokens",
+        "output_tokens",
+        "tool_calls",
+        "estimated_usd",
+    }
+    assert set(row) >= expected
