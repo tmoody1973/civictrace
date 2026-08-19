@@ -51,3 +51,22 @@ The user must be able to select a case, read the original commitment, jump to th
 Use the AI SDK Elements `ChainOfThought` component as a collapsed **Evidence Trace** beneath the Decision Delta header. It must display deterministic ledger/validation milestones and precise source anchors; it must **not** expose raw model chain-of-thought, hidden prompts, or unverified model text. Read `docs/implementation/reasoning-visibility-ux.md` before implementing it.
 
 The trace should show `Source preserved`, `Evidence extracted`, `Case candidate evaluated`, `Later evidence compared`, `Policy checks passed`, and `Human decision required`. The human approval step must stay visibly distinct from completed automated steps. The frontend receives this data from a typed `EvidenceTrace` API response based on ledger events, never directly from an LLM response.
+
+## Slice 3 — run it (local)
+
+```bash
+# terminal 1: backend serving the replayed ledger (see backend/README.md "Slice 1 — run it")
+cd backend && CIVICTRACE_LEDGER_JSON=/tmp/civictrace-ledger.json uv run uvicorn app.main:app --port 8000
+
+# terminal 2: the studio
+cd frontend && cp .env.example .env.local && pnpm install && pnpm dev
+open http://localhost:3000/cases/case-tid121-bronzeville-arts-tech-hub
+
+pnpm lint && pnpm typecheck && pnpm test      # ESLint, next typegen + tsc --noEmit, vitest
+```
+
+Layout today (MOO-695): case rail | original source (placeholder until MOO-699) | Decision Delta + review
+(raw state + counts until MOO-697); Evidence Trace rows land in the timeline pane in MOO-698. Types in
+`src/lib/api-types.ts` are a hand-written mirror of `backend/app/schemas/api.py`. API base URL:
+`NEXT_PUBLIC_API_BASE_URL` (default `http://localhost:8000`). No AI/provider key exists in the browser.
+Proof screenshots: `docs/hackathon/proof/moo-695-*.png`.
