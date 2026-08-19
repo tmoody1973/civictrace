@@ -138,3 +138,17 @@ def test_one_sided_delta_is_rejected(original: list[str], later: list[str]) -> N
 
 def test_delta_defaults_to_human_review() -> None:
     assert _delta(["ev-plan"], ["ev-amend"]).requires_human_review is True
+
+
+@pytest.mark.parametrize("bad_page", ["0", "abc", "-3", ""])
+def test_non_page_anchor_values_are_rejected(
+    plan_extraction: DocumentExtraction, plan_artifact: Artifact, bad_page: str
+) -> None:
+    item = plan_extraction.evidence[0]
+    bad_anchor = item.anchors[0].model_copy(update={"anchor_value": bad_page})
+    tampered = plan_extraction.model_copy(
+        update={"evidence": [item.model_copy(update={"anchors": [bad_anchor]})]}
+    )
+    result = validate_extraction(tampered, plan_artifact)
+    assert not result.ok
+    assert any("outside 1..31" in reason for reason in result.reasons)
