@@ -1,0 +1,45 @@
+[project]
+name = "civictrace-backend"
+version = "0.1.0"
+description = "CivicTrace backend: deterministic evidence workflow with bounded agents."
+requires-python = ">=3.12"
+dependencies = [
+  "pydantic>=2.7",
+]
+
+[dependency-groups]
+dev = [
+  "pytest>=8.0",
+  "ruff>=0.5",
+  "mypy>=1.10",
+]
+
+[build-system]
+requires = ["hatchling"]
+build-backend = "hatchling.build"
+
+[tool.hatch.build.targets.wheel]
+packages = ["app"]
+
+[tool.pytest.ini_options]
+testpaths = ["tests"]
+pythonpath = ["."]
+addopts = "-q"
+
+[tool.ruff]
+line-length = 100
+target-version = "py312"
+
+[tool.ruff.lint]
+select = ["E", "F", "I", "B", "UP"]
+
+[tool.mypy]
+python_version = "3.12"
+strict = true
+packages = ["app"]
+
+[tool.ruff.lint.per-file-ignores]
+# Prompt text is prose; wrapping it would change the policy strings. Replaced/reviewed in Slice 2.
+"app/agents/prompts.py" = ["E501"]
+# ADK adapter is pseudocode until Slice 2; the unused `instruction` is part of the outline.
+"app/agents/factory.py" = ["F841"]
