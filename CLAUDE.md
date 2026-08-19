@@ -32,7 +32,7 @@ CivicTrace is an approval-gated public-evidence system for local accountability.
 | Asynchronous work | Pub/Sub event fan-out and Cloud Tasks with idempotency/retry caps |
 | High-volume structured corpus | BigQuery filtering before any model context is constructed |
 | Meeting media, after City loop passes | Cloud Speech-to-Text V2 batch transcription plus Media Evidence Agent |
-| UI | Next.js/React/TypeScript with shadcn/ui + Kibo UI; desktop-first Evidence Studio |
+| UI | Next.js/React/TypeScript with shadcn/ui + Kibo UI; desktop-first Evidence Studio with AI SDK Elements Evidence Trace |
 
 Do not add Antigravity SDK, Genkit, a second UI framework, a dedicated vector database, an always-on cluster, TinyFish, or Parallel to the MVP without a documented architectural decision.
 
@@ -40,7 +40,8 @@ Do not add Antigravity SDK, Genkit, a second UI framework, a dedicated vector da
 
 | Task | Required documents |
 |---|---|
-| Product scope, domain model, user flow | `docs/product/PRD.md` |
+| Product scope, domain model, user flow | `docs/product/PRD.md` and `CONTEXT.md` |
+| Evidence Studio or AI SDK Elements | `docs/implementation/reasoning-visibility-ux.md` and `frontend/README.md` |
 | Agent prompts, schemas, agent/tool boundaries, orchestration states | `docs/architecture/multi-agent-design-and-prompts.md` |
 | ADK, Cloud Run, Vertex, Firestore, queues, or service design | `docs/architecture/google-agent-stack-decision.md` |
 | Source adapter, external API, TinyFish, Parallel | `docs/integrations/api-stack-and-vendor-decision.md` and `docs/sources/source-allowlist.yaml` |
@@ -122,7 +123,7 @@ The MVP is done when a reviewed City of Milwaukee replay corpus runs end to end 
 
 ## 9. First Instruction for a New Claude Code Session
 
-Read this file and these documents: `docs/product/PRD.md`, `docs/architecture/multi-agent-design-and-prompts.md`, `docs/architecture/google-agent-stack-decision.md`, `docs/implementation/project-structure.md`, and `.claude/rules/privacy-and-evidence.md`. Then use plan mode to propose **only** the first City source-replay vertical slice, including files, tests, local setup, and acceptance criteria. Do not write code until the plan is approved.
+Read this file and these documents: `CONTEXT.md`, `docs/product/PRD.md`, `docs/architecture/multi-agent-design-and-prompts.md`, `docs/architecture/google-agent-stack-decision.md`, `docs/implementation/project-structure.md`, `docs/implementation/reasoning-visibility-ux.md`, and `.claude/rules/privacy-and-evidence.md`. Then use plan mode to propose **only** the first City source-replay vertical slice, including files, tests, local setup, and acceptance criteria. Do not write code until the plan is approved.
 
 ## Agent skills
 

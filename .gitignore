@@ -53,3 +53,6 @@ pulumi.*.yaml
 # Local session memory and scratch issue tracker
 .remember/
 .scratch/
+
+# Starter-pack archives (already merged into the tree)
+*.zip
