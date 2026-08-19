@@ -1,5 +1,17 @@
 # CivicTrace: Where Cost, Security, and Deployment Controls Belong in Claude Code
 
+## Current budget (dev, MOO-690)
+
+| Item | Value |
+|---|---|
+| Project | `GOOGLE_CLOUD_PROJECT` from local `.env` (dev, labels `app=civictrace,environment=dev,teardown=required`) |
+| Budget | `civictrace-dev-10usd`, $10 USD / month |
+| Alert thresholds | 50%, 90%, 100% of $10 |
+| Recipient | Tarik Moody (Billing Account admin email; default budget notification) |
+| Setup / teardown | `docs/runbooks/local-vertex-setup.md` |
+
+A budget alert warns; it does not stop spend. Hard limits arrive with Cloud Run caps in Slice 5.
+
 ## Short Answer
 
 **Do not put the entire list in `CLAUDE.md`.** Put a short, non-negotiable summary there, then distribute the actual controls by function:
