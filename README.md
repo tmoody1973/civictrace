@@ -37,3 +37,7 @@ The full [Claude Code project pack guide](docs/claude-code-project-pack-guide.md
 ## Non-Negotiable Safety Rules
 
 CivicTrace uses original public sources, preserves exact provenance, makes uncertainty explicit, excludes individual student data, avoids unsupported allegations/casual claims, and requires human approval for all external-facing action. See [`CLAUDE.md`](CLAUDE.md) and [privacy/evidence rules](.claude/rules/privacy-and-evidence.md).
+
+## License
+
+MIT — see [LICENSE](LICENSE). The public records under `backend/tests/fixtures/` are City of Milwaukee Legistar documents and remain public records; see `docs/sources/`.
