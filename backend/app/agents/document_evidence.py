@@ -15,7 +15,7 @@ from app.schemas.case import (
     ReviewDecision,
     ReviewRequest,
 )
-from app.schemas.evidence import DocumentExtraction, EntityLinkBatch
+from app.schemas.evidence import DocumentEvidenceTask, DocumentExtraction, EntityLinkBatch
 from app.schemas.source import Artifact
 
 DOCUMENT_EVIDENCE_DEFINITION = AgentDefinition(
@@ -42,15 +42,30 @@ QUALITY_REVIEWER_DEFINITION = AgentDefinition(
 
 
 class DocumentEvidenceAgentService:
-    def __init__(self, runner: StructuredAgentRunner, *, case_id: str) -> None:
+    def __init__(
+        self,
+        runner: StructuredAgentRunner,
+        *,
+        case_id: str,
+        hint_pages: dict[str, list[int]] | None = None,
+    ) -> None:
         self._runner = runner
         self._case_id = case_id
+        self._hint_pages = hint_pages or {}
 
     async def document_evidence(
         self, artifact: Artifact, *, context: WorkflowContext
     ) -> DocumentExtraction:
+        task = DocumentEvidenceTask(
+            artifact_id=artifact.artifact_id,
+            title=artifact.title,
+            canonical_url=artifact.canonical_url,
+            media_type=artifact.media_type,
+            page_count=artifact.page_count,
+            hint_pages=self._hint_pages.get(artifact.artifact_id, []),
+        )
         result = await self._runner.run(
-            DOCUMENT_EVIDENCE_DEFINITION, artifact, trace_id=context.trace_id
+            DOCUMENT_EVIDENCE_DEFINITION, task, trace_id=context.trace_id
         )
         return DocumentExtraction.model_validate(result.model_dump())
 

@@ -32,6 +32,24 @@ class Evidence(BaseModel):
     limitations: list[str] = Field(default_factory=list)
 
 
+class DocumentEvidenceTask(BaseModel):
+    """Bounded task for the Document Evidence Agent: metadata + page hints, never page text.
+
+    The agent must call its read-only page tool to see any words. `hint_pages` are the
+    manifest's required_anchors pages — where a human said the load-bearing facts live —
+    offered as a starting point, not as the answer.
+    """
+
+    model_config = ConfigDict(extra="forbid")
+
+    artifact_id: str
+    title: str | None = None
+    canonical_url: str | None = None
+    media_type: str | None = None
+    page_count: int | None = None
+    hint_pages: list[int] = Field(default_factory=list)
+
+
 class DocumentExtraction(BaseModel):
     """Typed proposal from the Document Evidence Agent (or its fixture stand-in)."""
 

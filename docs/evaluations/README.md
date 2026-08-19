@@ -37,3 +37,16 @@ evals/
 ## Minimum CI Gate
 
 Before merging changes to agents, schemas, source adapters, evidence validation, approval code, or privacy policy, run the grounding, missingness, conflict, idempotency, and approval-gate suites. A model-output quality regression must be fixed, explicitly documented, or blocked from release.
+
+
+## Live grounding eval — Document Evidence (MOO-691)
+
+`CIVICTRACE_LIVE=1 uv run pytest tests/evaluations -q` (real Gemini Flash calls; ≈ $0.014/run).
+Criteria: every extraction passes `validate_extraction`; every manifest `required_anchors` page has
+at least one anchored evidence item; `$700,000` (plan) and `$2,345,000` (amendment) appear verbatim
+in accepted excerpts; the 2024 annual report's blank Completion Status yields an `UNKNOWN`-status
+item (or the miss is recorded here). Reports land in `docs/evaluations/runs/`.
+
+Run history: 2026-08-19 first run — plan p.5 uncovered and no UNKNOWN for the blank status; fixed
+by sharpening the bounded task message (read every hint page; blank form fields → UNKNOWN), not the
+versioned role prompt. Second run: all criteria pass.

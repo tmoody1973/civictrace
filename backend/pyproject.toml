@@ -5,6 +5,7 @@ description = "CivicTrace backend: deterministic evidence workflow with bounded 
 requires-python = ">=3.12"
 dependencies = [
   "fastapi>=0.115",
+  "google-adk>=2.7.1",
   "pydantic>=2.7",
   "pypdf>=6.16.1",
   "pyyaml>=6",
@@ -28,6 +29,7 @@ build-backend = "hatchling.build"
 packages = ["app"]
 
 [tool.pytest.ini_options]
+markers = ["live: needs CIVICTRACE_LIVE=1, ADC and a GCP project (real model calls)"]
 testpaths = ["tests"]
 pythonpath = ["."]
 addopts = "-q"

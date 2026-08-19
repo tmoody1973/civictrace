@@ -34,7 +34,7 @@ def _options(tmp_path: Path) -> ReplayOptions:
 
 def _run(tmp_path: Path, artifact_ids: list[str]):
     manifest = load_corpus_manifest(MANIFEST_PATH)
-    workflow, ledger = build_workflow(manifest, _options(tmp_path), clock=lambda: NOW)
+    workflow, ledger, _ = build_workflow(manifest, _options(tmp_path), clock=lambda: NOW)
     results = [
         asyncio.run(workflow.run(manifest.source_event(a), trace_id=f"t-{i}"))
         for i, a in enumerate(artifact_ids)
@@ -90,7 +90,7 @@ def test_full_corpus_yields_exactly_one_revised_delta(tmp_path: Path) -> None:
 
 def test_rerun_adds_no_delta_events(tmp_path: Path) -> None:
     manifest = load_corpus_manifest(MANIFEST_PATH)
-    workflow, ledger = build_workflow(manifest, _options(tmp_path), clock=lambda: NOW)
+    workflow, ledger, _ = build_workflow(manifest, _options(tmp_path), clock=lambda: NOW)
     for a in [PLAN, AMEND]:
         asyncio.run(workflow.run(manifest.source_event(a), trace_id="t"))
     before = len(ledger.events())
@@ -134,7 +134,7 @@ def test_tampered_delta_is_rejected_as_ledger_event(tmp_path: Path, label: str, 
         fixture_root=REPO_ROOT,
         vault_dir=tmp_path / "vault",
     )
-    workflow, ledger = build_workflow(manifest, options, clock=lambda: NOW)
+    workflow, ledger, _ = build_workflow(manifest, options, clock=lambda: NOW)
     for a in [PLAN, AMEND]:
         asyncio.run(workflow.run(manifest.source_event(a), trace_id="t"))
     rejected = _of(ledger, LedgerEventType.DELTA_REJECTED)

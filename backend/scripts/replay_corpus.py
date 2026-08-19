@@ -39,6 +39,7 @@ def main(argv: list[str] | None = None) -> int:
             extraction_path=args.extraction,
             fixture_root=REPO_ROOT,
             vault_dir=args.vault_dir,
+            runner_kind=args.runner,
             out_path=args.out,
             replay_duplicate=args.replay_duplicate,
         )
@@ -71,6 +72,15 @@ def _parse(argv: list[str] | None) -> argparse.Namespace:
     parser.add_argument("--vault-dir", type=Path, default=DEFAULT_VAULT)
     parser.add_argument("--allowlist", type=Path, default=DEFAULT_ALLOWLIST)
     parser.add_argument("--extraction", type=Path, default=DEFAULT_EXTRACTION)
+    parser.add_argument(
+        "--runner",
+        choices=("fake", "adk"),
+        default="fake",
+        help=(
+            "fake = reviewed fixtures (default, no credentials); adk = real Gemini Flash "
+            "via Vertex AI (needs GOOGLE_CLOUD_PROJECT and local ADC sign-in)"
+        ),
+    )
     return parser.parse_args(argv)
 
 

@@ -71,3 +71,23 @@ uv run python scripts/replay_corpus.py ../docs/sources/corpus-manifest.yaml --re
 ```
 
 Do not invent test data representing public records. Use reviewed public fixture files or synthetic non-sensitive failure fixtures only.
+
+
+## Slice 2.2 — real Gemini Flash for Document Evidence (`--runner adk`)
+
+```bash
+# needs docs/runbooks/local-vertex-setup.md done once (GOOGLE_CLOUD_PROJECT + ADC; no key file)
+set -a; source ../.env; set +a
+uv run python scripts/replay_corpus.py ../docs/sources/corpus-manifest.yaml \
+    --runner adk --replay-duplicate --out /tmp/ledger-adk.json
+cat /tmp/usage.jsonl        # per-call tokens, latency, estimated cost (a full run ≈ $0.016)
+
+# grounding eval vs the hand-anchored fixtures (writes docs/evaluations/runs/<date>-document-evidence.md)
+CIVICTRACE_LIVE=1 uv run pytest tests/evaluations -q
+```
+
+Only the Document Evidence role uses the real model; the Delta Investigator and Quality Reviewer
+stay on fixtures until issues 2.3/2.4. Expected consequence: with `--runner adk` the case ends
+`NO_DELTA`, because the fixture delta cites the human-written evidence ids and the bundle check
+refuses ids the live run did not produce (`DELTA_REJECTED … not in bundle`) — the gate failing
+closed, on purpose. The default `--runner fake` needs no credentials and is what CI runs.

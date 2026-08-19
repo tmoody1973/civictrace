@@ -34,7 +34,9 @@ def _options(tmp_path: Path, review_path: Path | None = None) -> ReplayOptions:
 
 def _run(tmp_path: Path, review_path: Path | None = None):
     manifest = load_corpus_manifest(MANIFEST_PATH)
-    workflow, ledger = build_workflow(manifest, _options(tmp_path, review_path), clock=lambda: NOW)
+    workflow, ledger, _ = build_workflow(
+        manifest, _options(tmp_path, review_path), clock=lambda: NOW
+    )
     results = [
         asyncio.run(workflow.run(manifest.source_event(a), trace_id=f"t-{i}"))
         for i, a in enumerate([PLAN, AMEND])
@@ -91,7 +93,7 @@ def test_rejected_review_lands_in_human_review(tmp_path: Path) -> None:
 
 def test_rerun_adds_no_review_events(tmp_path: Path) -> None:
     manifest = load_corpus_manifest(MANIFEST_PATH)
-    workflow, ledger = build_workflow(manifest, _options(tmp_path), clock=lambda: NOW)
+    workflow, ledger, _ = build_workflow(manifest, _options(tmp_path), clock=lambda: NOW)
     for a in [PLAN, AMEND]:
         asyncio.run(workflow.run(manifest.source_event(a), trace_id="t"))
     before = len(ledger.events())
