@@ -25,6 +25,34 @@ Create `pyproject.toml` with a modern supported Python version and the smallest 
 6. Add the City source adapter and raw artifact vault; use a local fixture/replay mode before live polling.
 7. Add one Document Evidence ADK agent and a fixture-based evaluation before adding the full agent team.
 
+## Slice 1 — run it (local, no model, no cloud)
+
+```bash
+cd backend
+uv sync                                    # Python >=3.12, pydantic, fastapi, pypdf, pyyaml
+
+# 1. Replay the reviewed TID 121 corpus through the workflow (plus the duplicate delivery)
+uv run python scripts/replay_corpus.py ../docs/sources/corpus-manifest.yaml \
+    --replay-duplicate --out /tmp/civictrace-ledger.json
+#   prints one line per event: SUCCEEDED / NOT_PUBLISHED / DUPLICATE_SUPPRESSED, exit 0 when clean
+
+# 2. Serve the Evidence Trace from that ledger
+CIVICTRACE_LEDGER_JSON=/tmp/civictrace-ledger.json uv run uvicorn app.main:app --port 8000
+curl -s localhost:8000/healthz
+curl -s localhost:8000/cases/case-tid121-bronzeville-arts-tech-hub/trace | jq
+curl -s localhost:8000/cases/nope/trace          # 404 envelope, never a stack trace
+
+# checks
+uv run pytest            # unit + integration
+uv run ruff check .
+uv run mypy app
+```
+
+What the replay proves: artifact stored and hashed before anything else; anchored evidence accepted only
+when the quoted words are on the anchored page; the missing 2025 annual report recorded as
+`NOT_PUBLISHED`; the same record delivered twice produces one ledger. `# ponytail: no auth on the API
+yet — add user auth before any deploy.`
+
 ## Required Commands Once Tooling Exists
 
 ```bash
@@ -33,11 +61,11 @@ uv run ruff check .
 uv run mypy app
 uv run pytest tests/unit tests/evaluations
 
-# run the local API after app/main.py exists
-uv run uvicorn app.main:app --reload --port 8080
+# run the local API (needs CIVICTRACE_LEDGER_JSON, see Slice 1 above)
+CIVICTRACE_LEDGER_JSON=/tmp/civictrace-ledger.json uv run uvicorn app.main:app --reload --port 8000
 
 # replay only reviewed public fixture corpus
-uv run python scripts/replay_corpus.py --manifest ../docs/sources/corpus-manifest.yaml
+uv run python scripts/replay_corpus.py ../docs/sources/corpus-manifest.yaml --replay-duplicate
 ```
 
 Do not invent test data representing public records. Use reviewed public fixture files or synthetic non-sensitive failure fixtures only.

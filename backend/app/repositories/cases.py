@@ -61,6 +61,13 @@ class InMemoryLedger:
                 )
             )
 
+    async def record_artifact_stored(self, artifact: Artifact, *, context: WorkflowContext) -> None:
+        self.append(
+            self._new_event(
+                context, LedgerEventType.ARTIFACT_STORED, artifact.artifact_id, artifact=artifact
+            )
+        )
+
     async def record_unavailable_artifact(
         self, event: SourceEvent, artifact: Artifact, *, context: WorkflowContext
     ) -> None:

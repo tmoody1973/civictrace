@@ -1,0 +1,136 @@
+"""One command runs the corpus; one URL shows the Evidence Trace. All four states visible."""
+
+from __future__ import annotations
+
+import json
+import sys
+from datetime import UTC, datetime
+from pathlib import Path
+
+import pytest
+from fastapi.testclient import TestClient
+
+from app.core.dependencies import JsonLedgerReader
+from app.domain.enums import JobStatus
+from app.main import create_app
+from app.services.replay import ReplayOptions, replay_corpus
+from tests.conftest import ALLOWLIST_PATH, FIXTURE_EXTRACTION_PATH, MANIFEST_PATH, REPO_ROOT
+
+CASE_ID = "case-tid121-bronzeville-arts-tech-hub"
+NOW = datetime(2026, 8, 19, 16, 0, tzinfo=UTC)
+
+
+@pytest.fixture(scope="module")
+def ledger_json(tmp_path_factory: pytest.TempPathFactory) -> tuple[Path, list]:
+    base = tmp_path_factory.mktemp("replay")
+    out = base / "ledger.json"
+    report = replay_corpus(
+        ReplayOptions(
+            manifest_path=MANIFEST_PATH,
+            allowlist_path=ALLOWLIST_PATH,
+            extraction_path=FIXTURE_EXTRACTION_PATH,
+            fixture_root=REPO_ROOT,
+            vault_dir=base / "vault",
+            out_path=out,
+            replay_duplicate=True,
+        ),
+        clock=lambda: NOW,
+    )
+    return out, report.results
+
+
+@pytest.fixture(scope="module")
+def client(ledger_json: tuple[Path, list]) -> TestClient:
+    return TestClient(create_app(trace_reader=JsonLedgerReader(ledger_json[0])))
+
+
+def test_replay_results_show_every_state(ledger_json: tuple[Path, list]) -> None:
+    statuses = [result.status for result in ledger_json[1]]
+    assert statuses.count(JobStatus.SUCCEEDED) == 3
+    assert statuses.count(JobStatus.NOT_PUBLISHED) == 1
+    assert statuses.count(JobStatus.DUPLICATE_SUPPRESSED) == 1
+    assert JobStatus.EXTRACTION_REJECTED not in statuses
+
+
+def test_ledger_json_is_written_and_typed(ledger_json: tuple[Path, list]) -> None:
+    payload = json.loads(ledger_json[0].read_text())
+    assert payload["case_id"] == CASE_ID
+    assert {event["event_type"] for event in payload["events"]} >= {
+        "ARTIFACT_STORED",
+        "EVIDENCE_ACCEPTED",
+        "ARTIFACT_NOT_PUBLISHED",
+    }
+
+
+def test_healthz(client: TestClient) -> None:
+    response = client.get("/healthz")
+    assert response.status_code == 200
+    assert response.json() == {"ok": True, "data": {"status": "ok"}, "error": None}
+
+
+def test_trace_shows_anchored_evidence_and_not_published(client: TestClient) -> None:
+    response = client.get(f"/cases/{CASE_ID}/trace")
+    assert response.status_code == 200
+    body = response.json()
+    assert body["ok"] is True and body["error"] is None
+    data = body["data"]
+    assert data["case_id"] == CASE_ID
+    events = data["events"]
+
+    accepted = [event for event in events if event["event_type"] == "EVIDENCE_ACCEPTED"]
+    assert len(accepted) == 8
+    assert all(event["anchors"] for event in accepted), "every evidence event has >= 1 anchor"
+    assert all(
+        event["canonical_url"].startswith("https://milwaukee.legistar1.com/") for event in accepted
+    )
+    assert all(event["verbatim_excerpt"] and event["neutral_statement"] for event in accepted)
+    pages = {
+        (event["artifact_id"], anchor["anchor_value"])
+        for event in accepted
+        for anchor in event["anchors"]
+    }
+    assert ("tid121-project-plan-2024", "5") in pages  # manifest required_anchors
+    assert ("tid121-amendment-1-2026", "3") in pages
+
+    missing = [event for event in events if event["event_type"] == "ARTIFACT_NOT_PUBLISHED"]
+    assert len(missing) == 1
+    assert missing[0]["status"] == "NOT_PUBLISHED"
+    assert missing[0]["artifact_id"] == "tid-annual-report-2025"
+    assert missing[0]["reason"] and "2026-08-19" in missing[0]["reason"]
+
+    stored = [event for event in events if event["event_type"] == "ARTIFACT_STORED"]
+    assert len(stored) == 3 and all(event["content_hash"].startswith("sha256:") for event in stored)
+
+    assert len({event["event_id"] for event in events}) == len(events), (
+        "duplicate run added nothing"
+    )
+
+
+def test_trace_has_no_free_text_summary_fields(client: TestClient) -> None:
+    event = client.get(f"/cases/{CASE_ID}/trace").json()["data"]["events"][0]
+    assert not {"summary", "narrative", "reasoning"} & set(event)
+
+
+def test_unknown_case_is_404_envelope(client: TestClient) -> None:
+    response = client.get("/cases/nope/trace")
+    assert response.status_code == 404
+    assert response.json() == {"ok": False, "data": None, "error": "case 'nope' not found"}
+
+
+def test_cli_main_exit_code_and_stdout(tmp_path: Path, capsys: pytest.CaptureFixture[str]) -> None:
+    sys.path.insert(0, str(Path(__file__).resolve().parents[2] / "scripts"))
+    import replay_corpus as cli  # noqa: PLC0415
+
+    code = cli.main(
+        [
+            str(MANIFEST_PATH),
+            "--replay-duplicate",
+            "--out",
+            str(tmp_path / "ledger.json"),
+            "--vault-dir",
+            str(tmp_path / "vault"),
+        ]
+    )
+    out = capsys.readouterr().out
+    assert code == 0
+    assert "DUPLICATE_SUPPRESSED" in out and "NOT_PUBLISHED" in out and "SUCCEEDED" in out

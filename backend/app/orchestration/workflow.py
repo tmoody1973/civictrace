@@ -64,6 +64,9 @@ class CaseRepository(Protocol):
     async def record_unavailable_artifact(
         self, event: SourceEvent, artifact: Artifact, *, context: WorkflowContext
     ) -> None: ...
+    async def record_artifact_stored(
+        self, artifact: Artifact, *, context: WorkflowContext
+    ) -> None: ...
     async def record_rejected_extraction(
         self, artifact: Artifact, reasons: tuple[str, ...], *, context: WorkflowContext
     ) -> None: ...
@@ -180,6 +183,8 @@ class CityDocumentWorkflow:
                     job_key=job_key,
                     reason=artifact.availability_reason,
                 )
+
+            await self._cases.record_artifact_stored(artifact, context=context)
 
             if not self._routes.requires_document_extraction(artifact):
                 await self._jobs.succeed(job_key, context=context)

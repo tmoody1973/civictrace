@@ -124,4 +124,6 @@ def test_second_delivery_is_suppressed_and_touches_nothing(
     assert second.status is JobStatus.DUPLICATE_SUPPRESSED
     assert second.job_key == first.job_key
     assert vault.calls == 1 and agents.calls == 1, "second run must not touch vault or agent"
-    assert len(ledger.events()) == 3, "no new ledger events on the duplicate"
+    assert len(ledger.events()) == 4, (
+        "3 evidence + 1 ARTIFACT_STORED; nothing added by the duplicate"
+    )
