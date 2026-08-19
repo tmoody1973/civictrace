@@ -66,3 +66,11 @@ def test_source_job_keys_adapter_matches_workflow_protocol() -> None:
     assert keys.source_job_key(_event(), workflow_version="city-document.v1") == build_job_key(
         _event(), job_type="PROCESS_SOURCE", agent_version="city-document.v1"
     )
+
+
+def test_same_bytes_at_a_new_url_is_the_same_job() -> None:
+    # The City moving the PDF to a new link is not a new source version.
+    moved = _event(canonical_url="https://milwaukee.legistar1.com/milwaukee/attachments/moved.pdf")
+    assert build_job_key(_event(), job_type="P", agent_version="v1") == build_job_key(
+        moved, job_type="P", agent_version="v1"
+    )
