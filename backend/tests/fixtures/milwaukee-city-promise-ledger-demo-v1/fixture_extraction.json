@@ -1,0 +1,116 @@
+{
+  "_schema_note": "Hand-written DocumentExtraction per artifact, keyed by artifact_id. Returned by FakeAgentRunner (Slice 1.5). Shape follows docs/implementation/backend-adk-outline.md section 4; MOO-684 must make app/schemas/evidence.py match this or update this file in the same change. Excerpts are verbatim from pdftotext output with whitespace collapsed to single spaces. Anchors are 1-based PDF page numbers.",
+  "fixture_extraction_version": "v1-2026-08-19",
+  "extractions": {
+    "tid121-project-plan-2024": {
+      "artifact_id": "tid121-project-plan-2024",
+      "agent_name": "document_evidence",
+      "agent_version": "fixture",
+      "evidence": [
+        {
+          "evidence_id": "ev-tid121-plan-housing-program",
+          "artifact_id": "tid121-project-plan-2024",
+          "object_type": "COMMITMENT",
+          "verbatim_excerpt": "is anticipated to include 60 one, two, three, and four bedroom apartment units affordable across a range of incomes, including 12 market rate units and 48 units that will be affordable to families with incomes between 30% - 60% of Area Median Income.",
+          "neutral_statement": "The 2024 Project Plan states the residential component is anticipated to include 60 apartment units, of which 12 are market rate and 48 are affordable to households between 30% and 60% of Area Median Income.",
+          "anchors": [{"artifact_id": "tid121-project-plan-2024", "anchor_type": "page", "anchor_value": "2"}],
+          "status": "SUPPORTED",
+          "limitations": ["The plan says 'anticipated'; it is a planned program, not a completed outcome."]
+        },
+        {
+          "evidence_id": "ev-tid121-plan-capital-costs",
+          "artifact_id": "tid121-project-plan-2024",
+          "object_type": "COMMITMENT",
+          "verbatim_excerpt": "TOTAL Capital Project Costs $700,000 *Up-to amount",
+          "neutral_statement": "The 2024 Project Plan, Table A, sets TOTAL Capital Project Costs at an up-to amount of $700,000, consisting of a grant to the Developer/Residential Owner.",
+          "anchors": [{"artifact_id": "tid121-project-plan-2024", "anchor_type": "page", "anchor_value": "5"}],
+          "status": "SUPPORTED",
+          "limitations": ["'Up-to' amount: a ceiling, not a spent figure."]
+        },
+        {
+          "evidence_id": "ev-tid121-plan-total-estimated",
+          "artifact_id": "tid121-project-plan-2024",
+          "object_type": "COMMITMENT",
+          "verbatim_excerpt": "Total Estimated Project Costs, excluding financing $ 763,750",
+          "neutral_statement": "The 2024 Project Plan estimates Total Project Costs, excluding financing, at $763,750 (the $700,000 grant plus $63,750 administration).",
+          "anchors": [{"artifact_id": "tid121-project-plan-2024", "anchor_type": "page", "anchor_value": "6"}],
+          "status": "SUPPORTED",
+          "limitations": []
+        }
+      ]
+    },
+    "tid-annual-report-2024": {
+      "artifact_id": "tid-annual-report-2024",
+      "agent_name": "document_evidence",
+      "agent_version": "fixture",
+      "evidence": [
+        {
+          "evidence_id": "ev-tid121-annual2024-authorized",
+          "artifact_id": "tid-annual-report-2024",
+          "object_type": "CLAIM",
+          "verbatim_excerpt": "Authorized expenditure (excluding interest): $763,750 Authorizing resolution(s): #240382",
+          "neutral_statement": "The 2024 Annual TID Report (TID 121 Periodic Report as of 12/31/24) lists authorized expenditure of $763,750 under authorizing resolution #240382.",
+          "anchors": [{"artifact_id": "tid-annual-report-2024", "anchor_type": "page", "anchor_value": "163"}],
+          "status": "SUPPORTED",
+          "limitations": []
+        },
+        {
+          "evidence_id": "ev-tid121-annual2024-completion-status",
+          "artifact_id": "tid-annual-report-2024",
+          "object_type": "UNKNOWN",
+          "verbatim_excerpt": "Completion Status: Project description:",
+          "neutral_statement": "The 'Completion Status' field on the TID 121 Periodic Report is blank. The record does not state a completion status.",
+          "anchors": [{"artifact_id": "tid-annual-report-2024", "anchor_type": "page", "anchor_value": "163"}],
+          "status": "UNKNOWN",
+          "limitations": ["A blank field is recorded as unknown, not as 'not started' or 'complete'."]
+        },
+        {
+          "evidence_id": "ev-tid121-annual2024-expenditures",
+          "artifact_id": "tid-annual-report-2024",
+          "object_type": "CLAIM",
+          "verbatim_excerpt": "Grant to Developer $ 700,000 $ - $ - $ - $ -",
+          "neutral_statement": "The Expenditures Life-to-Date table (as of 12/31/2024) shows a Grant to Developer budget of $700,000 with no appropriations, encumbrances, or expenditures recorded.",
+          "anchors": [{"artifact_id": "tid-annual-report-2024", "anchor_type": "page", "anchor_value": "164"}],
+          "status": "SUPPORTED",
+          "limitations": ["The 'within budget' and 'on schedule' check-box answers cannot be read from the extracted text and are treated as UNKNOWN."]
+        }
+      ]
+    },
+    "tid121-amendment-1-2026": {
+      "artifact_id": "tid121-amendment-1-2026",
+      "agent_name": "document_evidence",
+      "agent_version": "fixture",
+      "evidence": [
+        {
+          "evidence_id": "ev-tid121-amend1-capital-costs",
+          "artifact_id": "tid121-amendment-1-2026",
+          "object_type": "DECISION",
+          "verbatim_excerpt": "The City shall fund an estimated $2,345,000 in the form of TID Capital Project Costs",
+          "neutral_statement": "Amendment No. 1 (2026) states the City shall fund an estimated $2,345,000 in TID Capital Project Costs.",
+          "anchors": [{"artifact_id": "tid121-amendment-1-2026", "anchor_type": "page", "anchor_value": "3"}],
+          "status": "SUPPORTED",
+          "limitations": []
+        },
+        {
+          "evidence_id": "ev-tid121-amend1-commercial-grant",
+          "artifact_id": "tid121-amendment-1-2026",
+          "object_type": "DECISION",
+          "verbatim_excerpt": "Amendment 1 Grant to Project (Monetary Obligation to Developer/Commercial Owner) $1,645,000* TOTAL Capital Project Costs $2,345,000",
+          "neutral_statement": "Amendment No. 1, Table A, adds an up-to $1,645,000 grant to the Developer/Commercial Owner, bringing TOTAL Capital Project Costs to $2,345,000.",
+          "anchors": [{"artifact_id": "tid121-amendment-1-2026", "anchor_type": "page", "anchor_value": "3"}],
+          "status": "SUPPORTED",
+          "limitations": ["'Up-to' amounts: ceilings, not spent figures. The record does not state why the amendment was needed."]
+        }
+      ]
+    }
+  },
+  "not_published": {
+    "tid-annual-report-2025": {
+      "artifact_id": "tid-annual-report-2025",
+      "status": "NOT_PUBLISHED",
+      "reason": "No 2025 Annual Report of Tax Incremental Districts communication exists in Legistar as of 2026-08-19; prior-year reports were filed 2015-2024.",
+      "proof_of_absence": "provenance/annual-tid-report-matters-query-2026-08-19.json",
+      "evidence": []
+    }
+  }
+}

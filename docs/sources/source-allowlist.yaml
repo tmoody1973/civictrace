@@ -1,0 +1,34 @@
+# CivicTrace source allowlist — reviewed copy for Slice 1 (local replay).
+# Source adapters may retrieve only domains and content types listed here.
+# Adding a domain is a source-policy change: needs review, a fixture, and a test (CLAUDE.md rule 8).
+#
+# Change log
+#   2026-08-19  Created from source-allowlist.example.yaml for Slice 1. Only milwaukee_city/milwaukee_legistar
+#               is enrolled. Added milwaukee.legistar1.com: it is the attachment host for the same Legistar
+#               system (PDF links returned by webapi.legistar.com point there). Reviewed by Tarik on MOO-685.
+#               milwaukee_open_data and all MPS sources are NOT enrolled yet; add them with their own entry.
+
+version: 1
+jurisdictions:
+  milwaukee_city:
+    sources:
+      - id: milwaukee_legistar
+        purpose: City Council and committee public meeting metadata, agenda items, attachments, minutes, and official file references.
+        domains:
+          - milwaukee.legistar.com
+          - webapi.legistar.com
+          - milwaukee.legistar1.com   # attachment host (PDF/DOCX binaries) for milwaukee.legistar.com
+        allowed_content_types:
+          - application/json
+          - text/html
+          - application/pdf
+        refresh_policy: replay_only   # Slice 1: local fixture replay; no scheduled retrieval
+        minimum_interval_minutes: 30
+        evidence_authority: primary
+
+prohibited_behaviors:
+  - Authenticate to source websites.
+  - Submit forms, bids, records requests, or comments.
+  - Circumvent source access controls, anti-bot controls, or rate limits.
+  - Retrieve individual student information or other restricted personal information.
+  - Treat third-party discovery/extraction output as authoritative evidence without independent canonical-source retrieval.

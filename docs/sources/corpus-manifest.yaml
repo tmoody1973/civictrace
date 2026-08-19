@@ -1,0 +1,120 @@
+# CivicTrace reviewed replay corpus — Slice 1.
+# Every artifact below is an unmodified public record retrieved read-only from the City of Milwaukee Legistar system.
+# Reviewed and approved by Tarik Moody on 2026-08-19 (Linear MOO-685). Decision context: docs/decisions/002-first-case-is-a-tif-promise.md
+
+version: 1
+corpus_id: milwaukee-city-promise-ledger-demo-v1
+jurisdiction: milwaukee_city
+case_id: case-tid121-bronzeville-arts-tech-hub
+case_topic: >
+  City of Milwaukee Tax Incremental District No. 121 (Bronzeville Arts & Tech Hub), NW corner of W. North Ave and
+  N. 6th St. The 2024 Project Plan (Common Council file 240382) sets the City's TID capital contribution and the
+  housing/commercial program. Later public records revise the contribution (Amendment No. 1, file 260433) and
+  report status (2024 Annual TID Report, file 250623). The 2025 Annual TID Report is expected but not yet published.
+fixture_dir: backend/tests/fixtures/milwaukee-city-promise-ledger-demo-v1
+
+artifacts:
+  - artifact_id: tid121-project-plan-2024
+    role: original_commitment
+    source_id: milwaukee_legistar
+    legistar_file: "240382"
+    legistar_matter_id: 68373
+    legistar_attachment_id: 223678
+    canonical_url: https://milwaukee.legistar1.com/milwaukee/attachments/5fe0f830-23d2-4292-a314-f9583efb02e5.pdf
+    matter_url: https://webapi.legistar.com/v1/milwaukee/matters/68373
+    external_id: "240382/attachment/223678"
+    title: Project Plan - Bronzeville Arts and Tech Hub (Tax Incremental District No. 121)
+    council_action_date: 2024-07-02
+    retrieved_at: 2026-08-19T13:35:00Z
+    content_hash: sha256:7097a1ba6af1fc2aaa60a1d3e9a2b366d63ab067a8e6b4e052b46e8400aaefe1
+    media_type: application/pdf
+    byte_length: 2728839
+    page_count: 31
+    local_path: artifacts/tid121-project-plan-2024.pdf
+    availability: AVAILABLE
+    required_anchors:
+      - page: 2    # housing program: 60 units, 12 market rate, 48 affordable at 30-60% AMI
+      - page: 5    # TABLE A: TOTAL Capital Project Costs $700,000
+      - page: 6    # Total Estimated Project Costs, excluding financing $763,750
+
+  - artifact_id: tid-annual-report-2024
+    role: later_evidence
+    source_id: milwaukee_legistar
+    legistar_file: "250623"
+    legistar_matter_id: 71523
+    legistar_attachment_id: 237082
+    canonical_url: https://milwaukee.legistar1.com/milwaukee/attachments/5a3e5a14-ed2a-45e8-8e2a-d79a21cb0376.pdf
+    matter_url: https://webapi.legistar.com/v1/milwaukee/matters/71523
+    external_id: "250623/attachment/237082"
+    title: 2024 Annual TID Report (Communication from the Department of City Development)
+    council_action_date: 2025-07-31
+    retrieved_at: 2026-08-19T13:35:00Z
+    content_hash: sha256:a2058b5f9d6c6cd25b0f9ad9b630f70e9aef027f3ae973e9eca874cdb55124e6
+    media_type: application/pdf
+    byte_length: 6583974
+    page_count: 164
+    local_path: artifacts/tid-annual-report-2024.pdf
+    availability: AVAILABLE
+    required_anchors:
+      - page: 163  # TID 121 Periodic Report 12/31/24: authorized expenditure, authorizing resolution, Completion Status (blank)
+      - page: 164  # Expenditures life-to-date table: Grant to Developer budget $700,000, expenditures $ -
+
+  - artifact_id: tid121-amendment-1-2026
+    role: later_evidence
+    source_id: milwaukee_legistar
+    legistar_file: "260433"
+    legistar_matter_id: 74415
+    legistar_attachment_id: 248545
+    canonical_url: https://milwaukee.legistar1.com/milwaukee/attachments/aa63eaa2-3f02-473b-bef3-832c2767f5a4.pdf
+    matter_url: https://webapi.legistar.com/v1/milwaukee/matters/74415
+    external_id: "260433/attachment/248545"
+    title: Amendment #1 to Project Plan for TID #121
+    council_action_date: 2026-07-14
+    retrieved_at: 2026-08-19T13:35:00Z
+    content_hash: sha256:0c5ce45b48c957c0cf3ab8eecdc2e7fd866a5c315c78598c1a4deb01b5706a41
+    media_type: application/pdf
+    byte_length: 1252251
+    page_count: 15
+    local_path: artifacts/tid121-amendment-1-2026.pdf
+    availability: AVAILABLE
+    required_anchors:
+      - page: 3    # TABLE A: Amendment 1 adds $1,645,000 commercial grant; TOTAL Capital Project Costs $2,345,000
+
+  - artifact_id: tid-annual-report-2025
+    role: expected_later_evidence
+    source_id: milwaukee_legistar
+    legistar_file: null
+    legistar_matter_id: null
+    canonical_url: null
+    external_id: "expected:annual-tid-report-2025"
+    title: 2025 Annual TID Report (expected Communication from the Department of City Development)
+    retrieved_at: 2026-08-19T13:36:00Z
+    content_hash: null
+    media_type: null
+    local_path: null
+    availability: NOT_PUBLISHED
+    availability_reason: >
+      The Department of City Development has transmitted an "Annual Report of Tax Incremental Districts" communication
+      to the Common Council every year 2015-2024 (see provenance/annual-tid-report-matters-query-2026-08-19.json).
+      As of 2026-08-19 no 2025 report appears in Legistar. Absence of the record is recorded as NOT_PUBLISHED; it is
+      not evidence that the report does not exist or that any party acted improperly.
+    expected_basis:
+      prior_files: ["250623", "240654", "230422", "220286", "210465", "200366", "190520", "180559", "170503", "151352"]
+      prior_intro_dates: ["2025-07-31", "2024-09-03", "2023-07-11", "2022-06-21", "2021-07-07", "2020-07-07", "2019-07-09", "2018-07-10", "2017-07-11", "2015-12-15"]
+    proof_of_absence: provenance/annual-tid-report-matters-query-2026-08-19.json
+
+duplicate_event_fixture:
+  # Slice 1.4/1.6: the replay re-sends this event unchanged; the second delivery must be DUPLICATE_SUPPRESSED.
+  artifact_id: tid121-project-plan-2024
+
+required_demo_outcomes:
+  - Extract a source-anchored original Commitment from tid121-project-plan-2024 (pages 2, 5, 6).
+  - Extract source-anchored later Evidence from tid-annual-report-2024 (pages 163-164) and tid121-amendment-1-2026 (page 3).
+  - Record tid-annual-report-2025 as NOT_PUBLISHED with the basis above; no invented content.
+  - Demonstrate duplicate-event suppression with the same source-event fingerprint.
+  - (Slice 2) Produce a REVISED Decision Delta: TID Capital Project Costs $700,000 (plan p.5) -> $2,345,000 (amendment p.3), with UNKNOWN for build/occupancy status and next expected evidence = 2025 Annual TID Report.
+
+prohibited_fixture_content:
+  - Student-level, resident-level, or other restricted personal information.
+  - Modified public records presented as originals.
+  - Unverified third-party summaries as evidence authority.
