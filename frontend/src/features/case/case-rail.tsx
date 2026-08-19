@@ -4,6 +4,7 @@ import Link from "next/link";
 
 import { Skeleton } from "@/components/ui/skeleton";
 import { ApiErrorState } from "@/components/layout/api-error-state";
+import { STATE_COPY } from "@/features/case/copy";
 import { useCaseList } from "@/features/case/queries";
 
 export function CaseRail({ activeCaseId }: { activeCaseId?: string }) {
@@ -22,7 +23,7 @@ export function CaseRail({ activeCaseId }: { activeCaseId?: string }) {
               className="block rounded-md px-2 py-1.5 text-sm hover:bg-accent aria-[current=page]:bg-accent"
             >
               <span className="block truncate font-medium">{item.case_topic || item.case_id}</span>
-              <span className="block font-mono text-xs text-muted-foreground">{item.state}</span>
+              <span className="block text-xs text-muted-foreground">{STATE_COPY[item.state].label}</span>
             </Link>
           </li>
         ))}
