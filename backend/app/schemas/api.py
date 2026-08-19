@@ -9,7 +9,13 @@ from datetime import datetime
 
 from pydantic import BaseModel, ConfigDict, Field
 
-from app.domain.enums import AnchorType, DeltaCategory, LedgerEventType, ReviewOutcome
+from app.domain.enums import (
+    AnchorType,
+    DeltaCategory,
+    InquiryType,
+    LedgerEventType,
+    ReviewOutcome,
+)
 
 
 class ApiEnvelope[T](BaseModel):
@@ -55,6 +61,13 @@ class TraceEventView(BaseModel):
     what_is_not_established: list[str] = Field(default_factory=list)
     next_evidence_needed: str | None = None
     requires_human_review: bool | None = None
+    # inquiry rows: INQUIRY_STAGED / INQUIRY_REJECTED (MOO-703)
+    inquiry_type: InquiryType | None = None
+    proposed_question: str | None = None
+    scope_rationale: str | None = None
+    target_record_or_source: str | None = None
+    supporting_evidence_ids: list[str] = Field(default_factory=list)
+    excluded_requests: list[str] = Field(default_factory=list)
     # approval rows (MOO-702)
     approval_token_id: str | None = None
     approval_reviewer: str | None = None

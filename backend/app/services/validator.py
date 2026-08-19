@@ -8,9 +8,10 @@ from dataclasses import dataclass
 from app.domain.enums import AnchorType, ArtifactAvailability, DeltaResultType
 from app.domain.errors import EvidenceValidationError
 from app.policies.language_policy import find_allegation_language, find_causal_language
-from app.policies.privacy_policy import find_pii
+from app.policies.privacy_policy import find_pii, find_restricted_scope
 from app.schemas.case import CaseBundle, DecisionDelta, DecisionDeltaProposal
 from app.schemas.evidence import DocumentExtraction, Evidence, EvidenceAnchor
+from app.schemas.inquiry import InquiryProposal
 from app.schemas.source import Artifact
 from app.services.artifact_text import normalise_for_match
 
@@ -136,6 +137,51 @@ def _delta_bundle_reasons(delta: DecisionDelta, bundle: CaseBundle) -> list[str]
         elif evidence_id not in later:
             reasons.append(f"{evidence_id}: not in bundle")
     return reasons
+
+
+def validate_inquiry(proposal: InquiryProposal, bundle: CaseBundle) -> ValidationResult:
+    """An inquiry enters the ledger only if it is narrow, neutral, and cites bundle evidence.
+
+    excluded_requests is deliberately NOT scanned for scope words: it is where the
+    planner promises what it will not ask ("No student-level information.").
+    """
+    reasons: list[str] = []
+    if not proposal.proposed_question.strip():
+        reasons.append("proposed_question is empty")
+    if proposal.approval_required is not True:
+        reasons.append("approval_required must be true; no inquiry moves without a person")
+    reasons.extend(_inquiry_language_reasons(proposal))
+    reasons.extend(_inquiry_evidence_reasons(proposal, bundle))
+    return ValidationResult(tuple(reasons))
+
+
+def _inquiry_language_reasons(proposal: InquiryProposal) -> list[str]:
+    texts = (
+        ("proposed_question", proposal.proposed_question),
+        ("scope_rationale", proposal.scope_rationale),
+        ("target_record_or_source", proposal.target_record_or_source),
+        *(("limitations", text) for text in proposal.limitations),
+    )
+    reasons: list[str] = []
+    for field_name, text in texts:
+        for term in find_allegation_language(text):
+            reasons.append(f"allegation language in {field_name} ({term!r})")
+        for term in find_causal_language(text):
+            reasons.append(f"causal language in {field_name} ({term!r})")
+        for term in find_restricted_scope(text):
+            reasons.append(f"student/personnel scope in {field_name} ({term!r})")
+    return reasons
+
+
+def _inquiry_evidence_reasons(proposal: InquiryProposal, bundle: CaseBundle) -> list[str]:
+    if not proposal.supporting_evidence_ids:
+        return ["inquiry cites no supporting evidence"]
+    known = bundle.original_ids() | bundle.later_ids()
+    return [
+        f"{evidence_id}: not in bundle"
+        for evidence_id in proposal.supporting_evidence_ids
+        if evidence_id not in known
+    ]
 
 
 def _delta_language_reasons(delta: DecisionDelta) -> list[str]:

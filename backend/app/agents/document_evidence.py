@@ -16,6 +16,7 @@ from app.schemas.case import (
     ReviewRequest,
 )
 from app.schemas.evidence import DocumentEvidenceTask, DocumentExtraction, EntityLinkBatch
+from app.schemas.inquiry import InquiryProposal, InquiryTask
 from app.schemas.source import Artifact
 
 DOCUMENT_EVIDENCE_DEFINITION = AgentDefinition(
@@ -37,6 +38,13 @@ QUALITY_REVIEWER_DEFINITION = AgentDefinition(
     role="quality_reviewer",
     model="fixture",
     output_model=ReviewDecision,
+    tools=(),
+)
+INQUIRY_PLANNER_DEFINITION = AgentDefinition(
+    name="civictrace-inquiry_planner",
+    role="inquiry_planner",
+    model="fixture",
+    output_model=InquiryProposal,
     tools=(),
 )
 
@@ -113,3 +121,27 @@ class DocumentEvidenceAgentService:
             QUALITY_REVIEWER_DEFINITION, request, trace_id=context.trace_id
         )
         return ReviewDecision.model_validate(result.model_dump())
+
+    async def inquiry_planner(
+        self,
+        delta: DecisionDeltaProposal,
+        case_bundle: CaseBundle,
+        *,
+        context: WorkflowContext,
+    ) -> InquiryProposal:
+        task = InquiryTask(
+            case_id=delta.case_id,
+            case_topic=case_bundle.case_topic,
+            category=delta.category,
+            neutral_summary=delta.neutral_summary,
+            what_is_established=list(delta.what_is_established),
+            what_is_not_established=list(delta.what_is_not_established),
+            next_evidence_needed=delta.next_evidence_needed,
+            original_evidence_ids=list(delta.original_evidence_ids),
+            later_evidence_ids=list(delta.later_evidence_ids),
+            not_published_artifact_ids=list(case_bundle.not_published_artifact_ids),
+        )
+        result = await self._runner.run(
+            INQUIRY_PLANNER_DEFINITION, task, trace_id=context.trace_id
+        )
+        return InquiryProposal.model_validate(result.model_dump())

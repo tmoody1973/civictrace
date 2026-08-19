@@ -27,6 +27,8 @@ ALLEGATION_TERMS: tuple[str, ...] = (
     "lying",
     "cover-up",
     "coverup",
+    "cover up",
+    "covering up",
     "kickback",
     "bribe",
     "bribery",

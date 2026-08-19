@@ -42,6 +42,7 @@ class ReplayOptions:
     vault_dir: Path
     delta_path: Path | None = None
     review_path: Path | None = None
+    inquiry_path: Path | None = None
     out_path: Path | None = None
     replay_duplicate: bool = False
     runner_kind: str = "fake"  # "fake" (fixtures, default) or "adk" (real Gemini Flash, needs ADC)
@@ -72,9 +73,11 @@ class ReplayReport:
         human = [e for e in events if e.event_type is LedgerEventType.CASE_HUMAN_REVIEW]
         if staged and staged[-1].delta and staged[-1].review:
             delta, review = staged[-1].delta, staged[-1].review
+            inquiries = [e for e in events if e.event_type is LedgerEventType.INQUIRY_STAGED]
+            inquiry_note = "  inquiry: STAGED" if inquiries else ""
             return (
                 f"{self.manifest.case_id}  DELTA_STAGED ({delta.category})"
-                f"  reviewer={review.outcome}  next: {delta.next_evidence_needed}"
+                f"  reviewer={review.outcome}  next: {delta.next_evidence_needed}{inquiry_note}"
             )
         if human and human[-1].delta:
             category = human[-1].delta.category
@@ -95,10 +98,14 @@ def build_workflow(
     )
     delta_path = options.delta_path or options.extraction_path.with_name("fixture_delta.json")
     review_path = options.review_path or options.extraction_path.with_name("fixture_review.json")
+    inquiry_path = options.inquiry_path or options.extraction_path.with_name(
+        "fixture_inquiry.json"
+    )
     fake_runner = FakeAgentRunner.from_paths(
         extraction_path=options.extraction_path,
         delta_path=delta_path if delta_path.exists() else None,
         review_path=review_path if review_path.exists() else None,
+        inquiry_path=inquiry_path if inquiry_path.exists() else None,
     )
     runner, usage_log = _build_runner(manifest, options, fake_runner)
     hint_pages = {

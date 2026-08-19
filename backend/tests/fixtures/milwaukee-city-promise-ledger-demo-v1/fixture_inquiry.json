@@ -1,0 +1,27 @@
+{
+  "_schema_note": "Hand-written InquiryProposal per case id, returned by FakeAgentRunner for role inquiry_planner after a delta stages. The question must be narrow and neutral; validate_inquiry refuses allegation/causal words, foreign evidence ids, and student/personnel scope.",
+  "fixture_inquiry_version": "v1-2026-08-19",
+  "proposals": {
+    "case-tid121-bronzeville-arts-tech-hub": {
+      "inquiry_type": "SOURCE_QUESTION",
+      "proposed_question": "Has the 2025 Annual Report of Tax Incremental Districts, covering TID 121, been published, and if so, where is the public copy available?",
+      "scope_rationale": "The staged delta compares the 2024 Project Plan Capital Project Costs of $700,000 (plan p.5) with Amendment No. 1's $2,345,000 (amendment p.3). The latest supplied status record is the 2024 Annual TID Report; the 2025 report is the next expected public record that could show whether any grant funds were disbursed after 12/31/2024.",
+      "target_record_or_source": "City of Milwaukee Department of City Development — Annual Report of Tax Incremental Districts, 2025 edition",
+      "supporting_evidence_ids": [
+        "ev-tid121-plan-capital-costs",
+        "ev-tid121-amend1-capital-costs",
+        "ev-tid121-amend1-commercial-grant"
+      ],
+      "excluded_requests": [
+        "No personnel records.",
+        "No student-level information.",
+        "No records beyond TID 121 annual reporting."
+      ],
+      "approval_required": true,
+      "limitations": [
+        "This question does not assert that any report is overdue or that any commitment was missed.",
+        "Publication status of the 2025 report is unknown until the record itself is retrieved."
+      ]
+    }
+  }
+}

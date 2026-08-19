@@ -79,8 +79,8 @@ def _artifact_view(event: LedgerEvent) -> TraceEventView:
 
 
 def _case_view(event: LedgerEvent) -> TraceEventView:
-    """Delta / review rows, from the validated delta and review only."""
-    delta, review = event.delta, event.review
+    """Delta / review / inquiry rows, from validated fields only."""
+    delta, review, inquiry = event.delta, event.review, event.inquiry
     return TraceEventView(
         event_id=event.event_id,
         event_type=event.event_type,
@@ -98,6 +98,12 @@ def _case_view(event: LedgerEvent) -> TraceEventView:
         what_is_not_established=list(delta.what_is_not_established) if delta else [],
         next_evidence_needed=delta.next_evidence_needed if delta else None,
         requires_human_review=delta.requires_human_review if delta else None,
+        inquiry_type=inquiry.inquiry_type if inquiry else None,
+        proposed_question=inquiry.proposed_question if inquiry else None,
+        scope_rationale=inquiry.scope_rationale if inquiry else None,
+        target_record_or_source=inquiry.target_record_or_source if inquiry else None,
+        supporting_evidence_ids=list(inquiry.supporting_evidence_ids) if inquiry else [],
+        excluded_requests=list(inquiry.excluded_requests) if inquiry else [],
         approval_token_id=event.approval.token_id if event.approval else None,
         approval_reviewer=event.approval.reviewer_name if event.approval else None,
         approval_expires_at=event.approval.expires_at if event.approval else None,

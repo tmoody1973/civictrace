@@ -7,10 +7,16 @@ from app.domain.errors import FixtureIntegrityError
 from app.policies.source_policy import SourcePolicy
 from app.schemas.case import CaseBundle, CaseLinkProposal, DecisionDeltaProposal, ReviewDecision
 from app.schemas.evidence import DocumentExtraction, EntityLinkBatch
+from app.schemas.inquiry import InquiryProposal
 from app.schemas.source import Artifact, SourceEvent
 from app.services.artifact_text import read_page_texts
 from app.services.artifact_vault import HASH_PREFIX, sha256_hex
-from app.services.validator import ValidationResult, validate_delta, validate_extraction
+from app.services.validator import (
+    ValidationResult,
+    validate_delta,
+    validate_extraction,
+    validate_inquiry,
+)
 
 
 class CivicTracePolicyService:
@@ -55,3 +61,8 @@ class CivicTracePolicyService:
     def review_is_stageable(self, review: ReviewDecision, delta: DecisionDeltaProposal) -> bool:
         """Only an APPROVE with zero blocking issues stages; the reviewer cannot edit the delta."""
         return review.is_stageable() and delta.requires_human_review
+
+    def validate_inquiry(
+        self, inquiry: InquiryProposal, case_bundle: CaseBundle
+    ) -> ValidationResult:
+        return validate_inquiry(inquiry, case_bundle)

@@ -12,6 +12,7 @@ from typing import Protocol
 from app.domain.enums import DeltaResultType, JobStatus
 from app.schemas.case import CaseBundle, CaseLinkProposal, DecisionDeltaProposal, ReviewDecision
 from app.schemas.evidence import DocumentExtraction, EntityLinkBatch
+from app.schemas.inquiry import InquiryProposal
 from app.schemas.source import Artifact, SourceEvent
 
 
@@ -92,6 +93,17 @@ class CaseRepository(Protocol):
     async def record_rejected_extraction(
         self, artifact: Artifact, reasons: tuple[str, ...], *, context: WorkflowContext
     ) -> None: ...
+    async def stage_inquiry(
+        self, *, case_id: str, inquiry: InquiryProposal, context: WorkflowContext
+    ) -> None: ...
+    async def record_inquiry_rejected(
+        self,
+        *,
+        case_id: str,
+        inquiry: InquiryProposal,
+        reasons: tuple[str, ...],
+        context: WorkflowContext,
+    ) -> None: ...
 
 
 class ExtractionVerdict(Protocol):
@@ -115,6 +127,9 @@ class PolicyService(Protocol):
         self, delta: DecisionDeltaProposal, case_bundle: CaseBundle
     ) -> ExtractionVerdict: ...
     def review_is_stageable(self, review: ReviewDecision, delta: DecisionDeltaProposal) -> bool: ...
+    def validate_inquiry(
+        self, inquiry: InquiryProposal, case_bundle: CaseBundle
+    ) -> ExtractionVerdict: ...
 
 
 class AgentService(Protocol):
@@ -142,6 +157,13 @@ class AgentService(Protocol):
         *,
         context: WorkflowContext,
     ) -> ReviewDecision: ...
+    async def inquiry_planner(
+        self,
+        delta: DecisionDeltaProposal,
+        case_bundle: CaseBundle,
+        *,
+        context: WorkflowContext,
+    ) -> InquiryProposal: ...
 
 
 class RouteRegistry(Protocol):
@@ -303,8 +325,24 @@ class CityDocumentWorkflow:
             await self._cases.stage_delta(
                 case_id=delta.case_id, delta=delta, review=review, context=context
             )
+            await self._plan_inquiry(delta, bundle, context=context)
             return True
         await self._cases.record_case_human_review(
             case_id=delta.case_id, delta=delta, review=review, context=context
         )
         return False
+
+    async def _plan_inquiry(
+        self, delta: DecisionDeltaProposal, bundle: CaseBundle, *, context: WorkflowContext
+    ) -> None:
+        """Staged delta → planner proposal → deterministic gate → INQUIRY_STAGED or refusal."""
+        inquiry = await self._agents.inquiry_planner(delta, bundle, context=context)
+        verdict = self._policy.validate_inquiry(inquiry, bundle)
+        if verdict.ok:
+            await self._cases.stage_inquiry(
+                case_id=delta.case_id, inquiry=inquiry, context=context
+            )
+            return
+        await self._cases.record_inquiry_rejected(
+            case_id=delta.case_id, inquiry=inquiry, reasons=verdict.reasons, context=context
+        )

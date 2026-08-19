@@ -24,6 +24,7 @@ from app.schemas.case import (
     ReviewDecision,
 )
 from app.schemas.evidence import DocumentExtraction
+from app.schemas.inquiry import InquiryProposal
 from app.schemas.source import Artifact, SourceEvent
 
 SYSTEM_ACTOR = "system"
@@ -242,6 +243,31 @@ class InMemoryLedger:
         self.append(
             self._new_event(
                 context, LedgerEventType.DELTA_STAGED, case_id, delta=delta, review=review
+            )
+        )
+
+    async def stage_inquiry(
+        self, *, case_id: str, inquiry: InquiryProposal, context: WorkflowContext
+    ) -> None:
+        self.append(
+            self._new_event(context, LedgerEventType.INQUIRY_STAGED, case_id, inquiry=inquiry)
+        )
+
+    async def record_inquiry_rejected(
+        self,
+        *,
+        case_id: str,
+        inquiry: InquiryProposal,
+        reasons: tuple[str, ...],
+        context: WorkflowContext,
+    ) -> None:
+        self.append(
+            self._new_event(
+                context,
+                LedgerEventType.INQUIRY_REJECTED,
+                case_id,
+                inquiry=inquiry,
+                reason="; ".join(reasons),
             )
         )
 

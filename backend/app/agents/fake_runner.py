@@ -38,12 +38,15 @@ class FakeAgentRunner:
         extraction: dict[str, Any],
         delta: dict[str, Any] | None = None,
         review: dict[str, Any] | None = None,
+        inquiry: dict[str, Any] | None = None,
     ) -> FakeAgentRunner:
         fixtures = {"document_evidence": extraction["extractions"]}
         if delta is not None:
             fixtures["delta_investigator"] = delta["proposals"]
         if review is not None:
             fixtures["quality_reviewer"] = review["reviews"]
+        if inquiry is not None:
+            fixtures["inquiry_planner"] = inquiry["proposals"]
         return cls(fixtures)
 
     @classmethod
@@ -53,11 +56,13 @@ class FakeAgentRunner:
         extraction_path: Path,
         delta_path: Path | None = None,
         review_path: Path | None = None,
+        inquiry_path: Path | None = None,
     ) -> FakeAgentRunner:
         return cls.from_payloads(
             extraction=json.loads(extraction_path.read_text()),
             delta=json.loads(delta_path.read_text()) if delta_path else None,
             review=json.loads(review_path.read_text()) if review_path else None,
+            inquiry=json.loads(inquiry_path.read_text()) if inquiry_path else None,
         )
 
     async def run(
