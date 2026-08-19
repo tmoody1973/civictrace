@@ -65,7 +65,7 @@ The output is not an article, a verdict or a score. It is a **verifiable gap mad
 The MVP is built as **six vertical slices**, each a whole working piece, never a thinner product ([decision 003](docs/decisions/003-full-mvp-in-six-slices.md)):
 
 1. Evidence spine — source policy, vault, idempotency, extraction boundary, replay, trace API ✅
-2. Real agent + Decision Delta + Quality Reviewer (local) — delta ✅ · reviewer ✅ · trace/API ✅ · GCP dev project ✅ · real Gemini Flash agent ⏳
+2. Real agent + Decision Delta + Quality Reviewer (local) — delta, reviewer, trace/API, GCP dev project, real Gemini Flash Document Evidence agent + grounding eval ✅
 3. Evidence Studio UI (local) — shell, file endpoint, case card, Evidence Trace, PDF anchor jump, Playwright/axe gate + CI ✅
 4. Human approval token + inquiry packet + failed-approval demo
 5. Cloud deployment (Cloud Run, Firestore, GCS, Pub/Sub, Cloud Tasks, BigQuery), IaC, trace lineage, teardown
@@ -141,14 +141,14 @@ The delta says "the later document revises the City's stated contribution; the r
 | Read API: case summary, trace, case list, exact artifact bytes | ✅ | `test_replay_and_trace.py`, `test_case_list_and_artifact_file.py`; [contract](docs/implementation/api-contract.md) |
 | Evidence Studio: shell, Promise Card, Decision Delta, Evidence Trace | ✅ | `docs/hackathon/proof/*.png`, 18 Vitest tests, axe clean |
 | GCP dev project + Vertex AI + budget alert | ✅ | [runbook](docs/runbooks/local-vertex-setup.md) |
-| Real Gemini Flash agent behind the same seam + grounding eval | ⏳ | Slice 2 |
+| Real Gemini Flash agent behind the same seam + grounding eval | ✅ | `--runner adk`; `docs/evaluations/runs/`; ≈$0.016/replay |
 | PDF pane with anchor jump + hash check | ✅ | `docs/hackathon/proof/moo-699-*.png` |
 | Playwright smoke + axe gate + GitHub Actions CI | ✅ | [CI](https://github.com/tmoody1973/civictrace/actions) green; `frontend/e2e/` |
 | Approval token, inquiry packet, failed-approval demo | ⏳ | Slice 4 |
 | Cloud Run / Firestore / GCS / Pub-Sub / Tasks / BigQuery, IaC, teardown | ⏳ | Slice 5 |
 | Meeting media (Speech-to-Text V2, Media Evidence Agent) | ⏳ | Slice 6 |
 
-Backend: 129 tests, ruff + mypy clean. Frontend: 29 unit tests + 3 Playwright e2e (axe inside), TypeScript strict, ESLint clean. CI runs all of it on every push. Every closed issue in Linear carries a verification comment with real output.
+Backend: 135 tests, ruff + mypy clean. Frontend: 29 unit tests + 3 Playwright e2e (axe inside), TypeScript strict, ESLint clean. CI runs all of it on every push. Every closed issue in Linear carries a verification comment with real output.
 
 ## 9. Run it locally
 
