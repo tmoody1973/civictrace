@@ -32,7 +32,7 @@ Default when unsure: Linear for anything that will take more than one session; `
 
 ## GitHub (when a remote exists)
 
-Not active yet — this repo has no `.git` directory and no remote. Once it does:
+Active since 2026-08-19: `https://github.com/tmoody1973/civictrace` (private). Use for public bug reports / external contributors; planned build work stays in Linear.
 
 - **Create**: `gh issue create --title "..." --body "..."` (heredoc for multi-line bodies)
 - **Read**: `gh issue view <number> --comments`
