@@ -1,0 +1,530 @@
+{
+  "case_id": "case-tid121-bronzeville-arts-tech-hub",
+  "events": [
+    {
+      "event_id": "evt_8e3e563cf137f5486026576e4b9aabeb",
+      "event_type": "ARTIFACT_STORED",
+      "occurred_at": "2026-08-19T18:07:47.237883Z",
+      "actor": "system",
+      "artifact_id": "tid121-project-plan-2024",
+      "canonical_url": "https://milwaukee.legistar1.com/milwaukee/attachments/5fe0f830-23d2-4292-a314-f9583efb02e5.pdf",
+      "status": "AVAILABLE",
+      "content_hash": "sha256:7097a1ba6af1fc2aaa60a1d3e9a2b366d63ab067a8e6b4e052b46e8400aaefe1",
+      "evidence_id": null,
+      "anchors": [],
+      "verbatim_excerpt": null,
+      "neutral_statement": null,
+      "limitations": [],
+      "reason": null,
+      "category": null,
+      "neutral_summary": null,
+      "original_evidence_ids": [],
+      "later_evidence_ids": [],
+      "what_is_established": [],
+      "what_is_not_established": [],
+      "next_evidence_needed": null,
+      "requires_human_review": null,
+      "review_outcome": null,
+      "blocking_issues": [],
+      "review_notes": []
+    },
+    {
+      "event_id": "evt_418e238061da94bbedffe626aea505cd",
+      "event_type": "EVIDENCE_ACCEPTED",
+      "occurred_at": "2026-08-19T18:07:47.547590Z",
+      "actor": "system",
+      "artifact_id": "tid121-project-plan-2024",
+      "canonical_url": "https://milwaukee.legistar1.com/milwaukee/attachments/5fe0f830-23d2-4292-a314-f9583efb02e5.pdf",
+      "status": "SUPPORTED",
+      "content_hash": null,
+      "evidence_id": "ev-tid121-plan-housing-program",
+      "anchors": [
+        {
+          "anchor_type": "page",
+          "anchor_value": "2"
+        }
+      ],
+      "verbatim_excerpt": "is anticipated to include 60 one, two, three, and four bedroom apartment units affordable across a range of incomes, including 12 market rate units and 48 units that will be affordable to families with incomes between 30% - 60% of Area Median Income.",
+      "neutral_statement": "The 2024 Project Plan states the residential component is anticipated to include 60 apartment units, of which 12 are market rate and 48 are affordable to households between 30% and 60% of Area Median Income.",
+      "limitations": [
+        "The plan says 'anticipated'; it is a planned program, not a completed outcome."
+      ],
+      "reason": null,
+      "category": null,
+      "neutral_summary": null,
+      "original_evidence_ids": [],
+      "later_evidence_ids": [],
+      "what_is_established": [],
+      "what_is_not_established": [],
+      "next_evidence_needed": null,
+      "requires_human_review": null,
+      "review_outcome": null,
+      "blocking_issues": [],
+      "review_notes": []
+    },
+    {
+      "event_id": "evt_4b484d47300cfd8e348bc4b120a4ed4b",
+      "event_type": "EVIDENCE_ACCEPTED",
+      "occurred_at": "2026-08-19T18:07:47.547665Z",
+      "actor": "system",
+      "artifact_id": "tid121-project-plan-2024",
+      "canonical_url": "https://milwaukee.legistar1.com/milwaukee/attachments/5fe0f830-23d2-4292-a314-f9583efb02e5.pdf",
+      "status": "SUPPORTED",
+      "content_hash": null,
+      "evidence_id": "ev-tid121-plan-capital-costs",
+      "anchors": [
+        {
+          "anchor_type": "page",
+          "anchor_value": "5"
+        }
+      ],
+      "verbatim_excerpt": "TOTAL Capital Project Costs $700,000 *Up-to amount",
+      "neutral_statement": "The 2024 Project Plan, Table A, sets TOTAL Capital Project Costs at an up-to amount of $700,000, consisting of a grant to the Developer/Residential Owner.",
+      "limitations": [
+        "'Up-to' amount: a ceiling, not a spent figure."
+      ],
+      "reason": null,
+      "category": null,
+      "neutral_summary": null,
+      "original_evidence_ids": [],
+      "later_evidence_ids": [],
+      "what_is_established": [],
+      "what_is_not_established": [],
+      "next_evidence_needed": null,
+      "requires_human_review": null,
+      "review_outcome": null,
+      "blocking_issues": [],
+      "review_notes": []
+    },
+    {
+      "event_id": "evt_dd4b1eb84de6badfdc7c7239b3fb3144",
+      "event_type": "EVIDENCE_ACCEPTED",
+      "occurred_at": "2026-08-19T18:07:47.547677Z",
+      "actor": "system",
+      "artifact_id": "tid121-project-plan-2024",
+      "canonical_url": "https://milwaukee.legistar1.com/milwaukee/attachments/5fe0f830-23d2-4292-a314-f9583efb02e5.pdf",
+      "status": "SUPPORTED",
+      "content_hash": null,
+      "evidence_id": "ev-tid121-plan-total-estimated",
+      "anchors": [
+        {
+          "anchor_type": "page",
+          "anchor_value": "6"
+        }
+      ],
+      "verbatim_excerpt": "Total Estimated Project Costs, excluding financing $ 763,750",
+      "neutral_statement": "The 2024 Project Plan estimates Total Project Costs, excluding financing, at $763,750 (the $700,000 grant plus $63,750 administration).",
+      "limitations": [],
+      "reason": null,
+      "category": null,
+      "neutral_summary": null,
+      "original_evidence_ids": [],
+      "later_evidence_ids": [],
+      "what_is_established": [],
+      "what_is_not_established": [],
+      "next_evidence_needed": null,
+      "requires_human_review": null,
+      "review_outcome": null,
+      "blocking_issues": [],
+      "review_notes": []
+    },
+    {
+      "event_id": "evt_7724c62a5f4c2fac8174d0bfa7ccbc82",
+      "event_type": "NO_MATERIAL_DELTA",
+      "occurred_at": "2026-08-19T18:07:47.547772Z",
+      "actor": "system",
+      "artifact_id": "tid121-project-plan-2024",
+      "canonical_url": null,
+      "status": "NO_MATERIAL_DELTA",
+      "content_hash": null,
+      "evidence_id": null,
+      "anchors": [],
+      "verbatim_excerpt": null,
+      "neutral_statement": null,
+      "limitations": [],
+      "reason": "no later evidence to compare against the promise",
+      "category": null,
+      "neutral_summary": null,
+      "original_evidence_ids": [],
+      "later_evidence_ids": [],
+      "what_is_established": [],
+      "what_is_not_established": [],
+      "next_evidence_needed": null,
+      "requires_human_review": null,
+      "review_outcome": null,
+      "blocking_issues": [],
+      "review_notes": []
+    },
+    {
+      "event_id": "evt_98f48a33b4b0c981e4ff7835ce6d8169",
+      "event_type": "ARTIFACT_STORED",
+      "occurred_at": "2026-08-19T18:07:47.592554Z",
+      "actor": "system",
+      "artifact_id": "tid-annual-report-2024",
+      "canonical_url": "https://milwaukee.legistar1.com/milwaukee/attachments/5a3e5a14-ed2a-45e8-8e2a-d79a21cb0376.pdf",
+      "status": "AVAILABLE",
+      "content_hash": "sha256:a2058b5f9d6c6cd25b0f9ad9b630f70e9aef027f3ae973e9eca874cdb55124e6",
+      "evidence_id": null,
+      "anchors": [],
+      "verbatim_excerpt": null,
+      "neutral_statement": null,
+      "limitations": [],
+      "reason": null,
+      "category": null,
+      "neutral_summary": null,
+      "original_evidence_ids": [],
+      "later_evidence_ids": [],
+      "what_is_established": [],
+      "what_is_not_established": [],
+      "next_evidence_needed": null,
+      "requires_human_review": null,
+      "review_outcome": null,
+      "blocking_issues": [],
+      "review_notes": []
+    },
+    {
+      "event_id": "evt_6da7e5041b7f339d1bddf52b87a5b9d4",
+      "event_type": "EVIDENCE_ACCEPTED",
+      "occurred_at": "2026-08-19T18:07:49.092074Z",
+      "actor": "system",
+      "artifact_id": "tid-annual-report-2024",
+      "canonical_url": "https://milwaukee.legistar1.com/milwaukee/attachments/5a3e5a14-ed2a-45e8-8e2a-d79a21cb0376.pdf",
+      "status": "SUPPORTED",
+      "content_hash": null,
+      "evidence_id": "ev-tid121-annual2024-authorized",
+      "anchors": [
+        {
+          "anchor_type": "page",
+          "anchor_value": "163"
+        }
+      ],
+      "verbatim_excerpt": "Authorized expenditure (excluding interest): $763,750 Authorizing resolution(s): #240382",
+      "neutral_statement": "The 2024 Annual TID Report (TID 121 Periodic Report as of 12/31/24) lists authorized expenditure of $763,750 under authorizing resolution #240382.",
+      "limitations": [],
+      "reason": null,
+      "category": null,
+      "neutral_summary": null,
+      "original_evidence_ids": [],
+      "later_evidence_ids": [],
+      "what_is_established": [],
+      "what_is_not_established": [],
+      "next_evidence_needed": null,
+      "requires_human_review": null,
+      "review_outcome": null,
+      "blocking_issues": [],
+      "review_notes": []
+    },
+    {
+      "event_id": "evt_f00768b8c620539ced5ce218d7559ccb",
+      "event_type": "EVIDENCE_ACCEPTED",
+      "occurred_at": "2026-08-19T18:07:49.093369Z",
+      "actor": "system",
+      "artifact_id": "tid-annual-report-2024",
+      "canonical_url": "https://milwaukee.legistar1.com/milwaukee/attachments/5a3e5a14-ed2a-45e8-8e2a-d79a21cb0376.pdf",
+      "status": "UNKNOWN",
+      "content_hash": null,
+      "evidence_id": "ev-tid121-annual2024-completion-status",
+      "anchors": [
+        {
+          "anchor_type": "page",
+          "anchor_value": "163"
+        }
+      ],
+      "verbatim_excerpt": "Completion Status: Project description:",
+      "neutral_statement": "The 'Completion Status' field on the TID 121 Periodic Report is blank. The record does not state a completion status.",
+      "limitations": [
+        "A blank field is recorded as unknown, not as 'not started' or 'complete'."
+      ],
+      "reason": null,
+      "category": null,
+      "neutral_summary": null,
+      "original_evidence_ids": [],
+      "later_evidence_ids": [],
+      "what_is_established": [],
+      "what_is_not_established": [],
+      "next_evidence_needed": null,
+      "requires_human_review": null,
+      "review_outcome": null,
+      "blocking_issues": [],
+      "review_notes": []
+    },
+    {
+      "event_id": "evt_bd93aa06a8e4f78e72985b0ce3faa2d9",
+      "event_type": "EVIDENCE_ACCEPTED",
+      "occurred_at": "2026-08-19T18:07:49.093391Z",
+      "actor": "system",
+      "artifact_id": "tid-annual-report-2024",
+      "canonical_url": "https://milwaukee.legistar1.com/milwaukee/attachments/5a3e5a14-ed2a-45e8-8e2a-d79a21cb0376.pdf",
+      "status": "SUPPORTED",
+      "content_hash": null,
+      "evidence_id": "ev-tid121-annual2024-expenditures",
+      "anchors": [
+        {
+          "anchor_type": "page",
+          "anchor_value": "164"
+        }
+      ],
+      "verbatim_excerpt": "Grant to Developer $ 700,000 $ - $ - $ - $ -",
+      "neutral_statement": "The Expenditures Life-to-Date table (as of 12/31/2024) shows a Grant to Developer budget of $700,000 with no appropriations, encumbrances, or expenditures recorded.",
+      "limitations": [
+        "The 'within budget' and 'on schedule' check-box answers cannot be read from the extracted text and are treated as UNKNOWN."
+      ],
+      "reason": null,
+      "category": null,
+      "neutral_summary": null,
+      "original_evidence_ids": [],
+      "later_evidence_ids": [],
+      "what_is_established": [],
+      "what_is_not_established": [],
+      "next_evidence_needed": null,
+      "requires_human_review": null,
+      "review_outcome": null,
+      "blocking_issues": [],
+      "review_notes": []
+    },
+    {
+      "event_id": "evt_e14af3ff2bef18d702223f5c41cda772",
+      "event_type": "NO_MATERIAL_DELTA",
+      "occurred_at": "2026-08-19T18:07:49.093755Z",
+      "actor": "system",
+      "artifact_id": "tid-annual-report-2024",
+      "canonical_url": null,
+      "status": "NO_MATERIAL_DELTA",
+      "content_hash": null,
+      "evidence_id": null,
+      "anchors": [],
+      "verbatim_excerpt": null,
+      "neutral_statement": null,
+      "limitations": [],
+      "reason": "agent result NO_MATERIAL_DELTA",
+      "category": "EXPECTED_EVIDENCE_ARRIVED",
+      "neutral_summary": "The 2024 Annual TID Report (as of 12/31/2024) restates the authorized expenditure of $763,750 under resolution #240382 and records no expenditures to date. It does not revise the commitment stated in the 2024 Project Plan.",
+      "original_evidence_ids": [
+        "ev-tid121-plan-capital-costs",
+        "ev-tid121-plan-total-estimated"
+      ],
+      "later_evidence_ids": [
+        "ev-tid121-annual2024-authorized",
+        "ev-tid121-annual2024-expenditures",
+        "ev-tid121-annual2024-completion-status"
+      ],
+      "what_is_established": [
+        "Authorized expenditure (excluding interest) is $763,750 under authorizing resolution #240382 (annual report p.163).",
+        "The Grant to Developer line shows a $700,000 budget with no appropriations, encumbrances, or expenditures as of 12/31/2024 (annual report p.164)."
+      ],
+      "what_is_not_established": [
+        "Completion status: the 'Completion Status' field is blank (annual report p.163).",
+        "Whether the project is within budget or on schedule: the check-box answers cannot be read from the extracted text."
+      ],
+      "next_evidence_needed": "2025 Annual Report of Tax Incremental Districts (expected DCD communication)",
+      "requires_human_review": true,
+      "review_outcome": null,
+      "blocking_issues": [],
+      "review_notes": []
+    },
+    {
+      "event_id": "evt_a6c43d1de45880e36905a99b3c70a72c",
+      "event_type": "ARTIFACT_STORED",
+      "occurred_at": "2026-08-19T18:07:49.108122Z",
+      "actor": "system",
+      "artifact_id": "tid121-amendment-1-2026",
+      "canonical_url": "https://milwaukee.legistar1.com/milwaukee/attachments/aa63eaa2-3f02-473b-bef3-832c2767f5a4.pdf",
+      "status": "AVAILABLE",
+      "content_hash": "sha256:0c5ce45b48c957c0cf3ab8eecdc2e7fd866a5c315c78598c1a4deb01b5706a41",
+      "evidence_id": null,
+      "anchors": [],
+      "verbatim_excerpt": null,
+      "neutral_statement": null,
+      "limitations": [],
+      "reason": null,
+      "category": null,
+      "neutral_summary": null,
+      "original_evidence_ids": [],
+      "later_evidence_ids": [],
+      "what_is_established": [],
+      "what_is_not_established": [],
+      "next_evidence_needed": null,
+      "requires_human_review": null,
+      "review_outcome": null,
+      "blocking_issues": [],
+      "review_notes": []
+    },
+    {
+      "event_id": "evt_cea90afe571d43f295275c5c714174a5",
+      "event_type": "EVIDENCE_ACCEPTED",
+      "occurred_at": "2026-08-19T18:07:49.233242Z",
+      "actor": "system",
+      "artifact_id": "tid121-amendment-1-2026",
+      "canonical_url": "https://milwaukee.legistar1.com/milwaukee/attachments/aa63eaa2-3f02-473b-bef3-832c2767f5a4.pdf",
+      "status": "SUPPORTED",
+      "content_hash": null,
+      "evidence_id": "ev-tid121-amend1-capital-costs",
+      "anchors": [
+        {
+          "anchor_type": "page",
+          "anchor_value": "3"
+        }
+      ],
+      "verbatim_excerpt": "The City shall fund an estimated $2,345,000 in the form of TID Capital Project Costs",
+      "neutral_statement": "Amendment No. 1 (2026) states the City shall fund an estimated $2,345,000 in TID Capital Project Costs.",
+      "limitations": [],
+      "reason": null,
+      "category": null,
+      "neutral_summary": null,
+      "original_evidence_ids": [],
+      "later_evidence_ids": [],
+      "what_is_established": [],
+      "what_is_not_established": [],
+      "next_evidence_needed": null,
+      "requires_human_review": null,
+      "review_outcome": null,
+      "blocking_issues": [],
+      "review_notes": []
+    },
+    {
+      "event_id": "evt_679ff45349f368f239a07499fe35abff",
+      "event_type": "EVIDENCE_ACCEPTED",
+      "occurred_at": "2026-08-19T18:07:49.233292Z",
+      "actor": "system",
+      "artifact_id": "tid121-amendment-1-2026",
+      "canonical_url": "https://milwaukee.legistar1.com/milwaukee/attachments/aa63eaa2-3f02-473b-bef3-832c2767f5a4.pdf",
+      "status": "SUPPORTED",
+      "content_hash": null,
+      "evidence_id": "ev-tid121-amend1-commercial-grant",
+      "anchors": [
+        {
+          "anchor_type": "page",
+          "anchor_value": "3"
+        }
+      ],
+      "verbatim_excerpt": "Amendment 1 Grant to Project (Monetary Obligation to Developer/Commercial Owner) $1,645,000* TOTAL Capital Project Costs $2,345,000",
+      "neutral_statement": "Amendment No. 1, Table A, adds an up-to $1,645,000 grant to the Developer/Commercial Owner, bringing TOTAL Capital Project Costs to $2,345,000.",
+      "limitations": [
+        "'Up-to' amounts: ceilings, not spent figures. The record does not state why the amendment was needed."
+      ],
+      "reason": null,
+      "category": null,
+      "neutral_summary": null,
+      "original_evidence_ids": [],
+      "later_evidence_ids": [],
+      "what_is_established": [],
+      "what_is_not_established": [],
+      "next_evidence_needed": null,
+      "requires_human_review": null,
+      "review_outcome": null,
+      "blocking_issues": [],
+      "review_notes": []
+    },
+    {
+      "event_id": "evt_6e0d0673a0222464218a4574ff85167e",
+      "event_type": "DELTA_PROPOSED",
+      "occurred_at": "2026-08-19T18:07:49.233685Z",
+      "actor": "system",
+      "artifact_id": "case-tid121-bronzeville-arts-tech-hub",
+      "canonical_url": null,
+      "status": "DELTA_PROPOSED",
+      "content_hash": null,
+      "evidence_id": null,
+      "anchors": [],
+      "verbatim_excerpt": null,
+      "neutral_statement": null,
+      "limitations": [],
+      "reason": null,
+      "category": "REVISED",
+      "neutral_summary": "The 2024 Project Plan set TID Capital Project Costs at an up-to amount of $700,000 (plan p.5). Amendment No. 1 (2026) sets TID Capital Project Costs at $2,345,000, adding an up-to $1,645,000 grant to the Developer/Commercial Owner (amendment p.3). The later document revises the City's stated contribution; the record supplied does not state why.",
+      "original_evidence_ids": [
+        "ev-tid121-plan-capital-costs"
+      ],
+      "later_evidence_ids": [
+        "ev-tid121-amend1-capital-costs",
+        "ev-tid121-amend1-commercial-grant"
+      ],
+      "what_is_established": [
+        "2024 Project Plan, Table A: TOTAL Capital Project Costs $700,000, up-to amount (plan p.5).",
+        "Amendment No. 1: the City shall fund an estimated $2,345,000 in TID Capital Project Costs (amendment p.3).",
+        "Amendment No. 1, Table A: adds Grant to Project (Monetary Obligation to Developer/Commercial Owner) $1,645,000, up-to amount (amendment p.3)."
+      ],
+      "what_is_not_established": [
+        "Why the amendment was needed; the supplied record does not state a reason.",
+        "Whether any of the 60 housing units are built or occupied; no supplied record addresses construction or occupancy.",
+        "Whether any grant funds have been disbursed after 12/31/2024; the latest supplied status report is the 2024 Annual TID Report."
+      ],
+      "next_evidence_needed": "2025 Annual Report of Tax Incremental Districts (expected DCD communication)",
+      "requires_human_review": true,
+      "review_outcome": null,
+      "blocking_issues": [],
+      "review_notes": []
+    },
+    {
+      "event_id": "evt_022648f3c2cd93a68f61f497f8242d40",
+      "event_type": "DELTA_STAGED",
+      "occurred_at": "2026-08-19T18:07:49.233770Z",
+      "actor": "system",
+      "artifact_id": "case-tid121-bronzeville-arts-tech-hub",
+      "canonical_url": null,
+      "status": "DELTA_STAGED",
+      "content_hash": null,
+      "evidence_id": null,
+      "anchors": [],
+      "verbatim_excerpt": null,
+      "neutral_statement": null,
+      "limitations": [],
+      "reason": null,
+      "category": "REVISED",
+      "neutral_summary": "The 2024 Project Plan set TID Capital Project Costs at an up-to amount of $700,000 (plan p.5). Amendment No. 1 (2026) sets TID Capital Project Costs at $2,345,000, adding an up-to $1,645,000 grant to the Developer/Commercial Owner (amendment p.3). The later document revises the City's stated contribution; the record supplied does not state why.",
+      "original_evidence_ids": [
+        "ev-tid121-plan-capital-costs"
+      ],
+      "later_evidence_ids": [
+        "ev-tid121-amend1-capital-costs",
+        "ev-tid121-amend1-commercial-grant"
+      ],
+      "what_is_established": [
+        "2024 Project Plan, Table A: TOTAL Capital Project Costs $700,000, up-to amount (plan p.5).",
+        "Amendment No. 1: the City shall fund an estimated $2,345,000 in TID Capital Project Costs (amendment p.3).",
+        "Amendment No. 1, Table A: adds Grant to Project (Monetary Obligation to Developer/Commercial Owner) $1,645,000, up-to amount (amendment p.3)."
+      ],
+      "what_is_not_established": [
+        "Why the amendment was needed; the supplied record does not state a reason.",
+        "Whether any of the 60 housing units are built or occupied; no supplied record addresses construction or occupancy.",
+        "Whether any grant funds have been disbursed after 12/31/2024; the latest supplied status report is the 2024 Annual TID Report."
+      ],
+      "next_evidence_needed": "2025 Annual Report of Tax Incremental Districts (expected DCD communication)",
+      "requires_human_review": true,
+      "review_outcome": "APPROVE",
+      "blocking_issues": [],
+      "review_notes": [
+        "Both sides anchored: original = plan p.5 ($700,000); later = amendment p.3 ($2,345,000; $1,645,000 commercial grant).",
+        "Language is comparative, not causal; 'does not state why' preserves the gap.",
+        "Limitations name the up-to ceilings; next evidence (2025 Annual TID Report) directly resolves the disbursement gap."
+      ]
+    },
+    {
+      "event_id": "evt_dc01b2861374ee7a6249061d59ac9afc",
+      "event_type": "ARTIFACT_NOT_PUBLISHED",
+      "occurred_at": "2026-08-19T18:07:49.234562Z",
+      "actor": "system",
+      "artifact_id": "tid-annual-report-2025",
+      "canonical_url": null,
+      "status": "NOT_PUBLISHED",
+      "content_hash": null,
+      "evidence_id": null,
+      "anchors": [],
+      "verbatim_excerpt": null,
+      "neutral_statement": null,
+      "limitations": [],
+      "reason": "The Department of City Development has transmitted an \"Annual Report of Tax Incremental Districts\" communication to the Common Council every year 2015-2024 (see provenance/annual-tid-report-matters-query-2026-08-19.json). As of 2026-08-19 no 2025 report appears in Legistar. Absence of the record is recorded as NOT_PUBLISHED; it is not evidence that the report does not exist or that any party acted improperly.\n",
+      "category": null,
+      "neutral_summary": null,
+      "original_evidence_ids": [],
+      "later_evidence_ids": [],
+      "what_is_established": [],
+      "what_is_not_established": [],
+      "next_evidence_needed": null,
+      "requires_human_review": null,
+      "review_outcome": null,
+      "blocking_issues": [],
+      "review_notes": []
+    }
+  ]
+}
