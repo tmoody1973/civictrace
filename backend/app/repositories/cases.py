@@ -15,6 +15,7 @@ from enum import StrEnum
 
 from app.domain.enums import LedgerEventType
 from app.orchestration.workflow import WorkflowContext
+from app.schemas.approval import ApprovalToken
 from app.schemas.case import (
     BundleEvidence,
     CaseBundle,
@@ -65,6 +66,40 @@ class InMemoryLedger:
 
     def events(self) -> list[LedgerEvent]:
         return list(self._events)
+
+    def record_approval_event(
+        self,
+        kind: str,
+        *,
+        case_id: str,
+        actor: str,
+        token: ApprovalToken | None = None,
+        reason: str | None = None,
+    ) -> None:
+        """One row per human approval decision or fail-closed refusal (MOO-702).
+
+        Refusal rows carry a timestamp in the payload_ref so every attempt stays
+        visible; identical re-issued tokens still dedupe by token_id.
+        """
+        event_type = LedgerEventType(kind)
+        now = self._clock()
+        payload_ref = (
+            token.token_id if token is not None else f"{reason}@{now.isoformat()}"
+        )
+        job_key = "approval"
+        self.append(
+            LedgerEvent(
+                event_id=ledger_event_id(job_key, event_type, payload_ref),
+                case_id=case_id,
+                job_key=job_key,
+                event_type=event_type,
+                payload_ref=payload_ref,
+                occurred_at=now,
+                actor=actor,
+                approval=token,
+                reason=reason,
+            )
+        )
 
     # --- CaseRepository protocol (workflow.py) ---------------------------------
 

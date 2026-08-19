@@ -49,6 +49,9 @@ Common fields on every row: `event_id`, `event_type`, `occurred_at`, `actor`, `a
 | `NO_MATERIAL_DELTA` | `reason`; may carry delta fields if the agent returned a structured "no change" |
 | `DELTA_PROPOSED` / `DELTA_REJECTED` | `category`, `neutral_summary`, `original_evidence_ids`, `later_evidence_ids`, `what_is_established[]`, `what_is_not_established[]`, `next_evidence_needed`, `requires_human_review` (+ `reason` on rejected) |
 | `DELTA_STAGED` / `CASE_HUMAN_REVIEW` | delta fields above + `review_outcome`, `blocking_issues[]`, `review_notes[]` |
+| `INQUIRY_APPROVAL_ISSUED` | `approval_token_id`, `approval_reviewer`, `approval_expires_at` — a human authorized one action on one exact artifact hash (Slice 4) |
+| `INQUIRY_APPROVAL_REJECTED` | `reason` — the human said no, with their note |
+| `APPROVAL_REFUSED` | `reason` — validation failed closed (missing/mismatch/expired/revoked); every attempt gets its own row |
 
 Ordering guarantees: `ARTIFACT_STORED` precedes its `EVIDENCE_ACCEPTED` rows; `DELTA_PROPOSED` precedes
 `DELTA_STAGED`/`CASE_HUMAN_REVIEW`; every id in a delta's `original_evidence_ids`/`later_evidence_ids`

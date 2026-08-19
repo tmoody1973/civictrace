@@ -14,6 +14,7 @@ from app.domain.enums import (
     Materiality,
     ReviewOutcome,
 )
+from app.schemas.approval import ApprovalToken
 from app.schemas.evidence import Evidence
 from app.schemas.source import Artifact
 
@@ -154,4 +155,5 @@ class LedgerEvent(BaseModel):
     artifact: Artifact | None = None
     delta: DecisionDeltaProposal | None = None
     review: ReviewDecision | None = None
+    approval: ApprovalToken | None = None
     reason: str | None = None

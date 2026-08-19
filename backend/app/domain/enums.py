@@ -83,6 +83,15 @@ class LedgerEventType(StrEnum):
     DELTA_REJECTED = "DELTA_REJECTED"
     DELTA_STAGED = "DELTA_STAGED"
     CASE_HUMAN_REVIEW = "CASE_HUMAN_REVIEW"
+    INQUIRY_APPROVAL_ISSUED = "INQUIRY_APPROVAL_ISSUED"
+    INQUIRY_APPROVAL_REJECTED = "INQUIRY_APPROVAL_REJECTED"
+    APPROVAL_REFUSED = "APPROVAL_REFUSED"
+
+
+class ApprovalActionType(StrEnum):
+    """The only external-facing action a token can authorize today."""
+
+    RENDER_INQUIRY_PACKET = "RENDER_INQUIRY_PACKET"
 
 
 class DeltaResultType(StrEnum):

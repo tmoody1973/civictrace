@@ -55,6 +55,10 @@ class TraceEventView(BaseModel):
     what_is_not_established: list[str] = Field(default_factory=list)
     next_evidence_needed: str | None = None
     requires_human_review: bool | None = None
+    # approval rows (MOO-702)
+    approval_token_id: str | None = None
+    approval_reviewer: str | None = None
+    approval_expires_at: datetime | None = None
     # review rows
     review_outcome: ReviewOutcome | None = None
     blocking_issues: list[str] = Field(default_factory=list)
