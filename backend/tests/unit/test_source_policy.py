@@ -85,3 +85,24 @@ def test_expected_but_absent_record_without_url_passes_for_enrolled_source(
             content_hash=None,
         )
     )
+
+
+def test_userinfo_trick_is_rejected(policy: SourcePolicy) -> None:
+    # "host@" is userinfo; the real host is the part after "@".
+    with pytest.raises(SourcePolicyError, match="domain"):
+        policy.assert_source_event_allowed(
+            _event(canonical_url="https://milwaukee.legistar1.com@evil.example/x.pdf")
+        )
+
+
+def test_subdomain_of_allowlisted_host_is_rejected(policy: SourcePolicy) -> None:
+    with pytest.raises(SourcePolicyError, match="domain"):
+        policy.assert_source_event_allowed(
+            _event(canonical_url="https://cdn.milwaukee.legistar1.com/x.pdf")
+        )
+
+
+def test_uppercase_host_is_normalised_and_allowed(policy: SourcePolicy) -> None:
+    policy.assert_source_event_allowed(
+        _event(canonical_url="https://MILWAUKEE.LEGISTAR1.COM/milwaukee/attachments/x.pdf")
+    )
