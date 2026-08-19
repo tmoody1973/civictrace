@@ -50,7 +50,7 @@ class StructuredAgentRunner(Protocol):
 class CivicTraceAgentFactory:
     """Creates agent definitions; no business workflow or data mutation lives here."""
 
-    DEFAULT_MODEL = "gemini-3.5-flash"
+    DEFAULT_MODEL = "gemini-2.5-flash"
 
     def __init__(
         self,

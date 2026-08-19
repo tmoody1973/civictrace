@@ -58,15 +58,15 @@ gcloud config list                                    # shows account + project
 gcloud services list --enabled | grep aiplatform     # one line expected
 gcloud auth application-default print-access-token | cut -c1-12   # prints a token prefix, no error
 gcloud billing budgets list --billing-account=ACCOUNT_ID           # shows civictrace-dev-10usd
-git grep -l "private_key\|BEGIN PRIVATE" -- .        # must print nothing
+git grep -lE "private_key|BEGIN PRIVATE" -- . ":!docs/runbooks/*"   # must print nothing
 ```
 
 Smoke test: one tiny Gemini Flash call, no CivicTrace data. Expect a JSON reply containing `OK`.
 
 ```bash
-export CIVICTRACE_MODEL=gemini-flash-latest    # if this 404s, try gemini-3.5-flash and record the id that worked in .env
+export CIVICTRACE_MODEL=gemini-2.5-flash    # verified 2026-08-19. gemini-3-flash-preview also works, but only with location=global
 curl -s -X POST -H "Authorization: Bearer $(gcloud auth application-default print-access-token)" -H "Content-Type: application/json" \
-  "https://$GOOGLE_CLOUD_LOCATION-aiplatform.googleapis.com/v1/projects/$GOOGLE_CLOUD_PROJECT/locations/$GOOGLE_CLOUD_LOCATION/publishers/google/models/$CIVICTRACE_MODEL:generateContent" \
+  "https://$GOOGLE_CLOUD_LOCATION-aiplatform.googleapis.com/v1/projects/$GOOGLE_CLOUD_PROJECT/locations/$GOOGLE_CLOUD_LOCATION/publishers/google/models/${CIVICTRACE_MODEL}:generateContent" \
   -d '{"contents":[{"role":"user","parts":[{"text":"Reply with the single word OK."}]}]}'
 ```
 
