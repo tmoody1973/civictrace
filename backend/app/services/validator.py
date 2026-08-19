@@ -7,6 +7,7 @@ from dataclasses import dataclass
 
 from app.domain.enums import AnchorType, ArtifactAvailability
 from app.domain.errors import EvidenceValidationError
+from app.policies.language_policy import find_allegation_language
 from app.policies.privacy_policy import find_pii
 from app.schemas.case import DecisionDelta
 from app.schemas.evidence import DocumentExtraction, Evidence, EvidenceAnchor
@@ -55,6 +56,8 @@ def _evidence_reasons(
         reasons.append(f"{item.evidence_id}: no anchor")
     for kind in find_pii(item.verbatim_excerpt + " " + item.neutral_statement):
         reasons.append(f"{item.evidence_id}: {kind} pattern in evidence text")
+    for term in find_allegation_language(item.neutral_statement):
+        reasons.append(f"{item.evidence_id}: allegation language in neutral_statement ({term!r})")
     if item.artifact_id != artifact.artifact_id:
         reasons.append(f"{item.evidence_id}: evidence names unknown artifact {item.artifact_id}")
     for anchor in item.anchors:

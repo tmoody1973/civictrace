@@ -152,3 +152,32 @@ def test_non_page_anchor_values_are_rejected(
     result = validate_extraction(tampered, plan_artifact)
     assert not result.ok
     assert any("outside 1..31" in reason for reason in result.reasons)
+
+
+def test_allegation_language_in_neutral_statement_is_rejected(
+    plan_extraction: DocumentExtraction, plan_artifact: Artifact
+) -> None:
+    item = plan_extraction.evidence[1]
+    accusing = item.model_copy(
+        update={"neutral_statement": "The City's $700,000 grant was a kickback."}
+    )
+    tampered = plan_extraction.model_copy(update={"evidence": [accusing]})
+    result = validate_extraction(tampered, plan_artifact)
+    assert not result.ok
+    assert any("allegation language" in reason for reason in result.reasons)
+
+
+def test_allegation_words_inside_the_verbatim_quote_are_not_filtered(
+    plan_extraction: DocumentExtraction, plan_artifact: Artifact
+) -> None:
+    # The public record may itself say "fraud" (e.g. a statute title); quoting it is fine.
+    item = plan_extraction.evidence[1]
+    quoting = item.model_copy(update={"verbatim_excerpt": "TOTAL Capital Project Costs $700,000"})
+    assert validate_extraction(
+        plan_extraction.model_copy(update={"evidence": [quoting]}), plan_artifact
+    ).ok
+    quoting_fraud_word = item.model_copy(update={"verbatim_excerpt": "anti-fraud provisions"})
+    result = validate_extraction(
+        plan_extraction.model_copy(update={"evidence": [quoting_fraud_word]}), plan_artifact
+    )
+    assert not any("allegation" in reason for reason in result.reasons)
