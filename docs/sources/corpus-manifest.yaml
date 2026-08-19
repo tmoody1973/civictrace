@@ -30,7 +30,7 @@ artifacts:
     media_type: application/pdf
     byte_length: 2728839
     page_count: 31
-    local_path: artifacts/tid121-project-plan-2024.pdf
+    local_path: records/tid121-project-plan-2024.pdf
     availability: AVAILABLE
     required_anchors:
       - page: 2    # housing program: 60 units, 12 market rate, 48 affordable at 30-60% AMI
@@ -53,7 +53,7 @@ artifacts:
     media_type: application/pdf
     byte_length: 6583974
     page_count: 164
-    local_path: artifacts/tid-annual-report-2024.pdf
+    local_path: records/tid-annual-report-2024.pdf
     availability: AVAILABLE
     required_anchors:
       - page: 163  # TID 121 Periodic Report 12/31/24: authorized expenditure, authorizing resolution, Completion Status (blank)
@@ -75,7 +75,7 @@ artifacts:
     media_type: application/pdf
     byte_length: 1252251
     page_count: 15
-    local_path: artifacts/tid121-amendment-1-2026.pdf
+    local_path: records/tid121-amendment-1-2026.pdf
     availability: AVAILABLE
     required_anchors:
       - page: 3    # TABLE A: Amendment 1 adds $1,645,000 commercial grant; TOTAL Capital Project Costs $2,345,000
