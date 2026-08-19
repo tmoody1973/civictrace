@@ -1,0 +1,63 @@
+flowchart LR
+    subgraph Sources[Public-source adapters]
+      L[Milwaukee Legistar API\nmeetings · agenda items · files]
+      C[City CKAN API\nproperty · zoning · service data]
+      F[Finance adapter\nexported checkbook / contract record]
+      V[Meeting media\nvideo · audio · transcripts]
+    end
+
+    L --> I[Ingest API\nCloud Run]
+    C --> I
+    F --> I
+    V --> I
+
+    I --> O[(Cloud Storage\nraw immutable artifacts)]
+    I --> Q[Pub/Sub\nsource-discovered events]
+    Q --> D[Cloud Tasks\nidempotent document jobs]
+
+    subgraph Workers[Isolated ADK workers]
+      X[Multimodal Extractor\nGemini 3.5 Flash]
+      R[Entity Resolver\nproject · vendor · place]
+      G[Graph Updater\ntyped evidence + provenance]
+      H[Delta Investigator\ncompare commitments vs later records]
+      P[Inquiry Planner\npropose next bounded question]
+    end
+
+    D --> X --> R --> G --> H --> P
+    O --> X
+
+    G --> S[(Firestore\ncase state + event ledger)]
+    H --> S
+    P --> A{Approval gate\neditor token required}
+    A -->|approved| W[Artifact Worker\ncase file + draft request]
+    A -->|needs evidence| N[Notifier\neditor task]
+    W --> S
+
+    S --> U[CivicTrace Evidence Studio\nPDF · video · map · graph · timeline]
+    O --> U
+
+    subgraph Trust[Trust, recovery, and proof]
+      T[Cloud Logging / Trace\njob lineage + errors]
+      DL[Dead-letter queue\nretry / manual recovery]
+      E[Evaluation suite\ngrounding · idempotency · safety]
+    end
+
+    D --> T
+    X --> T
+    G --> T
+    H --> T
+    P --> T
+    D -->|failed after retry| DL
+    DL --> T
+    S --> E
+
+    classDef sources fill:#E9F2FF,stroke:#1C64F2,stroke-width:1.5px,color:#102A43;
+    classDef compute fill:#F4EEFF,stroke:#7E22CE,stroke-width:1.5px,color:#2E1065;
+    classDef state fill:#ECFDF5,stroke:#047857,stroke-width:1.5px,color:#064E3B;
+    classDef safety fill:#FFF7ED,stroke:#C2410C,stroke-width:1.5px,color:#7C2D12;
+    classDef ux fill:#FFF1F2,stroke:#BE123C,stroke-width:1.5px,color:#881337;
+    class L,C,F,V,I,Q,D sources;
+    class X,R,G,H,P compute;
+    class O,S,T,DL,E state;
+    class A,W,N safety;
+    class U ux;

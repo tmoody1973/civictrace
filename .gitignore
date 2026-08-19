@@ -1,0 +1,55 @@
+# Secrets and local environment
+.env
+.env.*
+!.env.example
+*.pem
+*.key
+*-service-account*.json
+service-account*.json
+
+# Claude Code local/user configuration
+.claude/settings.local.json
+.claude/local/
+
+# Python
+__pycache__/
+*.py[cod]
+.venv/
+venv/
+.pytest_cache/
+.mypy_cache/
+.coverage
+htmlcov/
+
+# Node/frontend
+node_modules/
+.next/
+dist/
+build/
+coverage/
+
+# Local source/evidence caches and generated media
+.local-data/
+.local-artifacts/
+.local-corpus/
+artifacts/
+transcripts/
+recordings/
+*.sqlite
+
+# Terraform/Pulumi local state and sensitive variable files
+.terraform/
+*.tfstate
+*.tfstate.*
+*.tfvars
+!*.tfvars.example
+pulumi.*.yaml
+
+# Editors and operating systems
+.DS_Store
+.vscode/
+.idea/
+
+# Local session memory and scratch issue tracker
+.remember/
+.scratch/

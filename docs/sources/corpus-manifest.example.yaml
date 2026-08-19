@@ -1,0 +1,51 @@
+# Copy to corpus-manifest.yaml and replace placeholders with a reviewed, public-source replay set.
+# Every fixture must preserve the original canonical URL, retrieval time, content hash, and access notes.
+
+version: 1
+corpus_id: milwaukee-city-promise-ledger-demo-v1
+jurisdiction: milwaukee_city
+case_id: case-demo-001
+case_topic: Replace with one geographically bounded public commitment selected after source review.
+
+artifacts:
+  - artifact_id: commitment-agenda-or-file
+    role: original_commitment
+    source_id: milwaukee_legistar
+    canonical_url: https://replace-with-reviewed-official-url
+    external_id: replace-with-official-file-or-event-id
+    retrieved_at: 2026-08-18T00:00:00Z
+    content_hash: sha256:replace-after-download
+    media_type: application/pdf
+    required_anchors:
+      - page_or_section_containing_the_commitment
+  - artifact_id: later-public-record
+    role: later_evidence
+    source_id: milwaukee_legistar_or_open_data
+    canonical_url: https://replace-with-reviewed-official-url
+    external_id: replace-with-official-id
+    retrieved_at: 2026-08-18T00:00:00Z
+    content_hash: sha256:replace-after-download
+    media_type: application/pdf
+    required_anchors:
+      - page_table_row_or_timestamp_showing_the_later_record
+  - artifact_id: place-context
+    role: entity_or_place_context
+    source_id: milwaukee_open_data
+    canonical_url: https://replace-with-reviewed-official-url
+    external_id: replace-with-dataset-record-id
+    retrieved_at: 2026-08-18T00:00:00Z
+    content_hash: sha256:replace-after-download
+    media_type: application/json
+
+required_demo_outcomes:
+  - Extract a source-anchored original Commitment object.
+  - Extract a source-anchored later Evidence object.
+  - Produce either a grounded Decision Delta or explicit no-delta/unknown state.
+  - Create a human-review-required Inquiry Proposal.
+  - Demonstrate duplicate-event suppression with the same source-event fingerprint.
+  - Demonstrate an explicit missing/withheld/failed-source state with a separate fixture.
+
+prohibited_fixture_content:
+  - Student-level, resident-level, or other restricted personal information.
+  - Modified public records presented as originals.
+  - Unverified third-party summaries as evidence authority.

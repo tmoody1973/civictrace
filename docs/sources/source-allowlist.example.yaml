@@ -1,0 +1,66 @@
+# Copy to source-allowlist.yaml for the selected deployment environment.
+# Source adapters may retrieve only domains and paths that this policy permits.
+# This is an example policy, not a claim that every endpoint is stable or approved for all use.
+
+version: 1
+jurisdictions:
+  milwaukee_city:
+    sources:
+      - id: milwaukee_legistar
+        purpose: City Council and committee public meeting metadata, agenda items, attachments, minutes, and official file references.
+        domains:
+          - milwaukee.legistar.com
+          - webapi.legistar.com
+        allowed_content_types:
+          - application/json
+          - text/html
+          - application/pdf
+        refresh_policy: scheduled
+        minimum_interval_minutes: 30
+        evidence_authority: primary
+      - id: milwaukee_open_data
+        purpose: Selected City public structured datasets and geographic/place context.
+        domains:
+          - data.milwaukee.gov
+        allowed_content_types:
+          - application/json
+          - text/csv
+          - text/html
+        refresh_policy: scheduled
+        minimum_interval_minutes: 60
+        evidence_authority: primary
+  mps:
+    sources:
+      - id: mps_board
+        purpose: Public Board/committee agenda, meeting information, approved public proceedings, and public recordings.
+        domains:
+          - milwaukeepublicschools.org
+          - resources.finalsite.net
+        allowed_content_types:
+          - text/html
+          - application/pdf
+          - application/json
+          - audio/mpeg
+          - video/mp4
+        refresh_policy: scheduled
+        minimum_interval_minutes: 60
+        evidence_authority: primary
+      - id: mps_procurement_awards
+        purpose: Publicly posted bid/RFP tabulations, scoring summaries, and award material only.
+        domains:
+          - milwaukeepublicschools.org
+          - resources.finalsite.net
+        allowed_content_types:
+          - text/html
+          - application/pdf
+          - application/vnd.openxmlformats-officedocument.spreadsheetml.sheet
+        refresh_policy: scheduled
+        minimum_interval_minutes: 1440
+        evidence_authority: primary
+
+prohibited_behaviors:
+  - Authenticate to source websites.
+  - Submit forms, bids, records requests, or comments.
+  - Circumvent source access controls, anti-bot controls, or rate limits.
+  - Retrieve individual student information or other restricted personal information.
+  - Treat third-party discovery/extraction output as authoritative evidence without independent canonical-source retrieval.

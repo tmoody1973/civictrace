@@ -1,0 +1,25 @@
+flowchart LR
+    A[Public commitment\nagenda · vote · policy · plan] --> B[Promise Ledger case\nwho · what · where · when]
+    B --> C[Expected evidence\nprogress report · contract · milestone]
+    D[Later public record\nmeeting · dataset · media · service signal] --> E{Evidence comparison}
+    C --> E
+    E -->|supported update| F[Case timeline updated]
+    E -->|conflict or gap| G[Decision Delta\nwhat changed · unknown · next evidence]
+    F --> H[Watch next source]
+    G --> I[Evidence Studio\nPDF · video · map · timeline · graph]
+    I --> J{Human review}
+    J -->|approve| K[Inquiry packet\nquestions · citations · source clips]
+    J -->|correct / defer| L[Feedback persisted\ncase state updated]
+    L --> H
+    K --> M[Optional human-approved\npublication or records request]
+
+    classDef source fill:#E8F2FF,stroke:#2563EB,stroke-width:1.5px,color:#172554;
+    classDef state fill:#ECFDF5,stroke:#059669,stroke-width:1.5px,color:#064E3B;
+    classDef insight fill:#FFF7ED,stroke:#C2410C,stroke-width:1.5px,color:#7C2D12;
+    classDef human fill:#FFF1F2,stroke:#BE123C,stroke-width:1.5px,color:#881337;
+    classDef action fill:#F5F3FF,stroke:#7E22CE,stroke-width:1.5px,color:#2E1065;
+    class A,D source;
+    class B,C,F,H,L state;
+    class E,G,I insight;
+    class J human;
+    class K,M action;
