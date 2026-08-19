@@ -17,7 +17,6 @@ from pydantic import BaseModel
 from app.agents.factory import AgentDefinition
 
 KEY_FIELDS = ("artifact_id", "trigger_artifact_id", "case_id")
-ROLE_SECTIONS = {"document_evidence": "extractions", "delta_investigator": "proposals"}
 
 
 @dataclass(frozen=True)
@@ -34,20 +33,31 @@ class FakeAgentRunner:
 
     @classmethod
     def from_payloads(
-        cls, *, extraction: dict[str, Any], delta: dict[str, Any] | None = None
+        cls,
+        *,
+        extraction: dict[str, Any],
+        delta: dict[str, Any] | None = None,
+        review: dict[str, Any] | None = None,
     ) -> FakeAgentRunner:
         fixtures = {"document_evidence": extraction["extractions"]}
         if delta is not None:
             fixtures["delta_investigator"] = delta["proposals"]
+        if review is not None:
+            fixtures["quality_reviewer"] = review["reviews"]
         return cls(fixtures)
 
     @classmethod
     def from_paths(
-        cls, *, extraction_path: Path, delta_path: Path | None = None
+        cls,
+        *,
+        extraction_path: Path,
+        delta_path: Path | None = None,
+        review_path: Path | None = None,
     ) -> FakeAgentRunner:
         return cls.from_payloads(
             extraction=json.loads(extraction_path.read_text()),
             delta=json.loads(delta_path.read_text()) if delta_path else None,
+            review=json.loads(review_path.read_text()) if review_path else None,
         )
 
     async def run(

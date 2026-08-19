@@ -82,10 +82,10 @@ def test_full_corpus_yields_exactly_one_revised_delta(tmp_path: Path) -> None:
     no_material = _of(ledger, LedgerEventType.NO_MATERIAL_DELTA)
     assert {e.payload_ref for e in no_material} >= {ANNUAL}
     assert _of(ledger, LedgerEventType.DELTA_REJECTED) == []
-    # Quality Reviewer is 2.4: the proposed delta lands in human review, not staged
-    assert len(_of(ledger, LedgerEventType.CASE_HUMAN_REVIEW)) == 1
-    assert _of(ledger, LedgerEventType.DELTA_STAGED) == []
-    assert results[2].staged_case_ids == ()
+    # Quality Reviewer (2.4) approves the fixture delta: staged, not human review
+    assert _of(ledger, LedgerEventType.CASE_HUMAN_REVIEW) == []
+    assert len(_of(ledger, LedgerEventType.DELTA_STAGED)) == 1
+    assert results[2].staged_case_ids == ("case-tid121-bronzeville-arts-tech-hub",)
 
 
 def test_rerun_adds_no_delta_events(tmp_path: Path) -> None:

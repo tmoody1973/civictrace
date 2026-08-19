@@ -1,16 +1,20 @@
-"""AgentService for Slice 2: Document Evidence and Delta Investigator via an injected runner.
-
-Entity Resolution is an empty no-op (later slice). Case link is deterministic: one case per
-corpus (# ponytail: agentic Case Linker when there is more than one case). Quality Reviewer is a
-placeholder until Slice 2.4 — it never approves, so every proposed delta lands in human review.
+"""AgentService for Slice 2: Document Evidence, Delta Investigator, and Quality Reviewer via an
+injected runner. Entity Resolution is an empty no-op (later slice). Case link is deterministic:
+one case per corpus (# ponytail: agentic Case Linker when there is more than one case).
 """
 
 from __future__ import annotations
 
 from app.agents.factory import AgentDefinition, StructuredAgentRunner
-from app.domain.enums import LinkStatus, ReviewOutcome
+from app.domain.enums import LinkStatus
 from app.orchestration.workflow import WorkflowContext
-from app.schemas.case import CaseBundle, CaseLinkProposal, DecisionDeltaProposal, ReviewDecision
+from app.schemas.case import (
+    CaseBundle,
+    CaseLinkProposal,
+    DecisionDeltaProposal,
+    ReviewDecision,
+    ReviewRequest,
+)
 from app.schemas.evidence import DocumentExtraction, EntityLinkBatch
 from app.schemas.source import Artifact
 
@@ -28,7 +32,13 @@ DELTA_INVESTIGATOR_DEFINITION = AgentDefinition(
     output_model=DecisionDeltaProposal,
     tools=(),
 )
-REVIEWER_UNAVAILABLE = "Quality Reviewer not yet available (Slice 2.4); human review required"
+QUALITY_REVIEWER_DEFINITION = AgentDefinition(
+    name="civictrace-quality_reviewer",
+    role="quality_reviewer",
+    model="fixture",
+    output_model=ReviewDecision,
+    tools=(),
+)
 
 
 class DocumentEvidenceAgentService:
@@ -81,4 +91,10 @@ class DocumentEvidenceAgentService:
         *,
         context: WorkflowContext,
     ) -> ReviewDecision:
-        return ReviewDecision(outcome=ReviewOutcome.REVISE, blocking_issues=[REVIEWER_UNAVAILABLE])
+        request = ReviewRequest(
+            trigger_artifact_id=case_bundle.trigger_artifact_id, delta=delta, bundle=case_bundle
+        )
+        result = await self._runner.run(
+            QUALITY_REVIEWER_DEFINITION, request, trace_id=context.trace_id
+        )
+        return ReviewDecision.model_validate(result.model_dump())

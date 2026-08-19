@@ -42,7 +42,9 @@ def manifest() -> CorpusManifest:
 def _build(manifest: CorpusManifest, tmp_path: Path, extraction_payload: dict | None = None):
     runner = (
         FakeAgentRunner.from_paths(
-            extraction_path=FIXTURE_EXTRACTION_PATH, delta_path=FIXTURE_DIR / "fixture_delta.json"
+            extraction_path=FIXTURE_EXTRACTION_PATH,
+            delta_path=FIXTURE_DIR / "fixture_delta.json",
+            review_path=FIXTURE_DIR / "fixture_review.json",
         )
         if extraction_payload is None
         else FakeAgentRunner.from_payloads(extraction=extraction_payload)

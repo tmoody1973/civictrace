@@ -1,0 +1,17 @@
+{
+  "_schema_note": "Hand-written ReviewDecision per triggering artifact, returned by FakeAgentRunner for role quality_reviewer. The reviewer checks the proposed delta against the evidence folder and policy; it can approve or flag, never edit.",
+  "fixture_review_version": "v1-2026-08-19",
+  "reviews": {
+    "tid121-amendment-1-2026": {
+      "outcome": "APPROVE",
+      "blocking_issues": [],
+      "notes": [
+        "Both sides anchored: original = plan p.5 ($700,000); later = amendment p.3 ($2,345,000; $1,645,000 commercial grant).",
+        "Language is comparative, not causal; 'does not state why' preserves the gap.",
+        "Limitations name the up-to ceilings; next evidence (2025 Annual TID Report) directly resolves the disbursement gap."
+      ],
+      "policy_flags": ["NO_PII_DETECTED", "NO_ALLEGATION_LANGUAGE", "HUMAN_REVIEW_REQUIRED"],
+      "review_summary": "Proposed REVISED delta is source-grounded on both sides and neutrally worded; no blocking issues."
+    }
+  }
+}

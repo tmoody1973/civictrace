@@ -50,6 +50,7 @@ def main(argv: list[str] | None = None) -> int:
             else (f"  — {result.reason}" if result.reason else "")
         )
         print(f"{result.artifact_id:28} {result.status:21} {result.job_key[:23]}…{reason}")
+    print(report.case_outcome_line())
     print(f"ledger events: {len(report.ledger.events())}" + (f"  → {args.out}" if args.out else ""))
     return 0 if report.ok else 1
 

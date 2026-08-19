@@ -99,15 +99,43 @@ class CaseBundle(BaseModel):
         return {item.evidence.evidence_id for item in self.later_evidence}
 
 
+class BlockingIssue(BaseModel):
+    """One specific problem the reviewer found: what, where, and the precise fix."""
+
+    model_config = ConfigDict(extra="forbid")
+
+    code: str
+    field: str
+    fix: str
+
+
 class ReviewDecision(BaseModel):
+    """Quality/Safety Reviewer output. It approves or flags; it never edits the proposal."""
+
     model_config = ConfigDict(extra="forbid")
 
     outcome: ReviewOutcome
-    blocking_issues: list[str] = Field(default_factory=list)
+    blocking_issues: list[BlockingIssue] = Field(default_factory=list)
     notes: list[str] = Field(default_factory=list)
+    policy_flags: list[str] = Field(default_factory=list)
+    review_summary: str | None = None
 
     def is_stageable(self) -> bool:
         return self.outcome is ReviewOutcome.APPROVE and not self.blocking_issues
+
+    def blocking_reasons(self) -> list[str]:
+        return [f"{issue.code} ({issue.field}): {issue.fix}" for issue in self.blocking_issues]
+
+
+class ReviewRequest(BaseModel):
+    """What the reviewer sees: the proposal, the frozen evidence folder, the code checks."""
+
+    model_config = ConfigDict(extra="forbid")
+
+    trigger_artifact_id: str
+    delta: DecisionDeltaProposal
+    bundle: CaseBundle
+    deterministic_check_reasons: list[str] = Field(default_factory=list)
 
 
 class LedgerEvent(BaseModel):

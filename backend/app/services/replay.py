@@ -11,7 +11,7 @@ from pathlib import Path
 
 from app.agents.document_evidence import DocumentEvidenceAgentService
 from app.agents.fake_runner import FakeAgentRunner
-from app.domain.enums import JobStatus
+from app.domain.enums import JobStatus, LedgerEventType
 from app.orchestration.idempotency import SourceJobKeys
 from app.orchestration.routes import CityRouteRegistry
 from app.orchestration.workflow import CityDocumentWorkflow, WorkflowResult
@@ -36,6 +36,7 @@ class ReplayOptions:
     fixture_root: Path
     vault_dir: Path
     delta_path: Path | None = None
+    review_path: Path | None = None
     out_path: Path | None = None
     replay_duplicate: bool = False
 
@@ -58,6 +59,22 @@ class ReplayReport:
     def ok(self) -> bool:
         return all(result.status in OK_STATUSES for result in self.results)
 
+    def case_outcome_line(self) -> str:
+        """One plain line: did the case end staged, in human review, or with no delta?"""
+        events = self.ledger.events()
+        staged = [e for e in events if e.event_type is LedgerEventType.DELTA_STAGED]
+        human = [e for e in events if e.event_type is LedgerEventType.CASE_HUMAN_REVIEW]
+        if staged and staged[-1].delta and staged[-1].review:
+            delta, review = staged[-1].delta, staged[-1].review
+            return (
+                f"{self.manifest.case_id}  DELTA_STAGED ({delta.category})"
+                f"  reviewer={review.outcome}  next: {delta.next_evidence_needed}"
+            )
+        if human and human[-1].delta:
+            category = human[-1].delta.category
+            return f"{self.manifest.case_id}  HUMAN_REVIEW ({category})  {human[-1].reason}"
+        return f"{self.manifest.case_id}  NO_DELTA"
+
 
 def build_workflow(
     manifest: CorpusManifest, options: ReplayOptions, *, clock: Callable[[], datetime]
@@ -71,9 +88,11 @@ def build_workflow(
         clock=clock,
     )
     delta_path = options.delta_path or options.extraction_path.with_name("fixture_delta.json")
+    review_path = options.review_path or options.extraction_path.with_name("fixture_review.json")
     runner = FakeAgentRunner.from_paths(
         extraction_path=options.extraction_path,
         delta_path=delta_path if delta_path.exists() else None,
+        review_path=review_path if review_path.exists() else None,
     )
     workflow = CityDocumentWorkflow(
         artifacts=LocalFixtureVault(

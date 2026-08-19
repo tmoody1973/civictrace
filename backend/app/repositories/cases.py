@@ -218,7 +218,7 @@ class InMemoryLedger:
         review: ReviewDecision,
         context: WorkflowContext,
     ) -> None:
-        reason = "; ".join(review.blocking_issues) or review.outcome
+        reason = "; ".join(review.blocking_reasons()) or f"reviewer outcome {review.outcome}"
         self.append(
             self._new_event(
                 context,

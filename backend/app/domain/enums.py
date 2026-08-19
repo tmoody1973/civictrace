@@ -69,7 +69,8 @@ class DeltaCategory(StrEnum):
 class ReviewOutcome(StrEnum):
     APPROVE = "APPROVE"
     REVISE = "REVISE"
-    BLOCK = "BLOCK"
+    REJECT = "REJECT"
+    HUMAN_REVIEW = "HUMAN_REVIEW"
 
 
 class LedgerEventType(StrEnum):
