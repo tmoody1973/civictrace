@@ -112,7 +112,7 @@ required_demo_outcomes:
   - Extract source-anchored later Evidence from tid-annual-report-2024 (pages 163-164) and tid121-amendment-1-2026 (page 3).
   - Record tid-annual-report-2025 as NOT_PUBLISHED with the basis above; no invented content.
   - Demonstrate duplicate-event suppression with the same source-event fingerprint.
-  - (Slice 2) Produce a REVISED Decision Delta: TID Capital Project Costs $700,000 (plan p.5) -> $2,345,000 (amendment p.3), with UNKNOWN for build/occupancy status and next expected evidence = 2025 Annual TID Report.
+  - "(Slice 2) Produce a REVISED Decision Delta: TID Capital Project Costs $700,000 (plan p.5) -> $2,345,000 (amendment p.3), with UNKNOWN for build/occupancy status and next expected evidence = 2025 Annual TID Report."
 
 prohibited_fixture_content:
   - Student-level, resident-level, or other restricted personal information.

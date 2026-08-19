@@ -5,6 +5,7 @@ description = "CivicTrace backend: deterministic evidence workflow with bounded 
 requires-python = ">=3.12"
 dependencies = [
   "pydantic>=2.7",
+  "pyyaml>=6",
 ]
 
 [dependency-groups]
@@ -12,6 +13,7 @@ dev = [
   "pytest>=8.0",
   "ruff>=0.5",
   "mypy>=1.10",
+  "types-pyyaml>=6.0.12.20260815",
 ]
 
 [build-system]
