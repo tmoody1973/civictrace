@@ -1,6 +1,6 @@
-# CivicTrace API contract (Slice 2) — what the Evidence Studio reads
+# CivicTrace API contract (Slices 2–3) — what the Evidence Studio reads
 
-Two read-only endpoints, no auth yet (`# ponytail: add user auth before any deploy`). Every response uses one
+Four read-only endpoints, no auth yet (`# ponytail: add user auth before any deploy`). Every response uses one
 envelope. Every field comes from the case ledger (validated facts); there is no free-text summary field.
 
 ```json
@@ -9,6 +9,22 @@ envelope. Every field comes from the case ledger (validated facts); there is no 
 ```
 
 ## `GET /healthz` → `{ "status": "ok" }`
+
+Any unmatched route or framework error uses the same envelope (`{ "ok": false, "data": null, "error": "Not Found" }`).
+CORS: origins from `CIVICTRACE_CORS_ORIGINS` (comma-separated; default `http://localhost:3000`); `ETag` and
+`X-CivicTrace-Content-Hash` are exposed to the browser.
+
+## `GET /cases` → `CaseSummaryView[]` (the case rail; Slice 3, MOO-696)
+
+Same shape as `GET /cases/{case_id}`, one per case, ordered by `case_id`. Empty ledger → `data: []`, still `ok: true`.
+
+## `GET /artifacts/{artifact_id}/file` → the exact vaulted bytes (Slice 3, MOO-696)
+
+`GET` or `HEAD`. Body is the stored artifact; headers: `Content-Type` = stored MIME type, `ETag: "<content_hash>"`,
+`X-CivicTrace-Content-Hash: <content_hash>`, `Cache-Control: private, max-age=0`. The UI can hash the body and compare to
+the `ARTIFACT_STORED` row's `content_hash` — "exact copy" is checkable. The file path comes from the ledger's own
+`storage_uri`, never from the request; the server re-hashes on every read and answers 500 if the vault bytes drift.
+Unknown id → 404 envelope `artifact 'x' not found`; a `NOT_PUBLISHED` artifact → 404 envelope `artifact 'x' is NOT_PUBLISHED`.
 
 ## `GET /cases/{case_id}` → `CaseSummaryView` (one-glance state)
 

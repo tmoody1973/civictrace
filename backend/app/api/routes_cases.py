@@ -12,6 +12,17 @@ from app.services.trace import build_case_summary, build_trace
 router = APIRouter()
 
 
+@router.get("/cases", response_model=ApiEnvelope[list[CaseSummaryView]])
+def case_list(request: Request) -> ApiEnvelope[list[CaseSummaryView]]:
+    reader: TraceReader = request.app.state.trace_reader
+    summaries = [
+        build_case_summary(case_id, reader.case_topic(case_id), events)
+        for case_id in sorted(reader.case_ids())
+        if (events := reader.events_for_case(case_id)) is not None
+    ]
+    return ApiEnvelope(ok=True, data=summaries, error=None)
+
+
 @router.get("/cases/{case_id}/trace", response_model=ApiEnvelope[TraceResponse])
 def case_trace(case_id: str, request: Request) -> ApiEnvelope[TraceResponse] | JSONResponse:
     reader: TraceReader = request.app.state.trace_reader

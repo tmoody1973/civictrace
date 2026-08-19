@@ -40,6 +40,8 @@ uv run python scripts/replay_corpus.py ../docs/sources/corpus-manifest.yaml \
 CIVICTRACE_LEDGER_JSON=/tmp/civictrace-ledger.json uv run uvicorn app.main:app --port 8000
 curl -s localhost:8000/healthz
 curl -s localhost:8000/cases/case-tid121-bronzeville-arts-tech-hub/trace | jq
+curl -s localhost:8000/cases | jq '.data[].case_id'                      # case rail (Slice 3)
+curl -sI localhost:8000/artifacts/tid121-project-plan-2024/file          # exact PDF bytes + hash header
 curl -s localhost:8000/cases/nope/trace          # 404 envelope, never a stack trace
 
 # checks

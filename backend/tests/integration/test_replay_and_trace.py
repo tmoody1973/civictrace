@@ -13,30 +13,10 @@ from fastapi.testclient import TestClient
 from app.core.dependencies import JsonLedgerReader
 from app.domain.enums import JobStatus
 from app.main import create_app
-from app.services.replay import ReplayOptions, replay_corpus
-from tests.conftest import ALLOWLIST_PATH, FIXTURE_EXTRACTION_PATH, MANIFEST_PATH, REPO_ROOT
+from tests.conftest import MANIFEST_PATH
 
 CASE_ID = "case-tid121-bronzeville-arts-tech-hub"
 NOW = datetime(2026, 8, 19, 16, 0, tzinfo=UTC)
-
-
-@pytest.fixture(scope="module")
-def ledger_json(tmp_path_factory: pytest.TempPathFactory) -> tuple[Path, list]:
-    base = tmp_path_factory.mktemp("replay")
-    out = base / "ledger.json"
-    report = replay_corpus(
-        ReplayOptions(
-            manifest_path=MANIFEST_PATH,
-            allowlist_path=ALLOWLIST_PATH,
-            extraction_path=FIXTURE_EXTRACTION_PATH,
-            fixture_root=REPO_ROOT,
-            vault_dir=base / "vault",
-            out_path=out,
-            replay_duplicate=True,
-        ),
-        clock=lambda: NOW,
-    )
-    return out, report.results
 
 
 @pytest.fixture(scope="module")
