@@ -2,9 +2,13 @@
 
 from __future__ import annotations
 
+from datetime import datetime
+
 from pydantic import BaseModel, ConfigDict, Field
 
-from app.domain.enums import DeltaCategory, LinkStatus, ReviewOutcome
+from app.domain.enums import DeltaCategory, LedgerEventType, LinkStatus, ReviewOutcome
+from app.schemas.evidence import Evidence
+from app.schemas.source import Artifact
 
 
 class Case(BaseModel):
@@ -60,3 +64,20 @@ class ReviewDecision(BaseModel):
 
     def is_stageable(self) -> bool:
         return self.outcome is ReviewOutcome.APPROVE and not self.blocking_issues
+
+
+class LedgerEvent(BaseModel):
+    """One append-only record in a Case's Promise Ledger. Never edited, never deleted."""
+
+    model_config = ConfigDict(extra="forbid")
+
+    event_id: str
+    case_id: str
+    job_key: str
+    event_type: LedgerEventType
+    payload_ref: str
+    occurred_at: datetime
+    actor: str
+    evidence: Evidence | None = None
+    artifact: Artifact | None = None
+    reason: str | None = None

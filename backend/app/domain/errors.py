@@ -23,3 +23,7 @@ class ArtifactImmutabilityError(CivicTraceError):
 
 class FixtureIntegrityError(CivicTraceError):
     """A reviewed fixture file no longer matches the hash recorded in the manifest."""
+
+
+class DuplicateJobError(CivicTraceError):
+    """A job with this idempotency key is already running or already succeeded."""
