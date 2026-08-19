@@ -132,6 +132,7 @@ def replay_corpus(
 def write_ledger_json(report: ReplayReport, path: Path) -> None:
     payload = {
         "case_id": report.manifest.case_id,
+        "case_topic": report.manifest.case_topic,
         "corpus_id": report.manifest.corpus_id,
         "events": [event.model_dump(mode="json") for event in report.ledger.events()],
     }

@@ -14,6 +14,7 @@ LEDGER_JSON_ENV = "CIVICTRACE_LEDGER_JSON"
 
 class TraceReader(Protocol):
     def events_for_case(self, case_id: str) -> list[LedgerEvent] | None: ...
+    def case_topic(self, case_id: str) -> str: ...
 
 
 class JsonLedgerReader:
@@ -22,6 +23,7 @@ class JsonLedgerReader:
     def __init__(self, path: Path) -> None:
         payload = json.loads(path.read_text())
         self._case_id: str = payload["case_id"]
+        self._case_topic: str = payload.get("case_topic", "")
         self._events = [LedgerEvent.model_validate(raw) for raw in payload["events"]]
 
     @classmethod
@@ -36,10 +38,16 @@ class JsonLedgerReader:
     def events_for_case(self, case_id: str) -> list[LedgerEvent] | None:
         return list(self._events) if case_id == self._case_id else None
 
+    def case_topic(self, case_id: str) -> str:
+        return self._case_topic
+
 
 class InMemoryTraceReader:
-    def __init__(self, case_id: str, events: list[LedgerEvent]) -> None:
-        self._case_id, self._events = case_id, events
+    def __init__(self, case_id: str, events: list[LedgerEvent], case_topic: str = "") -> None:
+        self._case_id, self._events, self._case_topic = case_id, events, case_topic
 
     def events_for_case(self, case_id: str) -> list[LedgerEvent] | None:
         return list(self._events) if case_id == self._case_id else None
+
+    def case_topic(self, case_id: str) -> str:
+        return self._case_topic

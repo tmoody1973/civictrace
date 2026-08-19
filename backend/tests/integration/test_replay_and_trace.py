@@ -134,3 +134,75 @@ def test_cli_main_exit_code_and_stdout(tmp_path: Path, capsys: pytest.CaptureFix
     out = capsys.readouterr().out
     assert code == 0
     assert "DUPLICATE_SUPPRESSED" in out and "NOT_PUBLISHED" in out and "SUCCEEDED" in out
+
+
+def test_trace_shows_delta_and_review_rows(client: TestClient) -> None:
+    events = client.get(f"/cases/{CASE_ID}/trace").json()["data"]["events"]
+    staged = [e for e in events if e["event_type"] == "DELTA_STAGED"]
+    assert len(staged) == 1
+    row = staged[0]
+    assert row["status"] == "DELTA_STAGED"
+    assert row["category"] == "REVISED"
+    assert "$700,000" in row["neutral_summary"] and "$2,345,000" in row["neutral_summary"]
+    assert row["original_evidence_ids"] == ["ev-tid121-plan-capital-costs"]
+    assert set(row["later_evidence_ids"]) == {
+        "ev-tid121-amend1-capital-costs",
+        "ev-tid121-amend1-commercial-grant",
+    }
+    assert row["what_is_established"] and row["what_is_not_established"]
+    assert "2025 Annual Report" in row["next_evidence_needed"]
+    assert row["requires_human_review"] is True
+    assert (
+        row["review_outcome"] == "APPROVE" and row["blocking_issues"] == [] and row["review_notes"]
+    )
+    # both anchor sides resolve to earlier EVIDENCE_ACCEPTED rows in the same response
+    accepted_ids = {e["evidence_id"] for e in events if e["event_type"] == "EVIDENCE_ACCEPTED"}
+    assert set(row["original_evidence_ids"]) <= accepted_ids
+    assert set(row["later_evidence_ids"]) <= accepted_ids
+    kinds = [e["event_type"] for e in events]
+    assert kinds.index("DELTA_PROPOSED") < kinds.index("DELTA_STAGED")
+    no_material = [e for e in events if e["event_type"] == "NO_MATERIAL_DELTA"]
+    assert len(no_material) == 2 and all(e["reason"] for e in no_material)
+
+
+def test_case_summary_endpoint(client: TestClient) -> None:
+    response = client.get(f"/cases/{CASE_ID}")
+    assert response.status_code == 200
+    body = response.json()
+    assert body["ok"] is True
+    data = body["data"]
+    assert data["case_id"] == CASE_ID
+    assert "Tax Incremental District No. 121" in data["case_topic"]
+    assert data["state"] == "DELTA_STAGED"
+    assert data["counts"] == {
+        "artifacts_stored": 3,
+        "evidence_accepted": 8,
+        "not_published": 1,
+        "extractions_rejected": 0,
+        "deltas_proposed": 1,
+        "deltas_rejected": 0,
+    }
+    latest = data["latest_delta"]
+    assert latest["category"] == "REVISED" and latest["review_outcome"] == "APPROVE"
+    assert latest["requires_human_review"] is True
+    assert "2025 Annual Report" in data["next_evidence_needed"]
+    assert not {"summary", "narrative", "reasoning"} & set(data)
+
+
+def test_case_summary_unknown_is_404_envelope(client: TestClient) -> None:
+    response = client.get("/cases/nope")
+    assert response.status_code == 404
+    assert response.json() == {"ok": False, "data": None, "error": "case 'nope' not found"}
+
+
+def test_cli_prints_case_outcome_line(tmp_path: Path, capsys: pytest.CaptureFixture[str]) -> None:
+    sys.path.insert(0, str(Path(__file__).resolve().parents[2] / "scripts"))
+    import replay_corpus as cli  # noqa: PLC0415
+
+    cli.main([str(MANIFEST_PATH), "--vault-dir", str(tmp_path / "vault")])
+    out = capsys.readouterr().out
+    assert (
+        "DELTA_STAGED (REVISED)" in out
+        and "reviewer=APPROVE" in out
+        and "2025 Annual Report" in out
+    )
