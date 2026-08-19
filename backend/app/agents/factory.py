@@ -50,7 +50,8 @@ class StructuredAgentRunner(Protocol):
 class CivicTraceAgentFactory:
     """Creates agent definitions; no business workflow or data mutation lives here."""
 
-    DEFAULT_MODEL = "gemini-2.5-flash"
+    # Latest GA Flash (2026-08-19). Gemini 3.x is served only from Vertex location "global".
+    DEFAULT_MODEL = "gemini-3.7-flash"
 
     def __init__(
         self,

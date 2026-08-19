@@ -8,7 +8,7 @@ Pick a project id once and reuse it everywhere below (lowercase, unique, e.g. `c
 
 ```bash
 export GOOGLE_CLOUD_PROJECT=civictrace-dev-tm      # change the suffix if taken
-export GOOGLE_CLOUD_LOCATION=us-central1
+export GOOGLE_CLOUD_LOCATION=global        # model calls; Gemini 3.x Flash is served only from "global" (us-central1 = 2.5 family)
 ```
 
 ## 1. Sign in and make the project
@@ -64,9 +64,11 @@ git grep -lE "private_key|BEGIN PRIVATE" -- . ":!docs/runbooks/*"   # must print
 Smoke test: one tiny Gemini Flash call, no CivicTrace data. Expect a JSON reply containing `OK`.
 
 ```bash
-export CIVICTRACE_MODEL=gemini-2.5-flash    # verified 2026-08-19. gemini-3-flash-preview also works, but only with location=global
+export CIVICTRACE_MODEL=gemini-3.7-flash    # latest GA Flash, verified 2026-08-19 @ global. Fallback: gemini-2.5-flash @ us-central1
+# list what exists today: curl -s -H "Authorization: Bearer $(gcloud auth application-default print-access-token)" -H "x-goog-user-project: $GOOGLE_CLOUD_PROJECT" \
+#   "https://aiplatform.googleapis.com/v1beta1/publishers/google/models?pageSize=300" | grep -o '"name": "publishers/google/models/gemini-[^"]*flash[^"]*"' | sort -u
 curl -s -X POST -H "Authorization: Bearer $(gcloud auth application-default print-access-token)" -H "Content-Type: application/json" \
-  "https://$GOOGLE_CLOUD_LOCATION-aiplatform.googleapis.com/v1/projects/$GOOGLE_CLOUD_PROJECT/locations/$GOOGLE_CLOUD_LOCATION/publishers/google/models/${CIVICTRACE_MODEL}:generateContent" \
+  "https://aiplatform.googleapis.com/v1/projects/$GOOGLE_CLOUD_PROJECT/locations/$GOOGLE_CLOUD_LOCATION/publishers/google/models/${CIVICTRACE_MODEL}:generateContent"   # host is regional (us-central1-aiplatform…) when the location is a region \
   -d '{"contents":[{"role":"user","parts":[{"text":"Reply with the single word OK."}]}]}'
 ```
 

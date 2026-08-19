@@ -204,7 +204,7 @@ civictrace/
 | Concern | Choice |
 |---|---|
 | Agent backend | Python 3.12+, Google ADK (bounded, read-only tools; typed proposals only) |
-| Inference | Gemini Flash through Vertex AI (`gemini-2.5-flash`, us-central1); fake fixture runner by default |
+| Inference | Gemini Flash through Vertex AI (`gemini-3.7-flash`, location `global` — Gemini 3.x is served only from `global`); fake fixture runner by default |
 | API | FastAPI, Pydantic v2 contracts independent of cloud SDKs |
 | Durable state (Slice 5) | Firestore (cases, jobs, approvals, ledger events); Cloud Storage (immutable artifacts); BigQuery (structured corpus filtering) |
 | Async work (Slice 5) | Pub/Sub fan-out, Cloud Tasks with idempotency keys and finite retries; Cloud Run API + IAM-only worker, min instances 0 |
