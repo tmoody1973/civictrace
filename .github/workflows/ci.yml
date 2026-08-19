@@ -13,6 +13,7 @@ jobs:
   backend:
     name: backend · pytest / ruff / mypy
     runs-on: ubuntu-latest
+    timeout-minutes: 15
     defaults: { run: { working-directory: backend } }
     steps:
       - uses: actions/checkout@v4
@@ -27,9 +28,14 @@ jobs:
   frontend:
     name: frontend · lint / typecheck / unit / e2e (fake agent runner, no cloud)
     runs-on: ubuntu-latest
+    timeout-minutes: 25
+    # Browser + OS libraries pre-installed; avoids `playwright install --with-deps` apt stalls on the stock runner.
+    container:
+      image: mcr.microsoft.com/playwright:v1.62.1-noble
     defaults: { run: { working-directory: frontend } }
     env:
       CI: "true"
+      HOME: /root
       NEXT_PUBLIC_API_BASE_URL: http://localhost:8000
     steps:
       - uses: actions/checkout@v4
@@ -46,7 +52,6 @@ jobs:
       - run: pnpm lint
       - run: pnpm typecheck
       - run: pnpm test
-      - run: pnpm exec playwright install --with-deps chromium
       - run: pnpm e2e
       - uses: actions/upload-artifact@v4
         if: failure()
