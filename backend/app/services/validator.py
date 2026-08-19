@@ -5,11 +5,11 @@ from __future__ import annotations
 from collections.abc import Sequence
 from dataclasses import dataclass
 
-from app.domain.enums import AnchorType, ArtifactAvailability
+from app.domain.enums import AnchorType, ArtifactAvailability, DeltaResultType
 from app.domain.errors import EvidenceValidationError
-from app.policies.language_policy import find_allegation_language
+from app.policies.language_policy import find_allegation_language, find_causal_language
 from app.policies.privacy_policy import find_pii
-from app.schemas.case import DecisionDelta
+from app.schemas.case import CaseBundle, DecisionDelta, DecisionDeltaProposal
 from app.schemas.evidence import DocumentExtraction, Evidence, EvidenceAnchor
 from app.schemas.source import Artifact
 from app.services.artifact_text import normalise_for_match
@@ -93,10 +93,57 @@ def _parse_page(value: str) -> int | None:
     return int(value) if value.isdigit() else None
 
 
-def validate_delta(delta: DecisionDelta) -> ValidationResult:
+def validate_delta(
+    delta: DecisionDelta | DecisionDeltaProposal, bundle: CaseBundle | None = None
+) -> ValidationResult:
+    """A delta enters the ledger only if both sides are anchored and the words are neutral."""
+    reasons: list[str] = []
+    reasons.extend(_delta_side_reasons(delta))
+    if bundle is not None:
+        reasons.extend(_delta_bundle_reasons(delta, bundle))
+    reasons.extend(_delta_language_reasons(delta))
+    if not delta.requires_human_review:
+        reasons.append("requires_human_review must be true; no delta is final without a person")
+    return ValidationResult(tuple(reasons))
+
+
+def _delta_side_reasons(delta: DecisionDelta | DecisionDeltaProposal) -> list[str]:
+    is_material = (
+        not isinstance(delta, DecisionDeltaProposal)
+        or delta.result_type is DeltaResultType.DECISION_DELTA
+    )
+    if not is_material:
+        return []
     reasons: list[str] = []
     if not delta.original_evidence_ids:
         reasons.append("delta has no original (Promise) evidence")
     if not delta.later_evidence_ids:
         reasons.append("delta has no later evidence")
-    return ValidationResult(tuple(reasons))
+    return reasons
+
+
+def _delta_bundle_reasons(delta: DecisionDelta, bundle: CaseBundle) -> list[str]:
+    original, later = bundle.original_ids(), bundle.later_ids()
+    reasons: list[str] = []
+    for evidence_id in delta.original_evidence_ids:
+        if evidence_id in later:
+            reasons.append(f"{evidence_id}: wrong side (later evidence listed as original)")
+        elif evidence_id not in original:
+            reasons.append(f"{evidence_id}: not in bundle")
+    for evidence_id in delta.later_evidence_ids:
+        if evidence_id in original:
+            reasons.append(f"{evidence_id}: wrong side (original evidence listed as later)")
+        elif evidence_id not in later:
+            reasons.append(f"{evidence_id}: not in bundle")
+    return reasons
+
+
+def _delta_language_reasons(delta: DecisionDelta) -> list[str]:
+    reasons: list[str] = []
+    texts = [delta.neutral_summary, *delta.what_is_established, *delta.what_is_not_established]
+    for text in texts:
+        for term in find_allegation_language(text):
+            reasons.append(f"allegation language in delta text ({term!r})")
+    for term in find_causal_language(delta.neutral_summary):
+        reasons.append(f"causal language in neutral_summary ({term!r})")
+    return reasons

@@ -56,14 +56,18 @@ def _event(payload_ref: str = "ev-1") -> LedgerEvent:
 
 
 def test_ledger_appends_once_per_event_id() -> None:
-    ledger = InMemoryLedger(case_id="case-1", clock=lambda: FIXED_NOW)
+    ledger = InMemoryLedger(
+        case_id="case-1", clock=lambda: FIXED_NOW, original_artifact_ids=frozenset()
+    )
     assert ledger.append(_event()) is AppendOutcome.APPENDED
     assert ledger.append(_event()) is AppendOutcome.DUPLICATE_SUPPRESSED
     assert len(ledger.events()) == 1
 
 
 def test_ledger_keeps_distinct_payloads_for_same_job_and_type() -> None:
-    ledger = InMemoryLedger(case_id="case-1", clock=lambda: FIXED_NOW)
+    ledger = InMemoryLedger(
+        case_id="case-1", clock=lambda: FIXED_NOW, original_artifact_ids=frozenset()
+    )
     ledger.append(_event("ev-1"))
     ledger.append(_event("ev-2"))
     assert [event.payload_ref for event in ledger.events()] == ["ev-1", "ev-2"]
@@ -79,7 +83,9 @@ def test_ledger_has_no_update_or_delete() -> None:
 
 
 def test_events_returns_a_copy() -> None:
-    ledger = InMemoryLedger(case_id="case-1", clock=lambda: FIXED_NOW)
+    ledger = InMemoryLedger(
+        case_id="case-1", clock=lambda: FIXED_NOW, original_artifact_ids=frozenset()
+    )
     ledger.append(_event())
     ledger.events().clear()
     assert len(ledger.events()) == 1

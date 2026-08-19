@@ -5,12 +5,12 @@ from __future__ import annotations
 from app.domain.enums import ArtifactAvailability
 from app.domain.errors import FixtureIntegrityError
 from app.policies.source_policy import SourcePolicy
-from app.schemas.case import CaseLinkProposal, DecisionDeltaProposal, ReviewDecision
+from app.schemas.case import CaseBundle, CaseLinkProposal, DecisionDeltaProposal, ReviewDecision
 from app.schemas.evidence import DocumentExtraction, EntityLinkBatch
 from app.schemas.source import Artifact, SourceEvent
 from app.services.artifact_text import read_page_texts
 from app.services.artifact_vault import HASH_PREFIX, sha256_hex
-from app.services.validator import ValidationResult, validate_extraction
+from app.services.validator import ValidationResult, validate_delta, validate_extraction
 
 
 class CivicTracePolicyService:
@@ -47,8 +47,11 @@ class CivicTracePolicyService:
     def validate_case_link(self, proposal: CaseLinkProposal) -> None:
         return None
 
-    def validate_delta(self, delta: DecisionDeltaProposal, case_bundle: dict[str, object]) -> None:
-        raise NotImplementedError("Slice 2")
+    def validate_delta(
+        self, delta: DecisionDeltaProposal, case_bundle: CaseBundle
+    ) -> ValidationResult:
+        return validate_delta(delta, case_bundle)
 
-    def assert_review_acceptable(self, review: ReviewDecision) -> None:
-        raise NotImplementedError("Slice 2")
+    def review_is_stageable(self, review: ReviewDecision, delta: DecisionDeltaProposal) -> bool:
+        """Only an APPROVE with zero blocking issues stages; the reviewer cannot edit the delta."""
+        return review.is_stageable() and delta.requires_human_review

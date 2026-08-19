@@ -43,3 +43,23 @@ _PATTERN = re.compile(
 
 def find_allegation_language(text: str) -> list[str]:
     return sorted({match.lower() for match in _PATTERN.findall(text)})
+
+
+CAUSAL_PHRASES: tuple[str, ...] = (
+    "because the",
+    "caused by",
+    "caused",
+    "as a result of",
+    "due to the developer",
+    "due to the city",
+    "led to",
+    "resulted in",
+    "failed to",
+    "mismanaged",
+)
+_CAUSAL = re.compile(r"\b(" + "|".join(re.escape(term) for term in CAUSAL_PHRASES) + r")\b", re.I)
+
+
+def find_causal_language(text: str) -> list[str]:
+    """A Decision Delta states what changed, never why. Cause is for humans with more record."""
+    return sorted({match.lower() for match in _CAUSAL.findall(text)})

@@ -35,6 +35,7 @@ class ReplayOptions:
     extraction_path: Path
     fixture_root: Path
     vault_dir: Path
+    delta_path: Path | None = None
     out_path: Path | None = None
     replay_duplicate: bool = False
 
@@ -61,7 +62,19 @@ class ReplayReport:
 def build_workflow(
     manifest: CorpusManifest, options: ReplayOptions, *, clock: Callable[[], datetime]
 ) -> tuple[CityDocumentWorkflow, InMemoryLedger]:
-    ledger = InMemoryLedger(case_id=manifest.case_id, clock=clock)
+    ledger = InMemoryLedger(
+        case_id=manifest.case_id,
+        case_topic=manifest.case_topic,
+        original_artifact_ids=frozenset(
+            entry.artifact_id for entry in manifest.artifacts if entry.role == "original_commitment"
+        ),
+        clock=clock,
+    )
+    delta_path = options.delta_path or options.extraction_path.with_name("fixture_delta.json")
+    runner = FakeAgentRunner.from_paths(
+        extraction_path=options.extraction_path,
+        delta_path=delta_path if delta_path.exists() else None,
+    )
     workflow = CityDocumentWorkflow(
         artifacts=LocalFixtureVault(
             manifest=manifest, fixture_root=options.fixture_root, vault_dir=options.vault_dir
@@ -71,7 +84,7 @@ def build_workflow(
         policy=CivicTracePolicyService(
             source_policy=SourcePolicy.from_yaml(options.allowlist_path)
         ),
-        agents=DocumentEvidenceAgentService(FakeAgentRunner.from_path(options.extraction_path)),
+        agents=DocumentEvidenceAgentService(runner, case_id=manifest.case_id),
         routes=CityRouteRegistry(),
         idempotency=SourceJobKeys(),
     )

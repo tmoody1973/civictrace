@@ -70,8 +70,11 @@ class PermissivePolicy:
 
     def validate_entity_links(self, links, extraction) -> None: ...  # noqa: ANN001
     def validate_case_link(self, proposal) -> None: ...  # noqa: ANN001
-    def validate_delta(self, delta, case_bundle) -> None: ...  # noqa: ANN001
-    def assert_review_acceptable(self, review) -> None: ...  # noqa: ANN001
+    def validate_delta(self, delta, case_bundle):  # noqa: ANN001, ANN202
+        return ValidationResult()
+
+    def review_is_stageable(self, review, delta) -> bool:  # noqa: ANN001
+        return False
 
 
 class DocumentRoutes:
@@ -92,7 +95,11 @@ def _workflow(manifest: CorpusManifest, tmp_path: Path, extraction: DocumentExtr
         LocalFixtureVault(manifest=manifest, fixture_root=REPO_ROOT, vault_dir=tmp_path)
     )
     agents = CountingAgents(extraction)
-    ledger = InMemoryLedger(case_id=manifest.case_id, clock=lambda: FIXED_NOW)
+    ledger = InMemoryLedger(
+        case_id=manifest.case_id,
+        clock=lambda: FIXED_NOW,
+        original_artifact_ids=frozenset({PLAN_ID}),
+    )
     workflow = CityDocumentWorkflow(
         artifacts=vault,
         jobs=InMemoryJobRepository(),

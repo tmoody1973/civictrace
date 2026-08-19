@@ -21,7 +21,13 @@ from app.repositories.jobs import InMemoryJobRepository
 from app.schemas.corpus import CorpusManifest
 from app.services.artifact_vault import LocalFixtureVault
 from app.services.corpus import load_corpus_manifest
-from tests.conftest import ALLOWLIST_PATH, FIXTURE_EXTRACTION_PATH, MANIFEST_PATH, REPO_ROOT
+from tests.conftest import (
+    ALLOWLIST_PATH,
+    FIXTURE_DIR,
+    FIXTURE_EXTRACTION_PATH,
+    MANIFEST_PATH,
+    REPO_ROOT,
+)
 
 PLAN_ID = "tid121-project-plan-2024"
 MISSING_ID = "tid-annual-report-2025"
@@ -35,17 +41,21 @@ def manifest() -> CorpusManifest:
 
 def _build(manifest: CorpusManifest, tmp_path: Path, extraction_payload: dict | None = None):
     runner = (
-        FakeAgentRunner.from_path(FIXTURE_EXTRACTION_PATH)
+        FakeAgentRunner.from_paths(
+            extraction_path=FIXTURE_EXTRACTION_PATH, delta_path=FIXTURE_DIR / "fixture_delta.json"
+        )
         if extraction_payload is None
-        else FakeAgentRunner(extraction_payload)
+        else FakeAgentRunner.from_payloads(extraction=extraction_payload)
     )
-    ledger = InMemoryLedger(case_id=manifest.case_id, clock=lambda: NOW)
+    ledger = InMemoryLedger(
+        case_id=manifest.case_id, clock=lambda: NOW, original_artifact_ids=frozenset({PLAN_ID})
+    )
     workflow = CityDocumentWorkflow(
         artifacts=LocalFixtureVault(manifest=manifest, fixture_root=REPO_ROOT, vault_dir=tmp_path),
         jobs=InMemoryJobRepository(),
         cases=ledger,
         policy=CivicTracePolicyService(source_policy=SourcePolicy.from_yaml(ALLOWLIST_PATH)),
-        agents=DocumentEvidenceAgentService(runner),
+        agents=DocumentEvidenceAgentService(runner, case_id=manifest.case_id),
         routes=CityRouteRegistry(),
         idempotency=SourceJobKeys(),
     )
@@ -80,7 +90,8 @@ def test_valid_fixture_yields_anchored_evidence_for_every_artifact(
         for anchor in event.evidence.anchors
     }
     assert required <= anchored, required - anchored
-    assert len(runner.calls) == 3
+    evidence_calls = [c for c in runner.calls if c.agent_name == "civictrace-document_evidence"]
+    assert len(evidence_calls) == 3
 
 
 def test_missing_record_is_not_published_and_agent_is_never_called(

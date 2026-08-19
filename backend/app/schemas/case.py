@@ -6,7 +6,14 @@ from datetime import datetime
 
 from pydantic import BaseModel, ConfigDict, Field
 
-from app.domain.enums import DeltaCategory, LedgerEventType, LinkStatus, ReviewOutcome
+from app.domain.enums import (
+    DeltaCategory,
+    DeltaResultType,
+    LedgerEventType,
+    LinkStatus,
+    Materiality,
+    ReviewOutcome,
+)
 from app.schemas.evidence import Evidence
 from app.schemas.source import Artifact
 
@@ -49,10 +56,47 @@ class DecisionDelta(BaseModel):
 
 
 class DecisionDeltaProposal(DecisionDelta):
-    """DecisionDelta as proposed by an agent; becomes durable only after validation."""
+    """DecisionDelta as proposed by an agent; becomes durable only after validation.
 
+    Deliberate deviation from the design doc: no numeric `confidence`. CONTEXT.md keeps
+    uncertainty as explicit states (UNKNOWN, NOT_PUBLISHED, HUMAN_REVIEW), not scores.
+    """
+
+    result_type: DeltaResultType
+    materiality: Materiality
+    limitations: list[str] = Field(default_factory=list)
     proposed_by_agent: str
     agent_version: str
+
+
+class BundleEvidence(BaseModel):
+    """One accepted evidence item plus where it came from, frozen for the Delta Investigator."""
+
+    model_config = ConfigDict(extra="forbid")
+
+    evidence: Evidence
+    canonical_url: str | None
+    artifact_role: str
+
+
+class CaseBundle(BaseModel):
+    """Frozen snapshot of one case's evidence: the promise pile and the later pile."""
+
+    model_config = ConfigDict(extra="forbid")
+
+    case_id: str
+    case_topic: str
+    trigger_artifact_id: str
+    original_evidence: list[BundleEvidence]
+    later_evidence: list[BundleEvidence]
+    new_evidence_ids: list[str]
+    not_published_artifact_ids: list[str] = Field(default_factory=list)
+
+    def original_ids(self) -> set[str]:
+        return {item.evidence.evidence_id for item in self.original_evidence}
+
+    def later_ids(self) -> set[str]:
+        return {item.evidence.evidence_id for item in self.later_evidence}
 
 
 class ReviewDecision(BaseModel):
@@ -80,4 +124,6 @@ class LedgerEvent(BaseModel):
     actor: str
     evidence: Evidence | None = None
     artifact: Artifact | None = None
+    delta: DecisionDeltaProposal | None = None
+    review: ReviewDecision | None = None
     reason: str | None = None

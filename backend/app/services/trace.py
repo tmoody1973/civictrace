@@ -29,7 +29,22 @@ def _view(event: LedgerEvent, urls: dict[str, str | None]) -> TraceEventView:
         return _evidence_view(event, urls.get(event.evidence.artifact_id))
     if event.artifact is not None and event.event_type in ARTIFACT_EVENTS:
         return _artifact_view(event)
-    raise ValueError(f"ledger event {event.event_id} has neither evidence nor artifact")
+    return _case_view(event)
+
+
+def _case_view(event: LedgerEvent) -> TraceEventView:
+    """Delta / review rows. # ponytail: MOO-694 adds the delta fields to the view."""
+    status = str(event.delta.result_type) if event.delta is not None else str(event.event_type)
+    return TraceEventView(
+        event_id=event.event_id,
+        event_type=event.event_type,
+        occurred_at=event.occurred_at,
+        actor=event.actor,
+        artifact_id=event.payload_ref,
+        canonical_url=None,
+        status=status,
+        reason=event.reason,
+    )
 
 
 def _evidence_view(event: LedgerEvent, canonical_url: str | None) -> TraceEventView:

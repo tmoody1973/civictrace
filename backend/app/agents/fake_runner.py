@@ -1,6 +1,8 @@
-"""Stand-in for the Document Evidence Agent: returns the reviewed fixture extraction, records calls.
+"""Stand-in for every agent role: returns reviewed, hand-written fixtures and records each call.
 
 No network, no model SDK. The workflow cannot tell the difference — that is the point.
+Fixture lookup: role → key, where the key is the payload's `artifact_id` (document evidence)
+or `trigger_artifact_id` (delta investigator on a CaseBundle).
 """
 
 from __future__ import annotations
@@ -14,6 +16,9 @@ from pydantic import BaseModel
 
 from app.agents.factory import AgentDefinition
 
+KEY_FIELDS = ("artifact_id", "trigger_artifact_id", "case_id")
+ROLE_SECTIONS = {"document_evidence": "extractions", "delta_investigator": "proposals"}
+
 
 @dataclass(frozen=True)
 class RunnerCall:
@@ -23,17 +28,43 @@ class RunnerCall:
 
 
 class FakeAgentRunner:
-    def __init__(self, fixture_payload: dict[str, Any]) -> None:
-        self._by_artifact: dict[str, dict[str, Any]] = fixture_payload["extractions"]
+    def __init__(self, fixtures_by_role: dict[str, dict[str, dict[str, Any]]]) -> None:
+        self._fixtures = fixtures_by_role
         self.calls: list[RunnerCall] = []
 
     @classmethod
-    def from_path(cls, path: Path) -> FakeAgentRunner:
-        return cls(json.loads(path.read_text()))
+    def from_payloads(
+        cls, *, extraction: dict[str, Any], delta: dict[str, Any] | None = None
+    ) -> FakeAgentRunner:
+        fixtures = {"document_evidence": extraction["extractions"]}
+        if delta is not None:
+            fixtures["delta_investigator"] = delta["proposals"]
+        return cls(fixtures)
+
+    @classmethod
+    def from_paths(
+        cls, *, extraction_path: Path, delta_path: Path | None = None
+    ) -> FakeAgentRunner:
+        return cls.from_payloads(
+            extraction=json.loads(extraction_path.read_text()),
+            delta=json.loads(delta_path.read_text()) if delta_path else None,
+        )
 
     async def run(
         self, definition: AgentDefinition, payload: BaseModel, *, trace_id: str
     ) -> BaseModel:
-        artifact_id = str(payload.model_dump()["artifact_id"])
-        self.calls.append(RunnerCall(definition.name, artifact_id, trace_id))
-        return definition.output_model.model_validate(self._by_artifact[artifact_id])
+        key = _fixture_key(payload)
+        self.calls.append(RunnerCall(definition.name, key, trace_id))
+        try:
+            raw = self._fixtures[definition.role][key]
+        except KeyError as exc:
+            raise KeyError(f"no fixture for role {definition.role!r} key {key!r}") from exc
+        return definition.output_model.model_validate(raw)
+
+
+def _fixture_key(payload: BaseModel) -> str:
+    data = payload.model_dump()
+    for field in KEY_FIELDS:
+        if data.get(field):
+            return str(data[field])
+    raise KeyError(f"payload {type(payload).__name__} has none of {KEY_FIELDS}")

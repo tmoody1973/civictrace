@@ -1,4 +1,4 @@
-"""CivicTrace deterministic workflow outline.
+"""CivicTrace deterministic City document workflow.
 
 This file intentionally does not expose raw ADK or Google Cloud calls. Those are injected
 behind typed protocols so every workflow can be tested with fakes before deployment.
@@ -9,8 +9,8 @@ from __future__ import annotations
 from dataclasses import dataclass
 from typing import Protocol
 
-from app.domain.enums import JobStatus
-from app.schemas.case import CaseLinkProposal, DecisionDeltaProposal, ReviewDecision
+from app.domain.enums import DeltaResultType, JobStatus
+from app.schemas.case import CaseBundle, CaseLinkProposal, DecisionDeltaProposal, ReviewDecision
 from app.schemas.evidence import DocumentExtraction, EntityLinkBatch
 from app.schemas.source import Artifact, SourceEvent
 
@@ -50,10 +50,32 @@ class CaseRepository(Protocol):
     async def active_case_summaries(
         self, *, candidate_entity_ids: list[str]
     ) -> list[dict[str, object]]: ...
-    async def frozen_case_bundle(
-        self, case_id: str, *, later_evidence_ids: list[str]
-    ) -> dict[str, object]: ...
+    def build_case_bundle(
+        self, *, trigger_artifact_id: str, new_evidence_ids: list[str]
+    ) -> CaseBundle: ...
+    async def record_no_material_delta(
+        self,
+        *,
+        trigger_artifact_id: str,
+        reason: str,
+        delta: DecisionDeltaProposal | None,
+        context: WorkflowContext,
+    ) -> None: ...
+    async def record_delta_proposed(
+        self, *, delta: DecisionDeltaProposal, context: WorkflowContext
+    ) -> None: ...
+    async def record_delta_rejected(
+        self, *, delta: DecisionDeltaProposal, reasons: tuple[str, ...], context: WorkflowContext
+    ) -> None: ...
     async def stage_delta(
+        self,
+        *,
+        case_id: str,
+        delta: DecisionDeltaProposal,
+        review: ReviewDecision,
+        context: WorkflowContext,
+    ) -> None: ...
+    async def record_case_human_review(
         self,
         *,
         case_id: str,
@@ -90,9 +112,9 @@ class PolicyService(Protocol):
     ) -> None: ...
     def validate_case_link(self, proposal: CaseLinkProposal) -> None: ...
     def validate_delta(
-        self, delta: DecisionDeltaProposal, case_bundle: dict[str, object]
-    ) -> None: ...
-    def assert_review_acceptable(self, review: ReviewDecision) -> None: ...
+        self, delta: DecisionDeltaProposal, case_bundle: CaseBundle
+    ) -> ExtractionVerdict: ...
+    def review_is_stageable(self, review: ReviewDecision, delta: DecisionDeltaProposal) -> bool: ...
 
 
 class AgentService(Protocol):
@@ -111,12 +133,12 @@ class AgentService(Protocol):
         context: WorkflowContext,
     ) -> list[CaseLinkProposal]: ...
     async def delta_investigator(
-        self, case_bundle: dict[str, object], *, context: WorkflowContext
+        self, case_bundle: CaseBundle, *, context: WorkflowContext
     ) -> DecisionDeltaProposal: ...
     async def quality_reviewer(
         self,
         delta: DecisionDeltaProposal,
-        case_bundle: dict[str, object],
+        case_bundle: CaseBundle,
         *,
         context: WorkflowContext,
     ) -> ReviewDecision: ...
@@ -227,23 +249,7 @@ class CityDocumentWorkflow:
                 case_id = proposal.case_id
                 if case_id is None or not proposal.is_actionable_existing_case_link():
                     continue
-
-                bundle = await self._cases.frozen_case_bundle(
-                    case_id,
-                    later_evidence_ids=proposal.linked_evidence_ids,
-                )
-                delta = await self._agents.delta_investigator(bundle, context=context)
-                self._policy.validate_delta(delta, bundle)
-                review = await self._agents.quality_reviewer(delta, bundle, context=context)
-                self._policy.assert_review_acceptable(review)
-
-                if review.is_stageable():
-                    await self._cases.stage_delta(
-                        case_id=case_id,
-                        delta=delta,
-                        review=review,
-                        context=context,
-                    )
+                if await self._compare_and_stage(artifact, proposal, context=context):
                     staged_case_ids.append(case_id)
 
             await self._jobs.succeed(job_key, context=context)
@@ -257,3 +263,48 @@ class CityDocumentWorkflow:
             # The outline keeps raw source/model content out of exception messages.
             await self._jobs.fail(job_key, error_code=type(exc).__name__, context=context)
             raise
+
+    async def _compare_and_stage(
+        self, artifact: Artifact, proposal: CaseLinkProposal, *, context: WorkflowContext
+    ) -> bool:
+        """Promise pile vs later pile → proposed delta → checks → review. True if staged."""
+        bundle = self._cases.build_case_bundle(
+            trigger_artifact_id=artifact.artifact_id,
+            new_evidence_ids=proposal.linked_evidence_ids,
+        )
+        if not bundle.later_evidence:
+            await self._cases.record_no_material_delta(
+                trigger_artifact_id=artifact.artifact_id,
+                reason="no later evidence to compare against the promise",
+                delta=None,
+                context=context,
+            )
+            return False
+
+        delta = await self._agents.delta_investigator(bundle, context=context)
+        verdict = self._policy.validate_delta(delta, bundle)
+        if not verdict.ok:
+            await self._cases.record_delta_rejected(
+                delta=delta, reasons=verdict.reasons, context=context
+            )
+            return False
+        if delta.result_type is not DeltaResultType.DECISION_DELTA:
+            await self._cases.record_no_material_delta(
+                trigger_artifact_id=artifact.artifact_id,
+                reason=f"agent result {delta.result_type}",
+                delta=delta,
+                context=context,
+            )
+            return False
+
+        await self._cases.record_delta_proposed(delta=delta, context=context)
+        review = await self._agents.quality_reviewer(delta, bundle, context=context)
+        if self._policy.review_is_stageable(review, delta):
+            await self._cases.stage_delta(
+                case_id=delta.case_id, delta=delta, review=review, context=context
+            )
+            return True
+        await self._cases.record_case_human_review(
+            case_id=delta.case_id, delta=delta, review=review, context=context
+        )
+        return False
