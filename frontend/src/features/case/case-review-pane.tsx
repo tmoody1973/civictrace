@@ -8,7 +8,7 @@ import { useCaseSummary } from "@/features/case/queries";
 
 export function CaseReviewPane({ caseId }: { caseId: string }) {
   const query = useCaseSummary(caseId);
-  if (query.isPending) return <Skeleton className="h-40 w-full" aria-label="Loading case" />;
+  if (query.isPending) return <Skeleton role="status" className="h-40 w-full" aria-label="Loading case" />;
   if (query.isError) return <ApiErrorState error={query.error} what="the case summary" />;
   return (
     <div className="space-y-4">

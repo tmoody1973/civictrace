@@ -14,7 +14,7 @@ import type { TraceEventView } from "@/lib/api-types";
 
 export function EvidenceTrace({ caseId }: { caseId: string }) {
   const query = useCaseTrace(caseId);
-  if (query.isPending) return <Skeleton className="h-10 w-full" aria-label="Loading Evidence Trace" />;
+  if (query.isPending) return <Skeleton role="status" className="h-10 w-full" aria-label="Loading Evidence Trace" />;
   if (query.isError) return <ApiErrorState error={query.error} what="the Evidence Trace" />;
   return <EvidenceTraceView events={query.data.events} />;
 }

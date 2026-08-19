@@ -7,7 +7,8 @@ export function TopBar({ caseId }: { caseId?: string }) {
         CivicTrace <span className="font-normal text-muted-foreground">Evidence Studio</span>
       </Link>
       {caseId ? (
-        <span className="truncate font-mono text-xs text-muted-foreground" aria-label="Current case id">
+        <span className="truncate font-mono text-xs text-muted-foreground">
+          <span className="sr-only">Current case id: </span>
           {caseId}
         </span>
       ) : null}

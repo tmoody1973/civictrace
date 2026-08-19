@@ -63,10 +63,13 @@ cd frontend && cp .env.example .env.local && pnpm install && pnpm dev
 open http://localhost:3000/cases/case-tid121-bronzeville-arts-tech-hub
 
 pnpm lint && pnpm typecheck && pnpm test      # ESLint, next typegen + tsc --noEmit, vitest
+pnpm e2e                                      # Playwright: starts backend (fixture replay) + Next itself, walks the demo path
+                                              # (card → trace → NOT_PUBLISHED → anchor → PDF p.3 → Matches ledger), keyboard-only
+                                              # variant, axe (0 serious/critical), and the API-down words. No cloud needed.
 ```
 
-Layout today (MOO-695): case rail | original source (placeholder until MOO-699) | Decision Delta + review
-(raw state + counts until MOO-697); Evidence Trace rows land in the timeline pane in MOO-698. Types in
+Layout: case rail | original source (PDF pane, anchor jump, hash verdict) | Promise Card + Decision Delta; Evidence Trace
+in the timeline pane. CI (`.github/workflows/ci.yml`) runs backend pytest/ruff/mypy and frontend lint/typecheck/unit/e2e on every push. Types in
 `src/lib/api-types.ts` are a hand-written mirror of `backend/app/schemas/api.py`. API base URL:
 `NEXT_PUBLIC_API_BASE_URL` (default `http://localhost:8000`). No AI/provider key exists in the browser.
 Proof screenshots: `docs/hackathon/proof/moo-695-*.png`.

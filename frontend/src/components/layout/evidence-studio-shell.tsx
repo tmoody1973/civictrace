@@ -46,7 +46,7 @@ export function EvidenceStudioShell({
 
 function Pane({ label, children }: { label: string; children: React.ReactNode }) {
   return (
-    <section aria-label={label} className="flex h-full min-h-0 flex-col overflow-auto p-4">
+    <section aria-label={label} tabIndex={0} className="flex h-full min-h-0 flex-col overflow-auto p-4 focus-visible:outline-2 focus-visible:outline-ring">
       <h2 className="mb-3 text-xs font-medium uppercase tracking-wide text-muted-foreground">{label}</h2>
       <div className="min-h-0 flex-1">{children}</div>
     </section>

@@ -24,8 +24,10 @@ export function PdfViewer({ bytes, anchoredPage, label }: PdfViewerProps) {
   const [numPages, setNumPages] = useState<number | null>(null);
   const [page, setPage] = useState(anchoredPage ?? 1);
   const [zoomIndex, setZoomIndex] = useState(1);
-  // pdf.js transfers the buffer to its worker (detaching it); hand it a private copy each load.
-  const file = useMemo(() => ({ data: new Uint8Array(bytes.slice(0)) }), [bytes]);
+  // pdf.js transfers any buffer it is given to its worker (detaching it), which breaks on re-mount.
+  // A blob URL lets pdf.js read the same bytes as often as it likes.
+  // ponytail: never revoked — one URL per distinct document (3 today); revoke via a ref when that grows.
+  const file = useMemo(() => ({ url: URL.createObjectURL(new Blob([bytes], { type: "application/pdf" })) }), [bytes]);
 
   // A new anchor jump re-targets the page (React "adjust state while rendering" pattern, no effect).
   const [lastAnchor, setLastAnchor] = useState(anchoredPage);
@@ -66,7 +68,7 @@ export function PdfViewer({ bytes, anchoredPage, label }: PdfViewerProps) {
         {label}: showing page {page} of {numPages ?? "unknown"}
         {onAnchoredPage ? " — this is the anchored page" : ""}
       </p>
-      <div className="min-h-0 flex-1 overflow-auto">
+      <div className="min-h-0 flex-1 overflow-auto focus-visible:outline-2 focus-visible:outline-ring" tabIndex={0} role="region" aria-label={`${label} page view`}>
         <Document
           file={file}
           onLoadSuccess={(pdf) => setNumPages(pdf.numPages)}

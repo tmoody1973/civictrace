@@ -14,7 +14,7 @@ import type { TraceEventView } from "@/lib/api-types";
 // pdf.js touches window/DOM APIs; render the viewer on the client only.
 const PdfViewer = dynamic(() => import("@/features/artifact/pdf-viewer").then((m) => m.PdfViewer), {
   ssr: false,
-  loading: () => <Skeleton className="h-64 w-full" aria-label="Loading PDF viewer" />,
+  loading: () => <Skeleton role="status" className="h-64 w-full" aria-label="Loading PDF viewer" />,
 });
 
 type Selection = { artifactId: string; page: number | null };
@@ -29,7 +29,7 @@ export function ArtifactPane({ caseId }: { caseId: string }) {
   const current = selection ?? (stored[0] ? { artifactId: stored[0].artifact_id, page: null } : null);
   const info = current ? ledgerInfoFor(current.artifactId, stored) : null;
 
-  if (trace.isPending) return <Skeleton className="h-24 w-full" aria-label="Loading case records" />;
+  if (trace.isPending) return <Skeleton role="status" className="h-24 w-full" aria-label="Loading case records" />;
   if (trace.isError) return <ApiErrorState error={trace.error} what="the case records" />;
   if (!current || !info) return <p className="text-sm text-muted-foreground">No preserved document in this case yet.</p>;
   return <ArtifactView key={current.artifactId} selection={current} info={info} />;
