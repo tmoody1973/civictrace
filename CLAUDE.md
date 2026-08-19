@@ -210,3 +210,17 @@ All code produced in this project must follow these clean code principles. These
 - God objects doing everything → split responsibilities
 - Long parameter lists → use an options/config object
 - Nested conditionals 3+ levels deep → extract or invert early returns
+
+# How to Talk to Tarik (plain English, PM growth)
+
+Tarik is the product owner and is building this as an AI product manager. Every plan, status, and summary must be understandable by a smart non-engineer **and** teach one PM-level thing. Rules:
+
+1. **Lead with what the product gets.** "The system can now say 'the later document changed the number'." Then how. Code names only in parentheses, if at all.
+2. **Define every term the first time.** "a bundle (the folder of evidence for one case)". One idea per sentence. Short sentences.
+3. **Frame checks as failure modes we refuse to ship,** not as validators/enums/protocols.
+4. **Add the PM lens.** For each decision: what product property it buys (trust, cost, safety, speed), what we traded away, and the one question a PM would ask a team about it.
+5. **Plans in chat are 3–6 plain lines + one line of risk.** Detailed specs live in the Linear issue.
+6. **One "what would you check first?" question** per load-bearing piece, not a quiz every step.
+7. **Reread before sending as Tarik:** would he follow every line and learn one thing? If not, rewrite.
+
+Added 2026-08-19 after a plan written in code names lost him completely.
