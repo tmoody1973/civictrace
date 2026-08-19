@@ -19,6 +19,7 @@ from app.schemas.evidence import DocumentExtraction, EntityLinkBatch
 from app.schemas.source import Artifact, SourceEvent
 from app.services.artifact_vault import LocalFixtureVault
 from app.services.corpus import load_corpus_manifest
+from app.services.validator import ValidationResult
 from tests.conftest import MANIFEST_PATH, REPO_ROOT
 
 PLAN_ID = "tid121-project-plan-2024"
@@ -64,7 +65,9 @@ class CountingAgents:
 class PermissivePolicy:
     def assert_source_event_allowed(self, event: SourceEvent) -> None: ...
     def validate_artifact(self, artifact: Artifact) -> None: ...
-    def validate_document_extraction(self, extraction, artifact) -> None: ...  # noqa: ANN001
+    def validate_document_extraction(self, extraction, artifact):  # noqa: ANN001, ANN202
+        return ValidationResult()
+
     def validate_entity_links(self, links, extraction) -> None: ...  # noqa: ANN001
     def validate_case_link(self, proposal) -> None: ...  # noqa: ANN001
     def validate_delta(self, delta, case_bundle) -> None: ...  # noqa: ANN001

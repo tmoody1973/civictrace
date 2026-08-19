@@ -74,6 +74,19 @@ class InMemoryLedger:
             )
         )
 
+    async def record_rejected_extraction(
+        self, artifact: Artifact, reasons: tuple[str, ...], *, context: WorkflowContext
+    ) -> None:
+        self.append(
+            self._new_event(
+                context,
+                LedgerEventType.EXTRACTION_REJECTED,
+                artifact.artifact_id,
+                artifact=artifact,
+                reason="; ".join(reasons),
+            )
+        )
+
     async def active_case_summaries(
         self, *, candidate_entity_ids: list[str]
     ) -> list[dict[str, object]]:

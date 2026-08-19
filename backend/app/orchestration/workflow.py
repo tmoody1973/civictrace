@@ -47,8 +47,12 @@ class CaseRepository(Protocol):
     async def append_validated_extraction(
         self, extraction: DocumentExtraction, *, context: WorkflowContext
     ) -> None: ...
-    async def active_case_summaries(self, *, candidate_entity_ids: list[str]) -> list[dict]: ...
-    async def frozen_case_bundle(self, case_id: str, *, later_evidence_ids: list[str]) -> dict: ...
+    async def active_case_summaries(
+        self, *, candidate_entity_ids: list[str]
+    ) -> list[dict[str, object]]: ...
+    async def frozen_case_bundle(
+        self, case_id: str, *, later_evidence_ids: list[str]
+    ) -> dict[str, object]: ...
     async def stage_delta(
         self,
         *,
@@ -60,6 +64,16 @@ class CaseRepository(Protocol):
     async def record_unavailable_artifact(
         self, event: SourceEvent, artifact: Artifact, *, context: WorkflowContext
     ) -> None: ...
+    async def record_rejected_extraction(
+        self, artifact: Artifact, reasons: tuple[str, ...], *, context: WorkflowContext
+    ) -> None: ...
+
+
+class ExtractionVerdict(Protocol):
+    @property
+    def ok(self) -> bool: ...
+    @property
+    def reasons(self) -> tuple[str, ...]: ...
 
 
 class PolicyService(Protocol):
@@ -67,12 +81,14 @@ class PolicyService(Protocol):
     def validate_artifact(self, artifact: Artifact) -> None: ...
     def validate_document_extraction(
         self, extraction: DocumentExtraction, artifact: Artifact
-    ) -> None: ...
+    ) -> ExtractionVerdict: ...
     def validate_entity_links(
         self, links: EntityLinkBatch, extraction: DocumentExtraction
     ) -> None: ...
     def validate_case_link(self, proposal: CaseLinkProposal) -> None: ...
-    def validate_delta(self, delta: DecisionDeltaProposal, case_bundle: dict) -> None: ...
+    def validate_delta(
+        self, delta: DecisionDeltaProposal, case_bundle: dict[str, object]
+    ) -> None: ...
     def assert_review_acceptable(self, review: ReviewDecision) -> None: ...
 
 
@@ -87,15 +103,19 @@ class AgentService(Protocol):
         self,
         extraction: DocumentExtraction,
         entity_links: EntityLinkBatch,
-        case_summaries: list[dict],
+        case_summaries: list[dict[str, object]],
         *,
         context: WorkflowContext,
     ) -> list[CaseLinkProposal]: ...
     async def delta_investigator(
-        self, case_bundle: dict, *, context: WorkflowContext
+        self, case_bundle: dict[str, object], *, context: WorkflowContext
     ) -> DecisionDeltaProposal: ...
     async def quality_reviewer(
-        self, delta: DecisionDeltaProposal, case_bundle: dict, *, context: WorkflowContext
+        self,
+        delta: DecisionDeltaProposal,
+        case_bundle: dict[str, object],
+        *,
+        context: WorkflowContext,
     ) -> ReviewDecision: ...
 
 
@@ -170,7 +190,17 @@ class CityDocumentWorkflow:
                 )
 
             extraction = await self._agents.document_evidence(artifact, context=context)
-            self._policy.validate_document_extraction(extraction, artifact)
+            verdict = self._policy.validate_document_extraction(extraction, artifact)
+            if not verdict.ok:
+                await self._cases.record_rejected_extraction(
+                    artifact, verdict.reasons, context=context
+                )
+                await self._jobs.succeed(job_key, context=context)
+                return WorkflowResult(
+                    status=JobStatus.EXTRACTION_REJECTED,
+                    job_key=job_key,
+                    reason="; ".join(verdict.reasons),
+                )
             await self._cases.append_validated_extraction(extraction, context=context)
 
             entity_links = await self._agents.entity_resolution(extraction, context=context)
@@ -189,11 +219,12 @@ class CityDocumentWorkflow:
             staged_case_ids: list[str] = []
             for proposal in proposals:
                 self._policy.validate_case_link(proposal)
-                if not proposal.is_actionable_existing_case_link():
+                case_id = proposal.case_id
+                if case_id is None or not proposal.is_actionable_existing_case_link():
                     continue
 
                 bundle = await self._cases.frozen_case_bundle(
-                    proposal.case_id,
+                    case_id,
                     later_evidence_ids=proposal.linked_evidence_ids,
                 )
                 delta = await self._agents.delta_investigator(bundle, context=context)
@@ -203,12 +234,12 @@ class CityDocumentWorkflow:
 
                 if review.is_stageable():
                     await self._cases.stage_delta(
-                        case_id=proposal.case_id,
+                        case_id=case_id,
                         delta=delta,
                         review=review,
                         context=context,
                     )
-                    staged_case_ids.append(proposal.case_id)
+                    staged_case_ids.append(case_id)
 
             await self._jobs.succeed(job_key, context=context)
             return WorkflowResult(
