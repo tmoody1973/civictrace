@@ -13,7 +13,9 @@ from datetime import UTC, datetime
 from pathlib import Path
 
 from app.domain.enums import ApprovalActionType, LedgerEventType
+from app.repositories.cases import LedgerRecorder
 from app.schemas.case import LedgerEvent
+from app.schemas.corpus import CorpusManifest
 from app.schemas.inquiry import InquiryProposal
 from app.schemas.source import Artifact
 from app.services.approval import DEFAULT_TTL, ApprovalService
@@ -22,7 +24,9 @@ from app.services.packet import (
     inquiry_artifact_hash,
     render_inquiry_packet,
 )
+from app.services.packet_store import LocalPacketWriter, PacketWriter
 from app.services.replay import ReplayOptions, ReplayReport, replay_corpus
+from app.services.uri_bytes import LocalUriResolver
 
 HASH_MISMATCH_MESSAGE = "you approved different bytes than are staged"
 
@@ -66,12 +70,14 @@ class ApprovalSession:
         self,
         report: ReplayReport,
         *,
-        packet_dir: Path,
+        packet_writer: PacketWriter,
         clock: Callable[[], datetime],
+        uri_resolver: LocalUriResolver | None = None,
     ) -> None:
         self._report = report
         self._ledger = report.ledger
-        self._packet_dir = packet_dir
+        self._packet_writer = packet_writer
+        self._uri_resolver = uri_resolver or LocalUriResolver()
         self._approval = ApprovalService(clock=clock, ledger=self._ledger)
 
     @classmethod
@@ -82,7 +88,25 @@ class ApprovalSession:
         packet_dir: Path,
         clock: Callable[[], datetime] = lambda: datetime.now(UTC),
     ) -> ApprovalSession:
-        return cls(replay_corpus(options, clock=clock), packet_dir=packet_dir, clock=clock)
+        return cls(
+            replay_corpus(options, clock=clock),
+            packet_writer=LocalPacketWriter(packet_dir),
+            clock=clock,
+        )
+
+    @classmethod
+    def from_cloud(
+        cls,
+        *,
+        manifest: CorpusManifest,
+        ledger: LedgerRecorder,
+        packet_writer: PacketWriter,
+        uri_resolver: LocalUriResolver,
+        clock: Callable[[], datetime] = lambda: datetime.now(UTC),
+    ) -> ApprovalSession:
+        """Cloud API session (MOO-709): reads what the worker wrote; renders to the bucket."""
+        report = ReplayReport(manifest=manifest, ledger=ledger)
+        return cls(report, packet_writer=packet_writer, clock=clock, uri_resolver=uri_resolver)
 
     # --- TraceReader protocol --------------------------------------------------
 
@@ -153,7 +177,7 @@ class ApprovalSession:
             token=token,
             approval=self._approval,
             ledger=self._ledger,
-            out_dir=self._packet_dir,
+            writer=self._packet_writer,
         )
         if not result.ok:
             return ApproveOutcome(kind="refused", reason=result.reason)
@@ -164,7 +188,7 @@ class ApprovalSession:
             reviewer_name=token.reviewer_name,
             expires_at=token.expires_at,
             packet_hash=result.packet_hash,
-            packet_path=str(result.packet_path),
+            packet_path=result.packet_path,
         )
 
     def reject(self, case_id: str, *, reviewer_name: str, note: str) -> bool:
@@ -187,4 +211,10 @@ class ApprovalSession:
             return None
         event = rendered[-1]
         assert event.packet_path is not None
-        return Path(event.packet_path).read_text(), event.payload_ref, event.packet_path
+        markdown = self._read_packet(event.packet_path)
+        return markdown, event.payload_ref, event.packet_path
+
+    def _read_packet(self, packet_path: str) -> str:
+        if packet_path.startswith("gs://"):
+            return self._uri_resolver.read_bytes(packet_path).decode("utf-8")
+        return Path(packet_path).read_text()

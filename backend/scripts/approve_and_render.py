@@ -29,6 +29,7 @@ from app.services.packet import (  # noqa: E402
     inquiry_artifact_hash,
     render_inquiry_packet,
 )
+from app.services.packet_store import LocalPacketWriter  # noqa: E402
 from app.services.replay import ReplayOptions, replay_corpus  # noqa: E402
 
 DEFAULT_EXTRACTION = (
@@ -81,7 +82,7 @@ def main(argv: list[str] | None = None) -> int:
         token=token,
         approval=approval,
         ledger=report.ledger,
-        out_dir=args.out_dir,
+        writer=LocalPacketWriter(args.out_dir),
     )
     if not result.ok:
         print(f"REFUSED: {result.reason}")

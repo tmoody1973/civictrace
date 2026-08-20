@@ -165,6 +165,18 @@ resource "google_storage_bucket_iam_member" "api_packets_read" {
   member = google_service_account.api.member
 }
 
+# --- Image registry: exists before any image push (MOO-709) ----------------------
+
+resource "google_artifact_registry_repository" "images" {
+  project       = var.project_id
+  location      = var.region
+  repository_id = "civictrace"
+  format        = "DOCKER"
+  labels        = local.labels
+
+  depends_on = [google_project_service.required]
+}
+
 # --- Bearer secret shell: value set out-of-band by the owner ---------------------
 
 resource "google_secret_manager_secret" "api_bearer" {

@@ -17,6 +17,7 @@ from app.services.packet import (
     inquiry_artifact_hash,
     render_inquiry_packet,
 )
+from app.services.packet_store import LocalPacketWriter
 from app.services.replay import ReplayOptions, build_workflow
 from tests.conftest import ALLOWLIST_PATH, FIXTURE_DIR, MANIFEST_PATH, REPO_ROOT
 
@@ -69,7 +70,7 @@ def _render(staged, tmp_path: Path, *, token, approval, inquiry=None):  # noqa: 
         token=token,
         approval=approval,
         ledger=ledger,
-        out_dir=tmp_path / "packets",
+        writer=LocalPacketWriter(tmp_path / "packets"),
     )
 
 
@@ -94,8 +95,8 @@ def test_valid_token_renders_draft_packet(staged, tmp_path: Path) -> None:
     approval, token = _issue(staged, clock)
     result = _render(staged, tmp_path, token=token, approval=approval)
     assert result.ok, result.reason
-    assert result.packet_path is not None and result.packet_path.exists()
-    text = result.packet_path.read_text()
+    assert result.packet_path is not None and Path(result.packet_path).exists()
+    text = Path(result.packet_path).read_text()
     assert text.startswith("# DRAFT")
     assert "not sent; no external action taken" in text
     assert "2025 Annual Report of Tax Incremental Districts" in text
@@ -104,7 +105,7 @@ def test_valid_token_renders_draft_packet(staged, tmp_path: Path) -> None:
     rendered = _of(ledger, LedgerEventType.PACKET_RENDERED)
     assert len(rendered) == 1
     assert rendered[0].payload_ref == result.packet_hash
-    assert rendered[0].packet_path == str(result.packet_path)
+    assert rendered[0].packet_path == result.packet_path
 
 
 def test_no_token_refused_and_no_file(staged, tmp_path: Path) -> None:
@@ -183,4 +184,4 @@ def test_golden_packet_snapshot(staged, tmp_path: Path) -> None:
     result = _render(staged, tmp_path, token=token, approval=approval)
     assert result.ok, result.reason
     assert result.packet_path is not None
-    assert result.packet_path.read_text() == GOLDEN_PATH.read_text()
+    assert Path(result.packet_path).read_text() == GOLDEN_PATH.read_text()

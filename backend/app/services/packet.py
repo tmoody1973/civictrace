@@ -11,7 +11,6 @@ from __future__ import annotations
 import hashlib
 import json
 from dataclasses import dataclass
-from pathlib import Path
 from typing import Protocol
 
 from app.domain.enums import ApprovalActionType, LedgerEventType
@@ -20,6 +19,7 @@ from app.schemas.case import BundleEvidence, CaseBundle, DecisionDeltaProposal, 
 from app.schemas.inquiry import InquiryProposal
 from app.services.approval import ApprovalService
 from app.services.artifact_vault import HASH_PREFIX
+from app.services.packet_store import PacketWriter
 
 MILESTONE_EVENTS = (
     LedgerEventType.ARTIFACT_STORED,
@@ -40,7 +40,7 @@ class PacketLedger(Protocol):
 class PacketResult:
     ok: bool
     reason: str | None = None
-    packet_path: Path | None = None
+    packet_path: str | None = None  # local filesystem path, or gs:// URI in the cloud
     packet_hash: str | None = None
 
 
@@ -77,7 +77,7 @@ def render_inquiry_packet(
     token: ApprovalToken | None,
     approval: ApprovalService,
     ledger: PacketLedger,
-    out_dir: Path,
+    writer: PacketWriter,
 ) -> PacketResult:
     """Validate the token against the staged inquiry's hash; refuse closed or write one file."""
     check = approval.validate(
@@ -93,18 +93,18 @@ def render_inquiry_packet(
         bundle=bundle, delta=delta, inquiry=inquiry, events=events, token=token
     )
     packet_hash = HASH_PREFIX + hashlib.sha256(markdown.encode("utf-8")).hexdigest()
-    out_dir.mkdir(parents=True, exist_ok=True)
     short_hash = packet_hash.removeprefix(HASH_PREFIX)[:12]
-    packet_path = out_dir / f"inquiry-packet-{bundle.case_id}-{short_hash}.md"
-    packet_path.write_text(markdown)
+    packet_address = writer.write(
+        f"inquiry-packet-{bundle.case_id}-{short_hash}.md", markdown
+    )
     ledger.record_packet_rendered(
         case_id=bundle.case_id,
         actor=token.reviewer_name,
         packet_hash=packet_hash,
-        packet_path=str(packet_path),
+        packet_path=packet_address,
         token=token,
     )
-    return PacketResult(ok=True, packet_path=packet_path, packet_hash=packet_hash)
+    return PacketResult(ok=True, packet_path=packet_address, packet_hash=packet_hash)
 
 
 def _build_markdown(

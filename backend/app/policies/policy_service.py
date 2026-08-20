@@ -11,6 +11,7 @@ from app.schemas.inquiry import InquiryProposal
 from app.schemas.source import Artifact, SourceEvent
 from app.services.artifact_text import read_page_texts
 from app.services.artifact_vault import HASH_PREFIX, sha256_hex
+from app.services.uri_bytes import LocalUriResolver
 from app.services.validator import (
     ValidationResult,
     validate_delta,
@@ -20,8 +21,12 @@ from app.services.validator import (
 
 
 class CivicTracePolicyService:
-    def __init__(self, *, source_policy: SourcePolicy) -> None:
+    def __init__(
+        self, *, source_policy: SourcePolicy, uri_resolver: LocalUriResolver | None = None
+    ) -> None:
         self._source_policy = source_policy
+        # gs:// URIs work when the cloud services inject a GcsUriResolver (MOO-709).
+        self._uri_resolver = uri_resolver or LocalUriResolver()
 
     def assert_source_event_allowed(self, event: SourceEvent) -> None:
         self._source_policy.assert_source_event_allowed(event)
@@ -31,7 +36,7 @@ class CivicTracePolicyService:
         if artifact.availability is not ArtifactAvailability.AVAILABLE:
             return
         assert artifact.storage_uri and artifact.content_hash
-        stored = open(artifact.storage_uri.removeprefix("file://"), "rb").read()
+        stored = self._uri_resolver.read_bytes(artifact.storage_uri)
         if HASH_PREFIX + sha256_hex(stored) != artifact.content_hash:
             raise FixtureIntegrityError(
                 f"{artifact.artifact_id}: stored bytes no longer match hash"
@@ -41,7 +46,10 @@ class CivicTracePolicyService:
         self, extraction: DocumentExtraction, artifact: Artifact
     ) -> ValidationResult:
         page_texts = (
-            read_page_texts(artifact.storage_uri, artifact.media_type)
+            read_page_texts(
+                self._uri_resolver.to_local_path(artifact.storage_uri).as_uri(),
+                artifact.media_type,
+            )
             if artifact.storage_uri
             else None
         )

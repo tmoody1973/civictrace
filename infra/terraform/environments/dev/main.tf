@@ -27,6 +27,24 @@ module "baseline" {
   owner       = "tarik"
 }
 
+# Services deploy only when an image exists (MOO-709): plan with -var deploy_services=true
+# after the image is built and pushed. The bearer secret must hold a version first.
+module "services" {
+  source     = "../../modules/services"
+  count      = var.deploy_services ? 1 : 0
+  project_id = var.project_id
+  region     = var.region
+
+  image                        = var.image
+  api_service_account_email    = module.baseline.api_service_account_email
+  worker_service_account_email = module.baseline.worker_service_account_email
+  bearer_secret_id             = module.baseline.bearer_secret_id
+}
+
 output "baseline" {
   value = module.baseline
+}
+
+output "services" {
+  value = var.deploy_services ? module.services[0] : null
 }

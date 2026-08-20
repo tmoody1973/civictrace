@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 import os
+import secrets
 from collections.abc import Sequence
 
 from fastapi import FastAPI, Request
@@ -27,10 +28,16 @@ def create_app(
     trace_reader: TraceReader,
     approval: ApprovalGateway | None = None,
     cors_origins: Sequence[str] | None = None,
+    bearer_token: str | None = None,
+    uri_resolver: object | None = None,
 ) -> FastAPI:
     app = FastAPI(title="CivicTrace API", version="0.1.0")
     app.state.trace_reader = trace_reader
     app.state.approval = approval
+    if uri_resolver is not None:
+        app.state.uri_resolver = uri_resolver
+    if bearer_token:
+        _require_bearer(app, bearer_token)
     app.add_middleware(
         CORSMiddleware,
         allow_origins=list(cors_origins or cors_origins_from_env()),
@@ -46,6 +53,25 @@ def create_app(
     return app
 
 
+def _require_bearer(app: FastAPI, token: str) -> None:
+    """Every route except /healthz needs the shared bearer (Slice 5 cloud demo).
+
+    # ponytail: shared token guards the public dev URL; per-user auth is post-hackathon.
+    """
+
+    @app.middleware("http")
+    async def bearer_gate(request: Request, call_next):  # type: ignore[no-untyped-def]  # noqa: ANN202
+        if request.url.path == "/healthz" or request.method == "OPTIONS":
+            return await call_next(request)
+        supplied = request.headers.get("Authorization", "").removeprefix("Bearer ").strip()
+        if not supplied or not secrets.compare_digest(supplied, token):
+            envelope: ApiEnvelope[None] = ApiEnvelope(
+                ok=False, data=None, error="missing or wrong bearer token"
+            )
+            return JSONResponse(status_code=401, content=envelope.model_dump(mode="json"))
+        return await call_next(request)
+
+
 def _http_error_as_envelope(_: Request, exc: HTTPException) -> JSONResponse:
     """Unmatched routes and framework errors use the same {ok,data,error} envelope."""
     envelope: ApiEnvelope[None] = ApiEnvelope(ok=False, data=None, error=str(exc.detail))
@@ -55,10 +81,13 @@ def _http_error_as_envelope(_: Request, exc: HTTPException) -> JSONResponse:
 def _default_app() -> FastAPI | None:
     """Uvicorn entry point. Tests build their own app via create_app().
 
-    CIVICTRACE_LIVE=1 replays the fixture corpus in-process and enables the
-    approval/packet write endpoints. CIVICTRACE_LEDGER_JSON serves a static
-    ledger read-only, as before.
+    CIVICTRACE_CLOUD=1 serves the Firestore-backed case with the bearer gate
+    (Cloud Run api service). CIVICTRACE_LIVE=1 replays the fixture corpus
+    in-process and enables the approval/packet write endpoints locally.
+    CIVICTRACE_LEDGER_JSON serves a static ledger read-only, as before.
     """
+    if os.environ.get("CIVICTRACE_CLOUD"):
+        return _cloud_app()
     if os.environ.get(LIVE_ENV):
         from app.services.approval_session import (
             DEFAULT_PACKET_DIR,
@@ -73,6 +102,33 @@ def _default_app() -> FastAPI | None:
     if os.environ.get(LEDGER_JSON_ENV):
         return create_app(trace_reader=JsonLedgerReader.from_env())
     return None
+
+
+def _cloud_app() -> FastAPI:
+    from google.cloud import storage  # type: ignore[attr-defined]
+
+    from app.services.approval_session import ApprovalSession
+    from app.services.cloud import CloudConfig, build_cloud_ledger
+    from app.services.corpus import load_corpus_manifest
+    from app.services.packet_store import GcsPacketWriter
+    from app.services.uri_bytes import GcsUriResolver
+
+    config = CloudConfig.from_env()
+    manifest = load_corpus_manifest(config.manifest_path)
+    storage_client = storage.Client(project=config.project)
+    resolver = GcsUriResolver(storage_client)
+    session = ApprovalSession.from_cloud(
+        manifest=manifest,
+        ledger=build_cloud_ledger(config, manifest),
+        packet_writer=GcsPacketWriter(storage_client, config.packets_bucket),
+        uri_resolver=resolver,
+    )
+    return create_app(
+        trace_reader=session,
+        approval=session,
+        bearer_token=os.environ.get("CIVICTRACE_API_BEARER"),
+        uri_resolver=resolver,
+    )
 
 
 app = _default_app()

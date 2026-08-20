@@ -6,17 +6,14 @@ The path on disk comes from the ledger's own record (storage_uri), never from th
 
 from __future__ import annotations
 
-from pathlib import Path
-from urllib.parse import unquote, urlparse
-
 from fastapi import APIRouter, Request, Response
 from fastapi.responses import JSONResponse
 
 from app.core.dependencies import TraceReader
 from app.domain.enums import ArtifactAvailability
 from app.schemas.api import ApiEnvelope
-from app.schemas.source import Artifact
 from app.services.artifact_vault import HASH_PREFIX, sha256_hex
+from app.services.uri_bytes import LocalUriResolver
 
 router = APIRouter()
 CONTENT_HASH_HEADER = "X-CivicTrace-Content-Hash"
@@ -30,7 +27,10 @@ def artifact_file(artifact_id: str, request: Request) -> Response:
         return _error(404, f"artifact {artifact_id!r} not found")
     if artifact.availability is not ArtifactAvailability.AVAILABLE or not artifact.storage_uri:
         return _error(404, f"artifact {artifact_id!r} is {artifact.availability.value}")
-    payload = _read_vaulted_bytes(artifact)
+    resolver: LocalUriResolver = getattr(
+        request.app.state, "uri_resolver", None
+    ) or LocalUriResolver()
+    payload = resolver.read_bytes(artifact.storage_uri)
     if HASH_PREFIX + sha256_hex(payload) != artifact.content_hash:
         return _error(500, f"artifact {artifact_id!r}: vault bytes do not match ledger hash")
     return Response(
@@ -42,13 +42,6 @@ def artifact_file(artifact_id: str, request: Request) -> Response:
             CONTENT_HASH_HEADER: artifact.content_hash or "",
         },
     )
-
-
-def _read_vaulted_bytes(artifact: Artifact) -> bytes:
-    parsed = urlparse(artifact.storage_uri or "")
-    if parsed.scheme != "file":
-        raise NotImplementedError(f"storage scheme {parsed.scheme!r} not served locally")
-    return Path(unquote(parsed.path)).read_bytes()
 
 
 def _error(status: int, message: str) -> JSONResponse:
