@@ -6,6 +6,8 @@ requires-python = ">=3.12"
 dependencies = [
   "fastapi>=0.115",
   "google-adk>=2.7.1",
+  "google-cloud-firestore>=2.28.1",
+  "google-cloud-storage>=3.13.1",
   "pydantic>=2.7",
   "pypdf>=6.16.1",
   "pyyaml>=6",

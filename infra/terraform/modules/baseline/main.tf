@@ -80,7 +80,8 @@ resource "google_storage_bucket" "packets" {
 }
 
 # --- Firestore: the durable ledger ----------------------------------------------
-# Composite indexes arrive with the queries that need them (MOO-708), in Terraform.
+# MOO-708's only query is a single-field order_by(seq) on the ledger_events subcollection,
+# served by Firestore's automatic index — no composite index is required or defined.
 
 resource "google_firestore_database" "ledger" {
   project         = var.project_id

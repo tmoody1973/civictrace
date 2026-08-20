@@ -21,7 +21,7 @@ from app.orchestration.routes import CityRouteRegistry
 from app.orchestration.workflow import CityDocumentWorkflow, WorkflowResult
 from app.policies.policy_service import CivicTracePolicyService
 from app.policies.source_policy import SourcePolicy
-from app.repositories.cases import InMemoryLedger
+from app.repositories.cases import InMemoryLedger, LedgerRecorder
 from app.repositories.jobs import InMemoryJobRepository
 from app.schemas.corpus import CorpusManifest
 from app.services.artifact_vault import LocalFixtureVault
@@ -59,7 +59,7 @@ class ReplayResult:
 @dataclass
 class ReplayReport:
     manifest: CorpusManifest
-    ledger: InMemoryLedger
+    ledger: LedgerRecorder
     results: list[ReplayResult] = field(default_factory=list)
 
     @property
@@ -86,9 +86,14 @@ class ReplayReport:
 
 
 def build_workflow(
-    manifest: CorpusManifest, options: ReplayOptions, *, clock: Callable[[], datetime]
-) -> tuple[CityDocumentWorkflow, InMemoryLedger, UsageLog | None]:
-    ledger = InMemoryLedger(
+    manifest: CorpusManifest,
+    options: ReplayOptions,
+    *,
+    clock: Callable[[], datetime],
+    ledger: LedgerRecorder | None = None,
+) -> tuple[CityDocumentWorkflow, LedgerRecorder, UsageLog | None]:
+    """`ledger` defaults to in-memory; the cloud worker injects a FirestoreLedger (MOO-708)."""
+    ledger = ledger or InMemoryLedger(
         case_id=manifest.case_id,
         case_topic=manifest.case_topic,
         original_artifact_ids=frozenset(

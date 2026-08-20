@@ -1,14 +1,17 @@
-"""Append-only Promise Ledger. In-memory implementation for Slice 1.
+"""Append-only Promise Ledger: shared recorder base + the in-memory implementation.
 
 There is deliberately no update/delete. A ledger event's id is derived from
 (job_key, event_type, payload_ref), so re-appending the same fact is a no-op.
+The Firestore implementation (Slice 5, MOO-708) subclasses `LedgerRecorder` in
+`app/repositories/firestore_cases.py`; only `append()` and `events()` differ.
 
-# ponytail: single-case ledger; case linking + Firestore implementation in Slice 2.
+# ponytail: single-case ledger; case linking is a later slice.
 """
 
 from __future__ import annotations
 
 import hashlib
+from abc import ABC, abstractmethod
 from collections.abc import Callable
 from datetime import datetime
 from enum import StrEnum
@@ -40,7 +43,9 @@ def ledger_event_id(job_key: str, event_type: LedgerEventType, payload_ref: str)
     return "evt_" + hashlib.sha256(material).hexdigest()[:32]
 
 
-class InMemoryLedger:
+class LedgerRecorder(ABC):
+    """Everything a ledger records, minus how it is stored. Subclasses supply append/events."""
+
     def __init__(
         self,
         *,
@@ -55,18 +60,12 @@ class InMemoryLedger:
         self._case_topic = case_topic
         self._original_artifact_ids = original_artifact_ids
         self._clock = clock
-        self._events: list[LedgerEvent] = []
-        self._seen: set[str] = set()
 
-    def append(self, event: LedgerEvent) -> AppendOutcome:
-        if event.event_id in self._seen:
-            return AppendOutcome.DUPLICATE_SUPPRESSED
-        self._seen.add(event.event_id)
-        self._events.append(event)
-        return AppendOutcome.APPENDED
+    @abstractmethod
+    def append(self, event: LedgerEvent) -> AppendOutcome: ...
 
-    def events(self) -> list[LedgerEvent]:
-        return list(self._events)
+    @abstractmethod
+    def events(self) -> list[LedgerEvent]: ...
 
     def record_approval_event(
         self,
@@ -189,12 +188,11 @@ class InMemoryLedger:
         self, *, trigger_artifact_id: str, new_evidence_ids: list[str]
     ) -> CaseBundle:
         """Freeze the promise pile and the later pile from everything accepted so far."""
-        urls = {
-            e.artifact.artifact_id: e.artifact.canonical_url for e in self._events if e.artifact
-        }
+        events = self.events()
+        urls = {e.artifact.artifact_id: e.artifact.canonical_url for e in events if e.artifact}
         original: list[BundleEvidence] = []
         later: list[BundleEvidence] = []
-        for event in self._events:
+        for event in events:
             if event.event_type is not LedgerEventType.EVIDENCE_ACCEPTED or event.evidence is None:
                 continue
             is_original = event.evidence.artifact_id in self._original_artifact_ids
@@ -206,7 +204,7 @@ class InMemoryLedger:
             (original if is_original else later).append(item)
         not_published = [
             e.artifact.artifact_id
-            for e in self._events
+            for e in events
             if e.event_type is LedgerEventType.ARTIFACT_NOT_PUBLISHED and e.artifact
         ]
         return CaseBundle(
@@ -333,3 +331,34 @@ class InMemoryLedger:
             actor=context.actor or SYSTEM_ACTOR,
             **details,  # type: ignore[arg-type]
         )
+
+
+class InMemoryLedger(LedgerRecorder):
+    """List-backed ledger for local replay and tests."""
+
+    def __init__(
+        self,
+        *,
+        case_id: str,
+        clock: Callable[[], datetime],
+        original_artifact_ids: frozenset[str],
+        case_topic: str = "",
+    ) -> None:
+        super().__init__(
+            case_id=case_id,
+            clock=clock,
+            original_artifact_ids=original_artifact_ids,
+            case_topic=case_topic,
+        )
+        self._events: list[LedgerEvent] = []
+        self._seen: set[str] = set()
+
+    def append(self, event: LedgerEvent) -> AppendOutcome:
+        if event.event_id in self._seen:
+            return AppendOutcome.DUPLICATE_SUPPRESSED
+        self._seen.add(event.event_id)
+        self._events.append(event)
+        return AppendOutcome.APPENDED
+
+    def events(self) -> list[LedgerEvent]:
+        return list(self._events)

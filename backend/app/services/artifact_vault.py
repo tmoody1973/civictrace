@@ -22,6 +22,18 @@ def sha256_hex(payload: bytes) -> str:
     return hashlib.sha256(payload).hexdigest()
 
 
+def read_verified_fixture(fixture_dir: Path, entry: ManifestArtifact) -> bytes:
+    """Read reviewed fixture bytes and refuse them if they no longer match the manifest hash."""
+    if entry.local_path is None or entry.content_hash is None:
+        raise FixtureIntegrityError(f"{entry.artifact_id}: AVAILABLE entry lacks local_path/hash")
+    payload = (fixture_dir / entry.local_path).read_bytes()
+    if HASH_PREFIX + sha256_hex(payload) != entry.content_hash:
+        raise FixtureIntegrityError(
+            f"{entry.artifact_id}: fixture bytes do not match manifest hash"
+        )
+    return payload
+
+
 class LocalFixtureVault:
     """Serves artifacts from the reviewed fixture corpus and stores them immutably on local disk."""
 
@@ -39,19 +51,10 @@ class LocalFixtureVault:
             return _unavailable_artifact(entry)
         payload = self._read_verified_fixture(entry)
         stored_path = self._store_immutably(entry, payload)
-        return _available_artifact(entry, stored_path)
+        return _available_artifact(entry, stored_path.resolve().as_uri())
 
     def _read_verified_fixture(self, entry: ManifestArtifact) -> bytes:
-        if entry.local_path is None or entry.content_hash is None:
-            raise FixtureIntegrityError(
-                f"{entry.artifact_id}: AVAILABLE entry lacks local_path/hash"
-            )
-        payload = (self._fixture_dir / entry.local_path).read_bytes()
-        if HASH_PREFIX + sha256_hex(payload) != entry.content_hash:
-            raise FixtureIntegrityError(
-                f"{entry.artifact_id}: fixture bytes do not match manifest hash"
-            )
-        return payload
+        return read_verified_fixture(self._fixture_dir, entry)
 
     def _store_immutably(self, entry: ManifestArtifact, payload: bytes) -> Path:
         assert entry.local_path is not None
@@ -68,7 +71,7 @@ class LocalFixtureVault:
         return target
 
 
-def _available_artifact(entry: ManifestArtifact, stored_path: Path) -> Artifact:
+def _available_artifact(entry: ManifestArtifact, storage_uri: str) -> Artifact:
     return Artifact(
         artifact_id=entry.artifact_id,
         source_id=entry.source_id,
@@ -79,7 +82,7 @@ def _available_artifact(entry: ManifestArtifact, stored_path: Path) -> Artifact:
         content_hash=entry.content_hash,
         byte_length=entry.byte_length,
         page_count=entry.page_count,
-        storage_uri=stored_path.resolve().as_uri(),
+        storage_uri=storage_uri,
         retrieved_at=entry.retrieved_at,
         availability=ArtifactAvailability.AVAILABLE,
     )
