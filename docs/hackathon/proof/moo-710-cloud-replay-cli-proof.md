@@ -64,6 +64,18 @@ POST /cases/case-tid121-bronzeville-arts-tech-hub/inquiry/approve   (wrong artif
 Ledger seq=18: `APPROVAL_REFUSED` (durable, auditable).
 Packets bucket: **empty** — no packet object was created.
 
+## Console screenshots — remaining human step
+
+ego-browser could not inherit the Google Console session (2 sign-in attempts), so the
+PNGs are still to capture. One click each, save as `moo-710-*.png` in this folder:
+
+1. Firestore case: https://console.cloud.google.com/firestore/databases/-default-/data/panel/cases/case-tid121-bronzeville-arts-tech-hub?project=civictrace-dev-tm
+2. GCS vault objects: https://console.cloud.google.com/storage/browser/civictrace-dev-tm-civictrace-vault?project=civictrace-dev-tm
+3. Tasks queue: https://console.cloud.google.com/cloudtasks/queue/us-central1/civictrace-ingest/tasks?project=civictrace-dev-tm
+4. Pub/Sub topic metrics: https://console.cloud.google.com/cloudpubsub/topic/detail/civictrace-source-events?project=civictrace-dev-tm
+5. Worker logs (21:36Z window): https://console.cloud.google.com/run/detail/us-central1/civictrace-worker/logs?project=civictrace-dev-tm
+6. BigQuery job history (worker SA queries): https://console.cloud.google.com/bigquery?project=civictrace-dev-tm&ws=!1m0 → Job history → Project history
+
 ## 6. Cost
 
 `cost-status.sh` at 21:39Z: budget `civictrace-dev-10usd` in place; both Cloud Run
