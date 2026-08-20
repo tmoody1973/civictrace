@@ -16,6 +16,7 @@ export const TRACE_COPY = {
   reviewNotes: "Reviewer notes",
   blockingIssues: "Blocking issues",
   reason: "Reason",
+  proposedQuestion: "Proposed next question",
   established: "What the public record establishes",
   notEstablished: "What the record does not establish",
   nextEvidence: "Next expected record",

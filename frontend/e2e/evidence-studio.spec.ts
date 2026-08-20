@@ -23,7 +23,7 @@ test.describe("Evidence Studio — TID 121 replay", () => {
 
     // Evidence Trace, collapsed by default → open → honest gap visible
     const toggle = page.getByRole("button", { name: "Toggle Evidence Trace" });
-    await expect(toggle).toContainText("Evidence Trace · 16 rows · 3 source artifacts");
+    await expect(toggle).toContainText("Evidence Trace · 17 rows · 3 source artifacts");
     await expect(page.getByRole("list", { name: "Ledger rows" })).toHaveCount(0);
     await toggle.click();
     const notPublished = page.getByTestId("trace-row-ARTIFACT_NOT_PUBLISHED");
@@ -44,7 +44,10 @@ test.describe("Evidence Studio — TID 121 replay", () => {
     await page.screenshot({ path: "test-results/studio-page3-matches-ledger.png", fullPage: false });
 
     // Delta chip → trace highlights the matching evidence row
-    await page.getByRole("button", { name: "Show evidence ev-tid121-plan-capital-costs in the Evidence Trace" }).click();
+    await page
+      .getByTestId("delta-original-ids")
+      .getByRole("button", { name: "Show evidence ev-tid121-plan-capital-costs in the Evidence Trace" })
+      .click();
     await expect(page.locator('[data-evidence-id="ev-tid121-plan-capital-costs"]')).toHaveClass(/ring-2/);
   });
 

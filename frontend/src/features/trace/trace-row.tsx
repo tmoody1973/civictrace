@@ -80,6 +80,16 @@ export function TraceRowView({ row, highlighted }: { row: TraceRow; highlighted:
           <p className="text-xs leading-relaxed">{event.reason ?? "No reason recorded."}</p>
         </Detail>
       )}
+      {row.isHuman && event.reason && (
+        <Detail label={TRACE_COPY.reason}>
+          <p className="text-xs leading-relaxed">{event.reason}</p>
+        </Detail>
+      )}
+      {event.proposed_question && (
+        <Detail label={TRACE_COPY.proposedQuestion}>
+          <p className="text-xs leading-relaxed">{event.proposed_question}</p>
+        </Detail>
+      )}
       {event.event_type === "EVIDENCE_ACCEPTED" && <EvidenceBody row={row} />}
       {(event.event_type === "NO_MATERIAL_DELTA" || event.event_type === "DELTA_REJECTED") && event.reason && !row.isGap && (
         <Detail label={TRACE_COPY.reason}>
