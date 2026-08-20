@@ -102,6 +102,31 @@ class InMemoryLedger:
             )
         )
 
+    def record_packet_rendered(
+        self,
+        *,
+        case_id: str,
+        actor: str,
+        packet_hash: str,
+        packet_path: str,
+        token: ApprovalToken,
+    ) -> None:
+        """One row per distinct packet content; rerendering identical bytes dedupes."""
+        job_key = "packet"
+        self.append(
+            LedgerEvent(
+                event_id=ledger_event_id(job_key, LedgerEventType.PACKET_RENDERED, packet_hash),
+                case_id=case_id,
+                job_key=job_key,
+                event_type=LedgerEventType.PACKET_RENDERED,
+                payload_ref=packet_hash,
+                occurred_at=self._clock(),
+                actor=actor,
+                approval=token,
+                packet_path=packet_path,
+            )
+        )
+
     # --- CaseRepository protocol (workflow.py) ---------------------------------
 
     async def append_validated_extraction(

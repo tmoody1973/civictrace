@@ -158,4 +158,5 @@ class LedgerEvent(BaseModel):
     review: ReviewDecision | None = None
     inquiry: InquiryProposal | None = None
     approval: ApprovalToken | None = None
+    packet_path: str | None = None
     reason: str | None = None
