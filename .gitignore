@@ -56,3 +56,4 @@ pulumi.*.yaml
 
 # Starter-pack archives (already merged into the tree)
 *.zip
+tfplan
