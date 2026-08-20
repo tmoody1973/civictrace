@@ -36,8 +36,10 @@ def create_app(
     app.state.approval = approval
     if uri_resolver is not None:
         app.state.uri_resolver = uri_resolver
-    if bearer_token:
-        _require_bearer(app, bearer_token)
+    # strip(): secret values created with `openssl ... | gcloud secrets versions add`
+    # carry a trailing newline; the header value never does.
+    if bearer_token and bearer_token.strip():
+        _require_bearer(app, bearer_token.strip())
     app.add_middleware(
         CORSMiddleware,
         allow_origins=list(cors_origins or cors_origins_from_env()),
@@ -61,7 +63,7 @@ def _require_bearer(app: FastAPI, token: str) -> None:
 
     @app.middleware("http")
     async def bearer_gate(request: Request, call_next):  # type: ignore[no-untyped-def]  # noqa: ANN202
-        if request.url.path == "/healthz" or request.method == "OPTIONS":
+        if request.url.path in ("/healthz", "/health") or request.method == "OPTIONS":
             return await call_next(request)
         supplied = request.headers.get("Authorization", "").removeprefix("Bearer ").strip()
         if not supplied or not secrets.compare_digest(supplied, token):

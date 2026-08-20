@@ -1,0 +1,8 @@
+# Build the CivicTrace service image from the repo root (backend/Dockerfile needs
+# both backend/ and docs/sources/ in the context).
+# Run: gcloud builds submit --config infra/cloudbuild.yaml \
+#        --substitutions _IMAGE=<region>-docker.pkg.dev/<project>/civictrace/civictrace:<tag> .
+steps:
+  - name: gcr.io/cloud-builders/docker
+    args: ["build", "-f", "backend/Dockerfile", "-t", "${_IMAGE}", "."]
+images: ["${_IMAGE}"]

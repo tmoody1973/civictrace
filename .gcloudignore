@@ -1,0 +1,15 @@
+# Keep Cloud Build uploads small: only what backend/Dockerfile needs.
+.git
+frontend/node_modules
+frontend/.next
+frontend/test-results
+frontend/playwright-report
+backend/.venv
+backend/.local-artifacts
+backend/.pytest_cache
+backend/.mypy_cache
+backend/.ruff_cache
+**/__pycache__
+infra/terraform/environments/dev/.terraform
+Plans
+docs/hackathon/proof

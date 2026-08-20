@@ -23,11 +23,12 @@ data "google_project" "this" {
 # --- Worker: IAM-only Cloud Tasks target -----------------------------------------
 
 resource "google_cloud_run_v2_service" "worker" {
-  project  = var.project_id
-  name     = "civictrace-worker"
-  location = var.region
-  labels   = local.labels
-  ingress  = "INGRESS_TRAFFIC_ALL" # authentication is IAM, not network: no allUsers binding exists
+  project             = var.project_id
+  name                = "civictrace-worker"
+  location            = var.region
+  labels              = local.labels
+  deletion_protection = false
+  ingress             = "INGRESS_TRAFFIC_ALL" # authentication is IAM, not network: no allUsers binding exists
 
   template {
     service_account = var.worker_service_account_email
@@ -38,7 +39,15 @@ resource "google_cloud_run_v2_service" "worker" {
     containers {
       image = var.image
       resources {
-        limits = { cpu = "1", memory = "1Gi" }
+        limits            = { cpu = "1", memory = "1Gi" }
+        startup_cpu_boost = true
+      }
+      startup_probe {
+        tcp_socket {
+          port = 8080
+        }
+        period_seconds    = 10
+        failure_threshold = 30
       }
       env {
         name  = "CIVICTRACE_APP"
@@ -107,11 +116,12 @@ resource "google_service_account_iam_member" "pubsub_token_creator" {
 # --- API: public URL, bearer gate in the app -------------------------------------
 
 resource "google_cloud_run_v2_service" "api" {
-  project  = var.project_id
-  name     = "civictrace-api"
-  location = var.region
-  labels   = local.labels
-  ingress  = "INGRESS_TRAFFIC_ALL"
+  project             = var.project_id
+  name                = "civictrace-api"
+  location            = var.region
+  labels              = local.labels
+  deletion_protection = false
+  ingress             = "INGRESS_TRAFFIC_ALL"
 
   template {
     service_account = var.api_service_account_email
@@ -122,7 +132,15 @@ resource "google_cloud_run_v2_service" "api" {
     containers {
       image = var.image
       resources {
-        limits = { cpu = "1", memory = "512Mi" }
+        limits            = { cpu = "1", memory = "1Gi" }
+        startup_cpu_boost = true
+      }
+      startup_probe {
+        tcp_socket {
+          port = 8080
+        }
+        period_seconds    = 10
+        failure_threshold = 30
       }
       env {
         name  = "CIVICTRACE_APP"
