@@ -45,7 +45,7 @@ fi
 # --- Buckets: never public, labeled --------------------------------------------
 for BUCKET in "${PROJECT}-civictrace-vault" "${PROJECT}-civictrace-packets"; do
   if gcloud storage buckets describe "gs://$BUCKET" --format=json >/tmp/bucket.json 2>/dev/null; then
-    grep -q '"publicAccessPrevention": "enforced"' /tmp/bucket.json \
+    grep -q '"public_access_prevention": "enforced"' /tmp/bucket.json \
       && pass "$BUCKET public access prevention enforced" \
       || fail "$BUCKET does not enforce public access prevention"
     grep -q '"app": "civictrace"' /tmp/bucket.json \
