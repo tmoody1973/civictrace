@@ -83,9 +83,11 @@ class FakeIngestor:
 class FakeEnqueuer:
     def __init__(self) -> None:
         self.events: list[SourceEvent] = []
+        self.message_ids: list[str | None] = []
 
-    def enqueue(self, event: SourceEvent) -> str:
+    def enqueue(self, event: SourceEvent, *, message_id: str | None = None) -> str:
         self.events.append(event)
+        self.message_ids.append(message_id)
         return "task-1"
 
 
@@ -103,6 +105,18 @@ def test_pubsub_push_enqueues_exactly_one_task() -> None:
     assert response.status_code == 200 and response.json()["ok"] is True
     assert [e.artifact_id for e in enqueuer.events] == ["tid121-project-plan-2024"]
     assert ingestor.events == []  # nothing heavy inside event delivery
+
+
+def test_pubsub_message_id_reaches_the_enqueuer_for_task_naming() -> None:
+    client, _, enqueuer = _worker()
+    envelope = {
+        "message": {
+            "data": base64.b64encode(EVENT.model_dump_json().encode()).decode(),
+            "messageId": "msg-42",
+        }
+    }
+    assert client.post("/pubsub/source-events", json=envelope).status_code == 200
+    assert enqueuer.message_ids == ["msg-42"]
 
 
 def test_pubsub_poison_message_is_acked_not_retried() -> None:
@@ -128,6 +142,41 @@ def test_task_malformed_payload_refused_without_retry() -> None:
     response = client.post("/tasks/ingest-source-event", json={"nope": True})
     assert response.status_code == 200 and response.json()["ok"] is False
     assert ingestor.events == []
+
+
+# --- BigQuery prefilter gate (MOO-710) --------------------------------------------
+
+
+class FakePrefilter:
+    def __init__(self, known: set[str]) -> None:
+        self._known = known
+
+    def manifest_row(self, artifact_id: str) -> object | None:
+        return {"artifact_id": artifact_id} if artifact_id in self._known else None
+
+
+def _run_ingestor(known: set[str]) -> tuple[WorkflowResult, list[str]]:
+    import asyncio
+
+    from app.worker import WorkflowIngestor
+
+    inner = FakeIngestor()
+    ingestor = WorkflowIngestor(workflow=inner, prefilter=FakePrefilter(known))
+    result = asyncio.run(ingestor.run(EVENT, trace_id="t-1"))
+    return result, [e.artifact_id for e in inner.events]
+
+
+def test_prefilter_passes_known_artifact_through_to_the_workflow() -> None:
+    result, ran = _run_ingestor(known={"tid121-project-plan-2024"})
+    assert result.status is JobStatus.SUCCEEDED
+    assert ran == ["tid121-project-plan-2024"]
+
+
+def test_prefilter_fails_closed_when_artifact_missing_from_corpus() -> None:
+    result, ran = _run_ingestor(known=set())
+    assert result.status is JobStatus.FAILED
+    assert "reviewed corpus" in (result.reason or "")
+    assert ran == []
 
 
 # --- URI resolver + packet writer ------------------------------------------------

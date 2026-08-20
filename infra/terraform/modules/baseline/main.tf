@@ -165,6 +165,53 @@ resource "google_storage_bucket_iam_member" "api_packets_read" {
   member = google_service_account.api.member
 }
 
+# --- BigQuery: queryable copy of the reviewed corpus manifest (MOO-710) ----------
+# The worker's bounded-evidence prefilter queries this table per source event.
+# Rows are loaded from the manifest by backend/scripts/load_corpus_bigquery.py.
+# Lifecycle (documented, no table expiration): dev is teardown=required, so the
+# dataset is deleted by the MOO-712 teardown; rows reload from the manifest in seconds.
+
+resource "google_bigquery_dataset" "corpus" {
+  project                    = var.project_id
+  dataset_id                 = "civictrace_dev"
+  location                   = var.region
+  labels                     = local.labels
+  delete_contents_on_destroy = true
+
+  depends_on = [google_project_service.required]
+}
+
+resource "google_bigquery_table" "corpus_artifacts" {
+  project             = var.project_id
+  dataset_id          = google_bigquery_dataset.corpus.dataset_id
+  table_id            = "corpus_artifacts"
+  labels              = local.labels
+  deletion_protection = false # disposable copy of the manifest, not the source of truth
+
+  schema = jsonencode([
+    { name = "artifact_id", type = "STRING", mode = "REQUIRED" },
+    { name = "source_id", type = "STRING", mode = "REQUIRED" },
+    { name = "role", type = "STRING", mode = "REQUIRED" },
+    { name = "canonical_url", type = "STRING", mode = "NULLABLE" },
+    { name = "hint_pages", type = "INTEGER", mode = "REPEATED" },
+    { name = "content_hash", type = "STRING", mode = "NULLABLE" },
+  ])
+}
+
+# Worker: may run query jobs, may read ONLY this dataset.
+resource "google_project_iam_member" "worker_bq_jobs" {
+  project = var.project_id
+  role    = "roles/bigquery.jobUser"
+  member  = google_service_account.worker.member
+}
+
+resource "google_bigquery_dataset_iam_member" "worker_corpus_read" {
+  project    = var.project_id
+  dataset_id = google_bigquery_dataset.corpus.dataset_id
+  role       = "roles/bigquery.dataViewer"
+  member     = google_service_account.worker.member
+}
+
 # --- Image registry: exists before any image push (MOO-709) ----------------------
 
 resource "google_artifact_registry_repository" "images" {

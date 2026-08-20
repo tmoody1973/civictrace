@@ -21,6 +21,7 @@ from app.repositories.firestore_cases import FirestoreLedger
 from app.repositories.firestore_jobs import FirestoreJobRepository
 from app.schemas.corpus import CorpusManifest
 from app.services.agents_service import build_agents_service
+from app.services.bigquery_corpus import BigQueryCorpusPrefilter
 from app.services.corpus import load_corpus_manifest
 from app.services.gcs_artifact_vault import GcsArtifactVault
 from app.services.uri_bytes import GcsUriResolver
@@ -38,6 +39,8 @@ class CloudConfig:
     tasks_queue: str
     worker_url: str
     runner_kind: str
+    bq_prefilter: bool
+    bq_dataset: str
     manifest_path: Path
     allowlist_path: Path
     extraction_path: Path
@@ -58,6 +61,8 @@ class CloudConfig:
             tasks_queue=os.environ.get("CIVICTRACE_TASKS_QUEUE", "civictrace-ingest"),
             worker_url=os.environ.get("CIVICTRACE_WORKER_URL", ""),
             runner_kind=os.environ.get("CIVICTRACE_RUNNER", "fake"),
+            bq_prefilter=os.environ.get("CIVICTRACE_BQ_PREFILTER") == "1",
+            bq_dataset=os.environ.get("CIVICTRACE_BQ_DATASET", "civictrace_dev"),
             manifest_path=_REPO_ROOT / "docs" / "sources" / "corpus-manifest.yaml",
             allowlist_path=_REPO_ROOT / "docs" / "sources" / "source-allowlist.yaml",
             extraction_path=_BACKEND_ROOT
@@ -88,10 +93,24 @@ def build_cloud_ledger(
     )
 
 
+def build_corpus_prefilter(config: CloudConfig) -> BigQueryCorpusPrefilter | None:
+    """The BQ bounded-evidence prefilter; None keeps local/fake mode on the manifest file."""
+    if not config.bq_prefilter:
+        return None
+    from google.cloud import bigquery
+
+    return BigQueryCorpusPrefilter(
+        client=bigquery.Client(project=config.project),
+        project=config.project,
+        dataset=config.bq_dataset,
+    )
+
+
 def build_cloud_workflow(
     config: CloudConfig,
     *,
     clock: Callable[[], datetime] = lambda: datetime.now(UTC),
+    prefilter: BigQueryCorpusPrefilter | None = None,
 ) -> tuple[CityDocumentWorkflow, FirestoreLedger, CorpusManifest]:
     from google.cloud import firestore  # noqa: I001
     from google.cloud import storage  # type: ignore[attr-defined]
@@ -117,6 +136,7 @@ def build_cloud_workflow(
             extraction_path=config.extraction_path,
             fixture_root=config.fixture_root,
             runner_kind=config.runner_kind,
+            hint_pages=prefilter.hint_pages() if prefilter is not None else None,
         )[0],
         routes=CityRouteRegistry(),
         idempotency=SourceJobKeys(),

@@ -32,8 +32,12 @@ class SourceEventIngestor(Protocol):
     async def run(self, event: SourceEvent, *, trace_id: str) -> WorkflowResult: ...
 
 
+class CorpusPrefilter(Protocol):
+    def manifest_row(self, artifact_id: str) -> object | None: ...
+
+
 class TaskEnqueuer(Protocol):
-    def enqueue(self, event: SourceEvent) -> str:
+    def enqueue(self, event: SourceEvent, *, message_id: str | None = None) -> str:
         """Create (or dedupe) the ingest task; returns the task name."""
         ...
 
@@ -56,7 +60,7 @@ def create_worker_app(*, ingestor: SourceEventIngestor, enqueuer: TaskEnqueuer) 
         except (KeyError, TypeError, ValueError, ValidationError) as exc:
             logger.error("pubsub message refused: %s", exc)
             return _json(200, ok=False, error=f"message refused: {type(exc).__name__}")
-        task_name = enqueuer.enqueue(event)
+        task_name = enqueuer.enqueue(event, message_id=envelope["message"].get("messageId"))
         return _json(200, ok=True, data={"task": task_name})
 
     @app.post("/tasks/ingest-source-event")
@@ -87,14 +91,46 @@ def _json(
 
 
 class WorkflowIngestor:
-    """Builds the cloud workflow once and runs one event at a time through it."""
+    """Builds the cloud workflow once and runs one event at a time through it.
 
-    def __init__(self) -> None:
-        from app.services.cloud import CloudConfig, build_cloud_workflow
+    With CIVICTRACE_BQ_PREFILTER=1 each event must have a manifest row in BigQuery
+    (the bounded-evidence prefilter, MOO-710); a missing row fails closed. A BigQuery
+    outage raises → 500 → Cloud Tasks retries within the queue's bounded retry caps.
+    """
 
-        self._workflow, _, _ = build_cloud_workflow(CloudConfig.from_env())
+    def __init__(
+        self,
+        *,
+        workflow: SourceEventIngestor | None = None,
+        prefilter: CorpusPrefilter | None = None,
+    ) -> None:
+        if workflow is None:
+            from app.services.cloud import (
+                CloudConfig,
+                build_cloud_workflow,
+                build_corpus_prefilter,
+            )
+
+            config = CloudConfig.from_env()
+            prefilter = build_corpus_prefilter(config)
+            workflow, _, _ = build_cloud_workflow(config, prefilter=prefilter)
+        self._workflow = workflow
+        self._prefilter = prefilter
 
     async def run(self, event: SourceEvent, *, trace_id: str) -> WorkflowResult:
+        if self._prefilter is not None and self._prefilter.manifest_row(event.artifact_id) is None:
+            from app.domain.enums import JobStatus
+
+            logger.error(
+                "%s: artifact %s has no corpus_artifacts row; event refused",
+                trace_id,
+                event.artifact_id,
+            )
+            return WorkflowResult(
+                status=JobStatus.FAILED,
+                job_key=f"prefilter:{event.artifact_id}",
+                reason="artifact not in the reviewed corpus (BigQuery prefilter)",
+            )
         return await self._workflow.run(event, trace_id=trace_id)
 
 
@@ -114,7 +150,7 @@ class CloudTasksEnqueuer:
         self._worker_url = config.worker_url.rstrip("/")
         self._invoker_email = os.environ.get("CIVICTRACE_WORKER_SA", "")
 
-    def enqueue(self, event: SourceEvent) -> str:
+    def enqueue(self, event: SourceEvent, *, message_id: str | None = None) -> str:
         from google.api_core.exceptions import AlreadyExists
         from google.cloud import tasks_v2
 
@@ -125,6 +161,10 @@ class CloudTasksEnqueuer:
             event, workflow_version=CityDocumentWorkflow.WORKFLOW_VERSION
         )
         task_id = job_key.replace(":", "-").replace("/", "-")
+        if message_id:
+            # Duplicate suppression is the persisted job repo's responsibility (MOO-710);
+            # a per-message task name keeps replays repeatable (Tasks burns names for ~1h).
+            task_id = f"{task_id}-{message_id}"
         task_name = f"{self._queue_path}/tasks/{task_id}"
         task = tasks_v2.Task(
             name=task_name,

@@ -81,6 +81,15 @@ resource "google_cloud_run_v2_service" "worker" {
         name  = "GOOGLE_CLOUD_LOCATION"
         value = "global" # Gemini 3.x Flash is served only from the global Vertex location
       }
+      env {
+        # Worker-only (MOO-710): each event needs a corpus_artifacts row in BigQuery.
+        name  = "CIVICTRACE_BQ_PREFILTER"
+        value = "1"
+      }
+      env {
+        name  = "CIVICTRACE_BQ_DATASET"
+        value = "civictrace_dev"
+      }
     }
   }
 }

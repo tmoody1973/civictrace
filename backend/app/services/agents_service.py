@@ -27,15 +27,19 @@ def build_agents_service(
     delta_path: Path | None = None,
     review_path: Path | None = None,
     inquiry_path: Path | None = None,
+    hint_pages: dict[str, list[int]] | None = None,
 ) -> tuple[DocumentEvidenceAgentService, UsageLog | None]:
     fake_runner = _fake_runner(
         extraction_path, delta_path=delta_path, review_path=review_path, inquiry_path=inquiry_path
     )
     runner, usage_log = _runner(manifest, fixture_root, runner_kind, fake_runner)
-    hint_pages = {
-        entry.artifact_id: [anchor.page for anchor in entry.required_anchors]
-        for entry in manifest.artifacts
-    }
+    # Cloud mode passes hint_pages from the BigQuery prefilter (MOO-710); the
+    # manifest anchors stay the source everywhere else.
+    if hint_pages is None:
+        hint_pages = {
+            entry.artifact_id: [anchor.page for anchor in entry.required_anchors]
+            for entry in manifest.artifacts
+        }
     service = DocumentEvidenceAgentService(
         runner, case_id=manifest.case_id, hint_pages=hint_pages
     )
