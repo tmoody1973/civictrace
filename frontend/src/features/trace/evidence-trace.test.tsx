@@ -13,7 +13,7 @@ describe("EvidenceTraceView (real TID 121 ledger rows)", () => {
   it("is collapsed by default and shows the counts in the header", () => {
     render(<EvidenceTraceView events={trace.events} />);
     expect(screen.getByRole("button", { name: /Toggle Evidence Trace/ })).toHaveTextContent(
-      "Evidence Trace · 16 rows · 3 source artifacts",
+      "Evidence Trace · 20 rows · 3 source artifacts",
     );
     expect(screen.queryByRole("list", { name: "Ledger rows" })).toBeNull();
   });
@@ -29,6 +29,14 @@ describe("EvidenceTraceView (real TID 121 ledger rows)", () => {
     expect(staged).toHaveAttribute("data-human-step", "true");
     expect(staged).toHaveAccessibleName(/Human decision required/);
     expect(within(staged).getByTestId("human-step-note")).toHaveTextContent("No external action happens without a human approval");
+
+    // Slice 4 rows (MOO-705): approval chain is visible, human steps marked, refusals are gaps.
+    expect(screen.getByTestId("trace-row-INQUIRY_STAGED")).toHaveAttribute("data-human-step", "true");
+    expect(screen.getByTestId("trace-row-INQUIRY_APPROVAL_ISSUED")).toHaveAttribute("data-human-step", "true");
+    expect(screen.getByTestId("trace-row-PACKET_RENDERED")).toHaveTextContent("DRAFT packet rendered");
+    const refused = screen.getByTestId("trace-row-APPROVAL_REFUSED");
+    expect(refused).toHaveTextContent("Approval refused — failed closed");
+    expect(refused).toHaveTextContent("you approved different bytes than are staged");
 
     const capital = screen.getAllByTestId("trace-row-EVIDENCE_ACCEPTED").find((row) =>
       row.textContent?.includes("TOTAL Capital Project Costs $700,000"),

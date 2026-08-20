@@ -12,6 +12,7 @@ from app.schemas.case import LedgerEvent
 from app.schemas.source import Artifact
 
 LEDGER_JSON_ENV = "CIVICTRACE_LEDGER_JSON"
+LIVE_ENV = "CIVICTRACE_LIVE"
 CORS_ORIGINS_ENV = "CIVICTRACE_CORS_ORIGINS"
 DEFAULT_CORS_ORIGINS = ("http://localhost:3000",)
 

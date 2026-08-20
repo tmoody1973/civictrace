@@ -1,7 +1,15 @@
 // The only place the frontend talks to the backend. Visual components import hooks from
 // features/, never this file's fetch. No AI/provider keys live in the browser.
 
-import type { ApiEnvelope, CaseSummaryView, HealthResponse, TraceResponse } from "@/lib/api-types";
+import type {
+  ApiEnvelope,
+  ApprovalResultView,
+  CaseSummaryView,
+  HealthResponse,
+  InquiryStagedView,
+  PacketView,
+  TraceResponse,
+} from "@/lib/api-types";
 
 export const API_BASE_URL = process.env.NEXT_PUBLIC_API_BASE_URL ?? "http://localhost:8000";
 
@@ -42,10 +50,31 @@ async function getJson<T>(path: string, fetchImpl: typeof fetch = fetch): Promis
   return unwrapEnvelope<T>(body, response.status);
 }
 
+async function postJson<T>(path: string, payload: unknown, fetchImpl: typeof fetch = fetch): Promise<T> {
+  let response: Response;
+  try {
+    response = await fetchImpl(`${API_BASE_URL}${path}`, {
+      method: "POST",
+      headers: { Accept: "application/json", "Content-Type": "application/json" },
+      body: JSON.stringify(payload),
+    });
+  } catch (cause) {
+    throw new ApiError(`Cannot reach the CivicTrace API at ${API_BASE_URL}`, null, { cause });
+  }
+  const body: unknown = await response.json().catch(() => null);
+  return unwrapEnvelope<T>(body, response.status);
+}
+
 export const api = {
   health: () => getJson<HealthResponse>("/healthz"),
   listCases: () => getJson<CaseSummaryView[]>("/cases"),
   caseSummary: (caseId: string) => getJson<CaseSummaryView>(`/cases/${encodeURIComponent(caseId)}`),
   caseTrace: (caseId: string) => getJson<TraceResponse>(`/cases/${encodeURIComponent(caseId)}/trace`),
   artifactFileUrl: (artifactId: string) => `${API_BASE_URL}/artifacts/${encodeURIComponent(artifactId)}/file`,
+  stagedInquiry: (caseId: string) => getJson<InquiryStagedView>(`/cases/${encodeURIComponent(caseId)}/inquiry`),
+  casePacket: (caseId: string) => getJson<PacketView>(`/cases/${encodeURIComponent(caseId)}/packet`),
+  approveInquiry: (caseId: string, body: { reviewer_name: string; artifact_hash: string }) =>
+    postJson<ApprovalResultView>(`/cases/${encodeURIComponent(caseId)}/inquiry/approve`, body),
+  rejectInquiry: (caseId: string, body: { reviewer_name: string; note: string }) =>
+    postJson<null>(`/cases/${encodeURIComponent(caseId)}/inquiry/reject`, body),
 };

@@ -22,11 +22,19 @@ export type TraceRow = {
   event: TraceEventView;
 };
 
-const HUMAN_STEPS: ReadonlySet<LedgerEventType> = new Set(["DELTA_STAGED", "CASE_HUMAN_REVIEW"]);
+const HUMAN_STEPS: ReadonlySet<LedgerEventType> = new Set([
+  "DELTA_STAGED",
+  "CASE_HUMAN_REVIEW",
+  "INQUIRY_STAGED",
+  "INQUIRY_APPROVAL_ISSUED",
+  "INQUIRY_APPROVAL_REJECTED",
+]);
 const GAP_STEPS: ReadonlySet<LedgerEventType> = new Set([
   "ARTIFACT_NOT_PUBLISHED",
   "EXTRACTION_REJECTED",
   "DELTA_REJECTED",
+  "INQUIRY_REJECTED",
+  "APPROVAL_REFUSED",
 ]);
 
 /** Gaps and human steps are never shown as "complete". */

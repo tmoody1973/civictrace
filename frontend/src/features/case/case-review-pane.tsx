@@ -2,6 +2,8 @@
 
 import { ApiErrorState } from "@/components/layout/api-error-state";
 import { Skeleton } from "@/components/ui/skeleton";
+import { ApprovalDrawer } from "@/features/approval/approval-drawer";
+import { PacketView } from "@/features/approval/packet-view";
 import { DecisionDeltaHeader } from "@/features/case/decision-delta-header";
 import { PromiseCard } from "@/features/case/promise-card";
 import { useCaseSummary } from "@/features/case/queries";
@@ -14,6 +16,8 @@ export function CaseReviewPane({ caseId }: { caseId: string }) {
     <div className="space-y-4">
       <PromiseCard summary={query.data} />
       <DecisionDeltaHeader delta={query.data.latest_delta} />
+      <ApprovalDrawer caseId={caseId} />
+      <PacketView caseId={caseId} />
     </div>
   );
 }

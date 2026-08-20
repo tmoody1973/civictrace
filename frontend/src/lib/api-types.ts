@@ -14,7 +14,15 @@ export type LedgerEventType =
   | "DELTA_PROPOSED"
   | "DELTA_REJECTED"
   | "DELTA_STAGED"
-  | "CASE_HUMAN_REVIEW";
+  | "CASE_HUMAN_REVIEW"
+  | "INQUIRY_STAGED"
+  | "INQUIRY_REJECTED"
+  | "INQUIRY_APPROVAL_ISSUED"
+  | "INQUIRY_APPROVAL_REJECTED"
+  | "APPROVAL_REFUSED"
+  | "PACKET_RENDERED";
+
+export type InquiryType = "SOURCE_QUESTION" | "RECORDS_REQUEST_OUTLINE" | "WATCH_REMINDER" | "HUMAN_RESEARCH_TASK";
 
 export type AnchorType = "page" | "table_cell" | "dataset_row" | "transcript_time" | "video_time" | "map_feature";
 export type DeltaCategory = "ADVANCED" | "REVISED" | "DEFERRED" | "CONFLICTING" | "EXPECTED_EVIDENCE_ARRIVED" | "RECORD_GAP";
@@ -52,9 +60,51 @@ export interface TraceEventView {
   what_is_not_established: string[];
   next_evidence_needed: string | null;
   requires_human_review: boolean | null;
+  inquiry_type: InquiryType | null;
+  proposed_question: string | null;
+  scope_rationale: string | null;
+  target_record_or_source: string | null;
+  supporting_evidence_ids: string[];
+  excluded_requests: string[];
+  approval_token_id: string | null;
+  approval_reviewer: string | null;
+  approval_expires_at: string | null;
   review_outcome: ReviewOutcome | null;
   blocking_issues: string[];
   review_notes: string[];
+}
+
+export interface InquiryProposalView {
+  inquiry_type: InquiryType;
+  proposed_question: string;
+  scope_rationale: string;
+  target_record_or_source: string;
+  supporting_evidence_ids: string[];
+  excluded_requests: string[];
+  approval_required: boolean;
+  limitations: string[];
+}
+
+export interface InquiryStagedView {
+  case_id: string;
+  proposal: InquiryProposalView;
+  artifact_hash: string;
+  ttl_minutes: number;
+}
+
+export interface ApprovalResultView {
+  token_id: string;
+  reviewer_name: string;
+  expires_at: string;
+  packet_hash: string;
+  packet_path: string;
+}
+
+export interface PacketView {
+  case_id: string;
+  markdown: string;
+  packet_hash: string;
+  packet_path: string;
 }
 
 export interface TraceResponse {

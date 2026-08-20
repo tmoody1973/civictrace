@@ -3,6 +3,7 @@ import { resolve } from "node:path";
 
 import { describe, expect, it } from "vitest";
 
+import { allApprovalCopy } from "@/features/approval/copy";
 import { allCaseCopy } from "@/features/case/copy";
 import { allTraceCopy } from "@/features/trace/copy";
 
@@ -21,7 +22,9 @@ describe("case copy vocabulary", () => {
   it("contains none of the backend's allegation words", () => {
     const terms = allegationTermsFromBackend();
     const pattern = new RegExp(`\\b(${terms.map((t) => t.replace(/[.*+?^${}()|[\]\\]/g, "\\$&")).join("|")})\\b`, "i");
-    const offenders = [...allCaseCopy(), ...allTraceCopy()].filter((text) => pattern.test(text));
+    const offenders = [...allCaseCopy(), ...allTraceCopy(), ...allApprovalCopy()].filter((text) =>
+      pattern.test(text),
+    );
     expect(offenders).toEqual([]);
   });
 

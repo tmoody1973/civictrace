@@ -1,6 +1,20 @@
 "use client";
 
-import { AlertTriangle, Ban, CheckCircle2, CircleDashed, FileCheck2, FileX2, GitCompareArrows, UserCheck } from "lucide-react";
+import {
+  AlertTriangle,
+  Ban,
+  CheckCircle2,
+  CircleDashed,
+  FileCheck2,
+  FileText,
+  FileX2,
+  GitCompareArrows,
+  HelpCircle,
+  ShieldCheck,
+  ShieldX,
+  UserCheck,
+  UserX,
+} from "lucide-react";
 
 import { ChainOfThoughtStep } from "@/components/ai-elements/chain-of-thought";
 import { Badge } from "@/components/ui/badge";
@@ -20,6 +34,12 @@ const ICONS: Record<LedgerEventType, typeof CheckCircle2> = {
   DELTA_REJECTED: Ban,
   DELTA_STAGED: UserCheck,
   CASE_HUMAN_REVIEW: AlertTriangle,
+  INQUIRY_STAGED: HelpCircle,
+  INQUIRY_REJECTED: Ban,
+  INQUIRY_APPROVAL_ISSUED: ShieldCheck,
+  INQUIRY_APPROVAL_REJECTED: UserX,
+  APPROVAL_REFUSED: ShieldX,
+  PACKET_RENDERED: FileText,
 };
 
 export function TraceRowView({ row, highlighted }: { row: TraceRow; highlighted: boolean }) {

@@ -7,7 +7,7 @@ from __future__ import annotations
 
 from datetime import datetime
 
-from pydantic import BaseModel, ConfigDict, Field
+from pydantic import BaseModel, ConfigDict, Field, field_validator
 
 from app.domain.enums import (
     AnchorType,
@@ -129,3 +129,78 @@ class HealthResponse(BaseModel):
     model_config = ConfigDict(extra="forbid")
 
     status: str
+
+
+class InquiryProposalView(BaseModel):
+    """The staged proposal exactly as the reviewer must see it before approving."""
+
+    model_config = ConfigDict(extra="forbid")
+
+    inquiry_type: InquiryType
+    proposed_question: str
+    scope_rationale: str
+    target_record_or_source: str
+    supporting_evidence_ids: list[str]
+    excluded_requests: list[str]
+    approval_required: bool
+    limitations: list[str]
+
+
+class InquiryStagedView(BaseModel):
+    model_config = ConfigDict(extra="forbid")
+
+    case_id: str
+    proposal: InquiryProposalView
+    artifact_hash: str
+    ttl_minutes: int
+
+
+class ApproveInquiryRequest(BaseModel):
+    """The client must echo the hash it displayed; the server compares bytes, not intentions."""
+
+    model_config = ConfigDict(extra="forbid")
+
+    reviewer_name: str = Field(min_length=1)
+    artifact_hash: str = Field(min_length=1)
+
+    @field_validator("reviewer_name", "artifact_hash")
+    @classmethod
+    def _not_blank(cls, value: str) -> str:
+        stripped = value.strip()
+        if not stripped:
+            raise ValueError("must not be blank")
+        return stripped
+
+
+class RejectInquiryRequest(BaseModel):
+    model_config = ConfigDict(extra="forbid")
+
+    reviewer_name: str = Field(min_length=1)
+    note: str = Field(min_length=1)
+
+    @field_validator("reviewer_name", "note")
+    @classmethod
+    def _not_blank(cls, value: str) -> str:
+        stripped = value.strip()
+        if not stripped:
+            raise ValueError("must not be blank")
+        return stripped
+
+
+class ApprovalResultView(BaseModel):
+    model_config = ConfigDict(extra="forbid")
+
+    token_id: str
+    reviewer_name: str
+    expires_at: datetime
+    packet_hash: str
+    packet_path: str
+
+
+class PacketView(BaseModel):
+    model_config = ConfigDict(extra="forbid")
+
+    case_id: str
+    markdown: str
+    packet_hash: str
+    packet_path: str

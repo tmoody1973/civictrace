@@ -32,6 +32,12 @@ export const EVENT_LABEL: Record<LedgerEventType, string> = {
   DELTA_REJECTED: "Proposed change refused by checks",
   DELTA_STAGED: "Change staged for human review",
   CASE_HUMAN_REVIEW: "Sent to a human reviewer",
+  INQUIRY_STAGED: "Next question staged for approval",
+  INQUIRY_REJECTED: "Proposed question refused by checks",
+  INQUIRY_APPROVAL_ISSUED: "Human approved — token issued",
+  INQUIRY_APPROVAL_REJECTED: "Human rejected the proposed question",
+  APPROVAL_REFUSED: "Approval refused — failed closed",
+  PACKET_RENDERED: "DRAFT packet rendered",
 };
 
 export const EVIDENCE_STATUS_LABEL: Record<string, string> = {

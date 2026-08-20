@@ -10,9 +10,11 @@ from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import JSONResponse
 from starlette.exceptions import HTTPException
 
-from app.api import routes_artifacts, routes_cases, routes_health
+from app.api import routes_approval, routes_artifacts, routes_cases, routes_health
+from app.api.routes_approval import ApprovalGateway
 from app.core.dependencies import (
     LEDGER_JSON_ENV,
+    LIVE_ENV,
     JsonLedgerReader,
     TraceReader,
     cors_origins_from_env,
@@ -20,19 +22,26 @@ from app.core.dependencies import (
 from app.schemas.api import ApiEnvelope
 
 
-def create_app(*, trace_reader: TraceReader, cors_origins: Sequence[str] | None = None) -> FastAPI:
+def create_app(
+    *,
+    trace_reader: TraceReader,
+    approval: ApprovalGateway | None = None,
+    cors_origins: Sequence[str] | None = None,
+) -> FastAPI:
     app = FastAPI(title="CivicTrace API", version="0.1.0")
     app.state.trace_reader = trace_reader
+    app.state.approval = approval
     app.add_middleware(
         CORSMiddleware,
         allow_origins=list(cors_origins or cors_origins_from_env()),
-        allow_methods=["GET", "OPTIONS"],
+        allow_methods=["GET", "POST", "OPTIONS"],
         allow_headers=["*"],
         expose_headers=["ETag", "X-CivicTrace-Content-Hash"],
     )
     app.include_router(routes_health.router)
     app.include_router(routes_cases.router)
     app.include_router(routes_artifacts.router)
+    app.include_router(routes_approval.router)
     app.add_exception_handler(HTTPException, _http_error_as_envelope)  # type: ignore[arg-type]
     return app
 
@@ -44,12 +53,26 @@ def _http_error_as_envelope(_: Request, exc: HTTPException) -> JSONResponse:
 
 
 def _default_app() -> FastAPI | None:
-    """Uvicorn entry point. Tests build their own app via create_app()."""
-    return (
-        create_app(trace_reader=JsonLedgerReader.from_env())
-        if os.environ.get(LEDGER_JSON_ENV)
-        else None
-    )
+    """Uvicorn entry point. Tests build their own app via create_app().
+
+    CIVICTRACE_LIVE=1 replays the fixture corpus in-process and enables the
+    approval/packet write endpoints. CIVICTRACE_LEDGER_JSON serves a static
+    ledger read-only, as before.
+    """
+    if os.environ.get(LIVE_ENV):
+        from app.services.approval_session import (
+            DEFAULT_PACKET_DIR,
+            ApprovalSession,
+            default_replay_options,
+        )
+
+        session = ApprovalSession.from_replay(
+            default_replay_options(), packet_dir=DEFAULT_PACKET_DIR
+        )
+        return create_app(trace_reader=session, approval=session)
+    if os.environ.get(LEDGER_JSON_ENV):
+        return create_app(trace_reader=JsonLedgerReader.from_env())
+    return None
 
 
 app = _default_app()

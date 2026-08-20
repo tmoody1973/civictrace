@@ -58,3 +58,16 @@ Ordering guarantees: `ARTIFACT_STORED` precedes its `EVIDENCE_ACCEPTED` rows; `D
 appears earlier in the same trace as an `EVIDENCE_ACCEPTED` row.
 
 Source of truth for field types: `backend/app/schemas/api.py`. Run it locally: `backend/README.md` → "Slice 1 — run it".
+
+## Slice 4 write endpoints (MOO-705, local only)
+
+These exist only when the server runs live (`CIVICTRACE_LIVE=1 uv run uvicorn app.main:app --port 8000` — it replays the fixture corpus in-process at startup). A static-ledger server answers them 503 `approval needs the live server`. Reviewer identity is a typed name until Slice 5 auth. `# ponytail: local write endpoints; auth is the Slice 5 deploy gate.`
+
+| endpoint | meaning |
+|---|---|
+| `GET /cases/{id}/inquiry` → `InquiryStagedView` | the staged proposal exactly as the reviewer must see it: `proposal` (question, scope, target, evidence ids, exclusions, limitations), `artifact_hash` (sha256 of the canonical proposal JSON — the bytes an approval binds to), `ttl_minutes`. 404 envelope if nothing is staged. |
+| `POST /cases/{id}/inquiry/approve` body `{reviewer_name, artifact_hash}` → `ApprovalResultView` | the client MUST echo the hash it displayed. Match → token issued → packet rendered (4.3) → `{token_id, reviewer_name, expires_at, packet_hash, packet_path}`. Echo mismatch → **409** envelope `you approved different bytes than are staged`, `APPROVAL_REFUSED` row, nothing rendered. |
+| `POST /cases/{id}/inquiry/reject` body `{reviewer_name, note}` → `null` | the human said no; `INQUIRY_APPROVAL_REJECTED` row carries the note. |
+| `GET /cases/{id}/packet` → `PacketView` | `{markdown, packet_hash, packet_path}` of the last rendered DRAFT packet. 404 envelope `no packet has been rendered` before approval. |
+
+New trace rows for the UI: `INQUIRY_STAGED` / `INQUIRY_REJECTED` (inquiry fields: `inquiry_type`, `proposed_question`, `scope_rationale`, `target_record_or_source`, `supporting_evidence_ids[]`, `excluded_requests[]`) and `PACKET_RENDERED` (`approval_token_id` etc.; `payload_ref` is the packet sha256).
