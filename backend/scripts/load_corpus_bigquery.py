@@ -44,7 +44,9 @@ def main(argv: list[str] | None = None) -> int:
     from google.cloud import bigquery
 
     manifest = load_corpus_manifest(args.manifest)
-    rows = manifest_rows(list(manifest.artifacts))
+    # Media rows too (MOO-717): the worker prefilter fails closed on any event whose
+    # artifact has no corpus row, and the meeting recording is now a replay event.
+    rows = manifest_rows(list(manifest.artifacts) + list(manifest.media_artifacts))
     client = bigquery.Client(project=args.project)
     table_id = f"{args.project}.{args.dataset}.{CORPUS_TABLE}"
     # Explicit schema, identical to Terraform's: without it the load autodetects and

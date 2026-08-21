@@ -13,3 +13,6 @@ backend/.ruff_cache
 infra/terraform/environments/dev/.terraform
 Plans
 docs/hackathon/proof
+# Meeting media is vaulted in GCS, never baked into the image (MOO-717)
+backend/tests/fixtures/*/media/*.mp4
+backend/tests/fixtures/*/media/*.flac
