@@ -40,7 +40,7 @@ import json, sys
 rows = [json.loads(line.split("model_usage ", 1)[1]) for line in sys.stdin if "model_usage " in line]
 tin = sum(r["input_tokens"] for r in rows); tout = sum(r["output_tokens"] for r in rows)
 usd = sum(r["estimated_usd"] for r in rows)
-print(f"{len(rows)} model calls · {tin} in / {tout} out tokens · est \${usd:.4f} (list-price estimate; the bill is authoritative)")
+print(f"{len(rows)} model calls · {tin} in / {tout} out tokens · est USD {usd:.4f} (list-price estimate; the bill is authoritative)")
 ' || echo "(no cloud model usage in the last 24h)"
 
 echo "-- exact month-to-date spend --"

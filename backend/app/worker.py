@@ -206,6 +206,9 @@ def _default_app() -> FastAPI | None:
     """Uvicorn entry point for Cloud Run; tests build their own app via create_worker_app()."""
     if not os.environ.get("CIVICTRACE_WORKER"):
         return None
+    # Python's default level drops INFO: model_usage and duplicate-suppression lines
+    # must reach Cloud Logging, so the worker opts in explicitly.
+    logging.basicConfig(level=logging.INFO)
     return create_worker_app(ingestor=WorkflowIngestor(), enqueuer=CloudTasksEnqueuer())
 
 
