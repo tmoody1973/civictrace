@@ -64,12 +64,19 @@ def test_head_returns_headers_without_body(
     assert response.content == b""
 
 
-def test_every_stored_artifact_is_servable(
+def test_every_stored_document_is_servable_and_media_is_refused_inline(
     client: TestClient, stored_artifacts: list[dict]
 ) -> None:
-    assert len(stored_artifacts) >= 3
+    assert len(stored_artifacts) >= 4
     for artifact in stored_artifacts:
-        assert client.get(f"/artifacts/{artifact['artifact_id']}/file").status_code == 200
+        response = client.get(f"/artifacts/{artifact['artifact_id']}/file")
+        if (artifact.get("media_type") or "").startswith(("video/", "audio/")):
+            # A 2.9GB recording must never be read into API memory; the reviewer
+            # reaches it through transcript evidence and the official source link.
+            assert response.status_code == 413
+            assert "not served inline" in response.json()["error"]
+        else:
+            assert response.status_code == 200
 
 
 def test_unknown_artifact_is_404_envelope(client: TestClient) -> None:
