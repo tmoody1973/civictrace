@@ -23,6 +23,8 @@ locals {
     "pubsub.googleapis.com",
     "bigquery.googleapis.com",
     "aiplatform.googleapis.com",
+    "speech.googleapis.com", # Slice 6 (MOO-716): STT V2 batch transcription of meeting media
+
     "iam.googleapis.com",
     "artifactregistry.googleapis.com",
     "cloudbuild.googleapis.com",
