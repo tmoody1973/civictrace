@@ -4,9 +4,11 @@
 import type {
   ApiEnvelope,
   ApprovalResultView,
+  CandidateBundleView,
   CaseSummaryView,
   HealthResponse,
   InquiryStagedView,
+  IntakeSelectionPayload,
   PacketView,
   TraceResponse,
   TranscriptView,
@@ -91,4 +93,13 @@ export const api = {
     postJson<ApprovalResultView>(`/cases/${encodeURIComponent(caseId)}/inquiry/approve`, body),
   rejectInquiry: (caseId: string, body: { reviewer_name: string; note: string }) =>
     postJson<null>(`/cases/${encodeURIComponent(caseId)}/inquiry/reject`, body),
+  intakeLookup: (fileNumber: string) =>
+    postJson<CandidateBundleView>("/intake/lookup", { file_number: fileNumber }),
+  intakeBundle: (bundleId: string) =>
+    getJson<CandidateBundleView>(`/intake/bundles/${encodeURIComponent(bundleId)}`),
+  intakeApprove: (bundleId: string, selection: IntakeSelectionPayload) =>
+    postJson<CandidateBundleView>(
+      `/intake/bundles/${encodeURIComponent(bundleId)}/approve`,
+      selection,
+    ),
 };

@@ -138,7 +138,7 @@ def replay_corpus(
         for entry in manifest.media_artifacts
         if entry.transcript_path is not None
     )
-    if options.replay_duplicate:
+    if options.replay_duplicate and manifest.duplicate_event_fixture is not None:
         artifact_ids.append(manifest.duplicate_event_fixture.artifact_id)
     for index, artifact_id in enumerate(artifact_ids):
         outcome = asyncio.run(

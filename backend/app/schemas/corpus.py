@@ -90,7 +90,9 @@ class CorpusManifest(BaseModel):
     # Meeting recordings (Slice 6). A separate list on purpose: the document replay
     # iterates `artifacts`; media flows through the transcription pipeline instead.
     media_artifacts: list[ManifestArtifact] = Field(default_factory=list)
-    duplicate_event_fixture: DuplicateEventFixture
+    # None for journalist-intake cases (MOO-719): the duplicate-suppression demo fixture
+    # belongs to the reviewed replay corpus only.
+    duplicate_event_fixture: DuplicateEventFixture | None = None
     required_demo_outcomes: list[str] = Field(default_factory=list)
     prohibited_fixture_content: list[str] = Field(default_factory=list)
 

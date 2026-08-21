@@ -115,11 +115,29 @@ def build_cloud_workflow(
     clock: Callable[[], datetime] = lambda: datetime.now(UTC),
     prefilter: BigQueryCorpusPrefilter | None = None,
 ) -> tuple[CityDocumentWorkflow, FirestoreLedger, CorpusManifest, UsageLog | None]:
-    """usage_log is non-None when the runner is 'adk' (live model); the worker logs it."""
+    """The reviewed replay corpus's workflow (the manifest yaml)."""
+    manifest = load_corpus_manifest(config.manifest_path)
+    workflow, ledger, usage_log = build_cloud_workflow_for_manifest(
+        config,
+        manifest,
+        clock=clock,
+        hint_pages=prefilter.hint_pages() if prefilter is not None else None,
+    )
+    return workflow, ledger, manifest, usage_log
+
+
+def build_cloud_workflow_for_manifest(
+    config: CloudConfig,
+    manifest: CorpusManifest,
+    *,
+    clock: Callable[[], datetime] = lambda: datetime.now(UTC),
+    hint_pages: dict[str, list[int]] | None = None,
+) -> tuple[CityDocumentWorkflow, FirestoreLedger, UsageLog | None]:
+    """One workflow bound to ONE case recipe — the reviewed corpus or a journalist-intake
+    case (MOO-719). usage_log is non-None when the runner is 'adk'; callers log it."""
     from google.cloud import firestore  # noqa: I001
     from google.cloud import storage  # type: ignore[attr-defined]
 
-    manifest = load_corpus_manifest(config.manifest_path)
     ledger = build_cloud_ledger(config, manifest, clock=clock)
     storage_client = storage.Client(project=config.project)
     agents, usage_log = build_agents_service(
@@ -127,7 +145,7 @@ def build_cloud_workflow(
         extraction_path=config.extraction_path,
         fixture_root=config.fixture_root,
         runner_kind=config.runner_kind,
-        hint_pages=prefilter.hint_pages() if prefilter is not None else None,
+        hint_pages=hint_pages,
     )
     source_policy = SourcePolicy.from_yaml(config.allowlist_path)
     fetch_bytes = None
@@ -157,4 +175,4 @@ def build_cloud_workflow(
         routes=CityRouteRegistry(),
         idempotency=SourceJobKeys(),
     )
-    return workflow, ledger, manifest, usage_log
+    return workflow, ledger, usage_log

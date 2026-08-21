@@ -52,7 +52,8 @@ def corpus_events(manifest_path: Path) -> list[SourceEvent]:
         for entry in manifest.media_artifacts
         if entry.transcript_path is not None
     )
-    artifact_ids.append(manifest.duplicate_event_fixture.artifact_id)
+    if manifest.duplicate_event_fixture is not None:
+        artifact_ids.append(manifest.duplicate_event_fixture.artifact_id)
     return [manifest.source_event(artifact_id) for artifact_id in artifact_ids]
 
 

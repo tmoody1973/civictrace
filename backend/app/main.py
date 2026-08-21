@@ -16,6 +16,7 @@ from app.api import (
     routes_artifacts,
     routes_cases,
     routes_health,
+    routes_intake,
     routes_transcripts,
 )
 from app.api.routes_approval import ApprovalGateway
@@ -33,6 +34,7 @@ def create_app(
     *,
     trace_reader: TraceReader,
     approval: ApprovalGateway | None = None,
+    intake: object | None = None,
     cors_origins: Sequence[str] | None = None,
     bearer_token: str | None = None,
     uri_resolver: object | None = None,
@@ -40,6 +42,7 @@ def create_app(
     app = FastAPI(title="CivicTrace API", version="0.1.0")
     app.state.trace_reader = trace_reader
     app.state.approval = approval
+    app.state.intake = intake
     if uri_resolver is not None:
         app.state.uri_resolver = uri_resolver
     # strip(): secret values created with `openssl ... | gcloud secrets versions add`
@@ -57,6 +60,7 @@ def create_app(
     app.include_router(routes_cases.router)
     app.include_router(routes_artifacts.router)
     app.include_router(routes_transcripts.router)
+    app.include_router(routes_intake.router)
     app.include_router(routes_approval.router)
     app.add_exception_handler(HTTPException, _http_error_as_envelope)  # type: ignore[arg-type]
     return app
@@ -114,17 +118,24 @@ def _default_app() -> FastAPI | None:
 
 
 def _cloud_app() -> FastAPI:
+    from google.cloud import firestore  # noqa: I001
     from google.cloud import storage  # type: ignore[attr-defined]
 
+    from app.api.routes_intake import IntakeGateway
+    from app.repositories.firestore_trace_reader import FirestoreTraceReader
+    from app.repositories.intake import FirestoreIntakeStore
     from app.services.approval_session import ApprovalSession
     from app.services.cloud import CloudConfig, build_cloud_ledger
+    from app.services.cloud_intake import CreateCaseEnqueuer
     from app.services.corpus import load_corpus_manifest
+    from app.services.legistar_intake import LegistarIntakeClient
     from app.services.packet_store import GcsPacketWriter
     from app.services.uri_bytes import GcsUriResolver
 
     config = CloudConfig.from_env()
     manifest = load_corpus_manifest(config.manifest_path)
     storage_client = storage.Client(project=config.project)
+    firestore_client = firestore.Client(project=config.project)
     resolver = GcsUriResolver(storage_client)
     session = ApprovalSession.from_cloud(
         manifest=manifest,
@@ -132,9 +143,16 @@ def _cloud_app() -> FastAPI:
         packet_writer=GcsPacketWriter(storage_client, config.packets_bucket),
         uri_resolver=resolver,
     )
+    # Reads are multi-case (MOO-719: journalist cases beside the demo case); approvals
+    # remain bound to the reviewed corpus case until MOO-720.
     return create_app(
-        trace_reader=session,
+        trace_reader=FirestoreTraceReader(firestore_client),
         approval=session,
+        intake=IntakeGateway(
+            lookup=LegistarIntakeClient(),
+            store=FirestoreIntakeStore(firestore_client),
+            start_creation=CreateCaseEnqueuer(config),
+        ),
         bearer_token=os.environ.get("CIVICTRACE_API_BEARER"),
         uri_resolver=resolver,
     )

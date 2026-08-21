@@ -92,21 +92,26 @@ class GcsArtifactVault:
         return _available_artifact(entry, f"gs://{self._bucket_name}/{object_name}")
 
     def _store_immutably(self, entry: ManifestArtifact, payload: bytes) -> str:
-        assert entry.local_path is not None
-        object_name = f"{entry.artifact_id}{Path(entry.local_path).suffix}"
-        blob = self._client.bucket(self._bucket_name).blob(object_name)
-        blob.metadata = _provenance_metadata(entry)
-        try:
-            blob.upload_from_string(
-                payload, content_type=entry.media_type, if_generation_match=0
-            )
-        except PreconditionFailed:
-            existing = blob.download_as_bytes()
-            if sha256_hex(existing) != sha256_hex(payload):
-                raise ArtifactImmutabilityError(
-                    f"{entry.artifact_id}: stored bytes differ; refusing to overwrite"
-                ) from None
-        return f"gs://{self._bucket_name}/{object_name}"
+        return store_gcs_bytes(self._client, self._bucket_name, entry, payload)
+
+
+def store_gcs_bytes(
+    client: StorageClient, bucket_name: str, entry: ManifestArtifact, payload: bytes
+) -> str:
+    """Create-only vault write with provenance metadata; identical re-writes are no-ops."""
+    assert entry.local_path is not None
+    object_name = f"{entry.artifact_id}{Path(entry.local_path).suffix}"
+    blob = client.bucket(bucket_name).blob(object_name)
+    blob.metadata = _provenance_metadata(entry)
+    try:
+        blob.upload_from_string(payload, content_type=entry.media_type, if_generation_match=0)
+    except PreconditionFailed:
+        existing = blob.download_as_bytes()
+        if sha256_hex(existing) != sha256_hex(payload):
+            raise ArtifactImmutabilityError(
+                f"{entry.artifact_id}: stored bytes differ; refusing to overwrite"
+            ) from None
+    return f"gs://{bucket_name}/{object_name}"
 
 
 def _provenance_metadata(entry: ManifestArtifact) -> dict[str, str]:

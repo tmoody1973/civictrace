@@ -42,7 +42,16 @@ class TaskEnqueuer(Protocol):
         ...
 
 
-def create_worker_app(*, ingestor: SourceEventIngestor, enqueuer: TaskEnqueuer) -> FastAPI:
+class CaseCreator(Protocol):
+    async def run(self, bundle_id: str) -> dict[str, str]: ...
+
+
+def create_worker_app(
+    *,
+    ingestor: SourceEventIngestor,
+    enqueuer: TaskEnqueuer,
+    case_creator: CaseCreator | None = None,
+) -> FastAPI:
     app = FastAPI(title="CivicTrace worker", version="0.1.0")
 
     @app.get("/healthz", response_model=ApiEnvelope[HealthResponse])
@@ -78,6 +87,23 @@ def create_worker_app(*, ingestor: SourceEventIngestor, enqueuer: TaskEnqueuer) 
             ok=True,
             data={"status": result.status, "job_key": result.job_key, "reason": result.reason},
         )
+
+    @app.post("/tasks/create-case")
+    async def create_case(request: Request) -> JSONResponse:
+        """Case intake (MOO-719): one task runs the full gated chain from durable state.
+
+        Deterministic refusals return 200 (retrying cannot fix them; the bundle records
+        the reason). Unexpected errors raise → 500 → bounded Cloud Tasks retries."""
+        if case_creator is None:
+            return _json(200, ok=False, error="case intake is not enabled on this worker")
+        try:
+            payload = await request.json()
+            bundle_id = str(payload["bundle_id"])
+        except (KeyError, TypeError, ValueError) as exc:
+            logger.error("create-case payload refused: %s", exc)
+            return _json(200, ok=False, error=f"payload refused: {type(exc).__name__}")
+        result = await case_creator.run(bundle_id)
+        return _json(200, ok=result.get("status") == "CASE_CREATED", data=result)
 
     return app
 
@@ -209,7 +235,13 @@ def _default_app() -> FastAPI | None:
     # Python's default level drops INFO: model_usage and duplicate-suppression lines
     # must reach Cloud Logging, so the worker opts in explicitly.
     logging.basicConfig(level=logging.INFO)
-    return create_worker_app(ingestor=WorkflowIngestor(), enqueuer=CloudTasksEnqueuer())
+    from app.services.cloud_intake import CloudCaseCreator
+
+    return create_worker_app(
+        ingestor=WorkflowIngestor(),
+        enqueuer=CloudTasksEnqueuer(),
+        case_creator=CloudCaseCreator(),
+    )
 
 
 app = _default_app()

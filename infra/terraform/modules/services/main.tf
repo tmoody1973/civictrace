@@ -188,8 +188,36 @@ resource "google_cloud_run_v2_service" "api" {
           }
         }
       }
+      # Case intake (MOO-719): the API enqueues one create-case task; the worker does
+      # the fetching, vaulting, and pipeline run. The API itself never calls a model.
+      env {
+        name  = "CIVICTRACE_TASKS_QUEUE"
+        value = local.queue_name
+      }
+      env {
+        name  = "CIVICTRACE_WORKER_URL"
+        value = local.worker_url
+      }
+      env {
+        name  = "CIVICTRACE_WORKER_SA"
+        value = var.worker_service_account_email
+      }
     }
   }
+}
+
+# Case intake (MOO-719): the API creates the create-case task and mints the worker-SA
+# OIDC token that authenticates it.
+resource "google_project_iam_member" "api_tasks_enqueuer" {
+  project = var.project_id
+  role    = "roles/cloudtasks.enqueuer"
+  member  = "serviceAccount:${var.api_service_account_email}"
+}
+
+resource "google_service_account_iam_member" "api_acts_as_worker" {
+  service_account_id = "projects/${var.project_id}/serviceAccounts/${var.worker_service_account_email}"
+  role               = "roles/iam.serviceAccountUser"
+  member             = "serviceAccount:${var.api_service_account_email}"
 }
 
 resource "google_cloud_run_v2_service_iam_member" "api_public" {

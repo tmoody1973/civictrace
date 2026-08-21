@@ -113,6 +113,37 @@ export interface TraceResponse {
   events: TraceEventView[];
 }
 
+export type BundleStatus = "DRAFT" | "APPROVED" | "CREATING" | "CASE_CREATED" | "FAILED";
+
+export interface CandidateAttachmentView {
+  attachment_id: number;
+  name: string;
+  url: string;
+}
+
+export interface CandidateBundleView {
+  bundle_id: string;
+  legistar_file: string;
+  matter_id: number;
+  title: string;
+  matter_type: string | null;
+  matter_status: string | null;
+  intro_date: string | null;
+  matter_url: string;
+  attachments: CandidateAttachmentView[];
+  retrieved_at: string;
+  status: BundleStatus;
+  failure_reason: string | null;
+  case_id: string | null;
+}
+
+export interface IntakeSelectionPayload {
+  reviewer_name: string;
+  case_topic: string;
+  promise_attachment_ids: number[];
+  later_attachment_ids: number[];
+}
+
 export interface TranscriptSegmentView {
   start_ms: number;
   end_ms: number;
