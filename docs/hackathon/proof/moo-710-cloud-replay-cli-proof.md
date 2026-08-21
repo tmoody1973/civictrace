@@ -66,15 +66,14 @@ Packets bucket: **empty** — no packet object was created.
 
 ## Console screenshots (captured 2026-08-20 via Claude driving Chrome)
 
-ego-browser could not inherit the Google Console session (2 sign-in attempts), so the
-PNGs are still to capture. One click each, save as `moo-710-*.png` in this folder:
+Saved in this folder:
 
-1. Firestore case: https://console.cloud.google.com/firestore/databases/-default-/data/panel/cases/case-tid121-bronzeville-arts-tech-hub?project=civictrace-dev-tm
-2. GCS vault objects: https://console.cloud.google.com/storage/browser/civictrace-dev-tm-civictrace-vault?project=civictrace-dev-tm
-3. Tasks queue: https://console.cloud.google.com/cloudtasks/queue/us-central1/civictrace-ingest/tasks?project=civictrace-dev-tm
-4. Pub/Sub topic metrics: https://console.cloud.google.com/cloudpubsub/topic/detail/civictrace-source-events?project=civictrace-dev-tm
-5. Worker logs (21:36Z window): https://console.cloud.google.com/run/detail/us-central1/civictrace-worker/logs?project=civictrace-dev-tm
-6. BigQuery job history (worker SA queries): https://console.cloud.google.com/bigquery?project=civictrace-dev-tm&ws=!1m0 → Job history → Project history
+1. `moo-710-firestore-case.jpg` — the case document (`event_count: 18`, `ledger_events` subcollection, `jobs` collection).
+2. `moo-710-gcs-vault.jpg` — vault bucket, Not public, the 3 record PDFs.
+3. `moo-710-tasks-queue.jpg` — `civictrace-ingest` queue, healthy and drained.
+4. `moo-710-pubsub-topic.jpg` — `civictrace-source-events` topic detail.
+5. `moo-710-worker-logs.jpg` — the ordered replay window (15:36 CST / 21:36Z): alternating `/pubsub/source-events` and `/tasks/ingest-source-event`, all 200.
+6. `moo-710-bigquery-jobs.jpg` — BigQuery Project history: the worker service account's SELECT query jobs (the prefilter) plus the load job.
 
 ## 6. Cost
 
