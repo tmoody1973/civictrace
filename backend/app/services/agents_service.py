@@ -6,6 +6,7 @@ Document Evidence role to the real Gemini Flash runner (MOO-691's seam, unchange
 
 from __future__ import annotations
 
+from collections.abc import Callable
 from pathlib import Path
 
 from app.agents.document_evidence import DocumentEvidenceAgentService
@@ -14,7 +15,7 @@ from app.agents.fake_runner import FakeAgentRunner
 from app.agents.routing_runner import RoleRoutingRunner
 from app.agents.usage_log import UsageLog
 from app.core.config import apply_vertex_env, require_vertex_config
-from app.schemas.corpus import CorpusManifest
+from app.schemas.corpus import CorpusManifest, ManifestArtifact
 from app.schemas.evidence import MediaEvidenceTask
 from app.schemas.transcript import TranscriptArtifact
 from app.tools.artifact_tools import ArtifactPageReader
@@ -32,6 +33,7 @@ def build_agents_service(
     inquiry_path: Path | None = None,
     media_path: Path | None = None,
     hint_pages: dict[str, list[int]] | None = None,
+    pdf_path_for: Callable[[ManifestArtifact], Path] | None = None,
 ) -> tuple[DocumentEvidenceAgentService, UsageLog | None]:
     fixture_dir = fixture_root / manifest.fixture_dir
     fake_runner = _fake_runner(
@@ -41,7 +43,9 @@ def build_agents_service(
         inquiry_path=inquiry_path,
         media_path=media_path,
     )
-    runner, usage_log = _runner(manifest, fixture_dir, runner_kind, fake_runner)
+    runner, usage_log = _runner(
+        manifest, fixture_dir, runner_kind, fake_runner, pdf_path_for=pdf_path_for
+    )
     # Cloud mode passes hint_pages from the BigQuery prefilter (MOO-710); the
     # manifest anchors stay the source everywhere else.
     if hint_pages is None:
@@ -114,6 +118,8 @@ def _runner(
     fixture_dir: Path,
     runner_kind: str,
     fake_runner: FakeAgentRunner,
+    *,
+    pdf_path_for: Callable[[ManifestArtifact], Path] | None = None,
 ) -> tuple[StructuredAgentRunner, UsageLog | None]:
     if runner_kind == "fake":
         return fake_runner, None
@@ -127,7 +133,12 @@ def _runner(
         entry = manifest.entry(artifact_id)
         if entry.local_path is None:
             raise ValueError(f"{artifact_id}: no vaulted file to read")
-        return ArtifactPageReader(artifact_id=artifact_id, pdf_path=fixture_dir / entry.local_path)
+        # Intake cases (MOO-719) have no local fixture file; the cloud injects a resolver
+        # that materializes the vault bytes instead.
+        pdf_path = (
+            pdf_path_for(entry) if pdf_path_for is not None else fixture_dir / entry.local_path
+        )
+        return ArtifactPageReader(artifact_id=artifact_id, pdf_path=pdf_path)
 
     def transcript_reader_for(artifact_id: str) -> TranscriptSpanReader:
         return TranscriptSpanReader(

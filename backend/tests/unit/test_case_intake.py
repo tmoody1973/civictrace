@@ -84,9 +84,23 @@ def test_approved_bundle_becomes_a_vaulted_case_with_ordered_events() -> None:
 
 def test_unapproved_bundle_is_refused_before_any_fetch() -> None:
     service, recorded = _service()
-    with pytest.raises(CaseIntakeError, match="only an APPROVED bundle"):
+    with pytest.raises(CaseIntakeError, match="only an approved"):
         service.create_case(_bundle(status=BundleStatus.DRAFT), _selection())
     assert recorded["stored"] == [] and recorded["manifests"] == []
+
+
+def test_already_created_bundle_is_refused() -> None:
+    service, recorded = _service()
+    with pytest.raises(CaseIntakeError, match="only an approved"):
+        service.create_case(_bundle(status=BundleStatus.CASE_CREATED), _selection())
+    assert recorded["manifests"] == []
+
+
+def test_creating_status_is_a_legitimate_retry_not_a_refusal() -> None:
+    """A cloud-task retry after a crash sees CREATING; it must not be told 'unapproved'."""
+    service, recorded = _service()
+    manifest, _ = service.create_case(_bundle(status=BundleStatus.CREATING), _selection())
+    assert recorded["manifests"] == [manifest]
 
 
 def test_off_allowlist_url_is_refused() -> None:

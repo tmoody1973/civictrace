@@ -62,10 +62,12 @@ class CaseIntakeService:
         Returns the manifest and its ordered source events (promise documents first),
         ready for the replay pipeline. Raises CaseIntakeError on any refusal.
         """
-        if bundle.status is not BundleStatus.APPROVED:
+        # DRAFT = no human approval yet; CASE_CREATED = already done. CREATING/FAILED are
+        # legitimate retry states — a crash after approval must not un-approve the bundle.
+        if bundle.status in (BundleStatus.DRAFT, BundleStatus.CASE_CREATED):
             raise CaseIntakeError(
-                f"bundle {bundle.bundle_id} is {bundle.status}; only an APPROVED bundle may "
-                "become a case"
+                f"bundle {bundle.bundle_id} is {bundle.status}; only an approved, uncreated "
+                "bundle may become a case"
             )
         selected_ids = [*selection.promise_attachment_ids, *selection.later_attachment_ids]
         by_id = {attachment.attachment_id: attachment for attachment in bundle.attachments}

@@ -20,7 +20,7 @@ from app.policies.policy_service import CivicTracePolicyService
 from app.policies.source_policy import SourcePolicy
 from app.repositories.firestore_cases import FirestoreLedger
 from app.repositories.firestore_jobs import FirestoreJobRepository
-from app.schemas.corpus import CorpusManifest
+from app.schemas.corpus import CorpusManifest, ManifestArtifact
 from app.services.agents_service import build_agents_service, load_media_transcript
 from app.services.bigquery_corpus import BigQueryCorpusPrefilter
 from app.services.corpus import load_corpus_manifest
@@ -140,12 +140,28 @@ def build_cloud_workflow_for_manifest(
 
     ledger = build_cloud_ledger(config, manifest, clock=clock)
     storage_client = storage.Client(project=config.project)
+    resolver = GcsUriResolver(storage_client)
+    fixture_dir = config.fixture_root / manifest.fixture_dir
+
+    def pdf_path_for(entry: ManifestArtifact) -> Path:
+        """The reviewed corpus ships its files in the image; intake artifacts (MOO-719)
+        exist only in the vault, so the agent's page reader gets a cached download."""
+        assert entry.local_path is not None
+        local = fixture_dir / entry.local_path
+        if local.exists():
+            return local
+        suffix = Path(entry.local_path).suffix
+        return resolver.to_local_path(
+            f"gs://{config.vault_bucket}/{entry.artifact_id}{suffix}"
+        )
+
     agents, usage_log = build_agents_service(
         manifest,
         extraction_path=config.extraction_path,
         fixture_root=config.fixture_root,
         runner_kind=config.runner_kind,
         hint_pages=hint_pages,
+        pdf_path_for=pdf_path_for,
     )
     source_policy = SourcePolicy.from_yaml(config.allowlist_path)
     fetch_bytes = None
