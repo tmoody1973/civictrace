@@ -34,6 +34,17 @@ export function useIntakeBundle(bundleId: string | null) {
   });
 }
 
+/** While the case is being created, its record already fills with real steps — show them. */
+export function useCreationProgress(caseId: string | null, active: boolean) {
+  return useQuery({
+    queryKey: ["cases", caseId, "creation-progress"],
+    queryFn: () => api.caseTrace(caseId as string),
+    enabled: caseId !== null && active,
+    refetchInterval: active ? POLL_MS : false,
+    retry: false, // a 404 just means the pipeline has not written its first step yet
+  });
+}
+
 export function useIntakeApprove(bundleId: string) {
   const client = useQueryClient();
   return useMutation({

@@ -9,7 +9,7 @@ import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { useIntakeApprove } from "@/features/intake/queries";
+import { useCreationProgress, useIntakeApprove } from "@/features/intake/queries";
 import type { CandidateBundleView } from "@/lib/api-types";
 
 const inputClassName =
@@ -188,14 +188,56 @@ function StatusNotice({ bundle }: { bundle: CandidateBundleView }) {
       </Alert>
     );
   }
+  return <CreationProgress bundle={bundle} />;
+}
+
+/** Live steps from the case record — observable workflow, never model "thinking". */
+function CreationProgress({ bundle }: { bundle: CandidateBundleView }) {
+  const caseId = `case-intake-${bundle.legistar_file}`;
+  const progress = useCreationProgress(caseId, true);
+  const events = progress.data?.events ?? [];
+  const stored = events.filter((event) => event.event_type === "ARTIFACT_STORED");
+  const evidence = events.filter((event) => event.event_type === "EVIDENCE_ACCEPTED");
+  const compared = events.some((event) =>
+    ["DELTA_PROPOSED", "DELTA_STAGED", "NO_MATERIAL_DELTA", "CASE_HUMAN_REVIEW"].includes(
+      event.event_type,
+    ),
+  );
   return (
-    <Alert>
+    <Alert data-testid="creation-progress">
       <AlertTitle>
-        <Badge>{bundle.status}</Badge> Working…
+        <Badge>{bundle.status}</Badge> Building the case — live steps
       </AlertTitle>
       <AlertDescription>
-        Approved. The system is fetching the official documents, locking their fingerprints,
-        and running the evidence pipeline. This page updates by itself (about 2–4 minutes).
+        <ul className="mt-1 list-disc space-y-1 pl-5">
+          <li>Approved; documents requested from the City&apos;s servers ✓</li>
+          {events.length === 0 ? (
+            <li>Fetching the official documents and locking their fingerprints…</li>
+          ) : null}
+          {stored.map((event) => (
+            <li key={event.event_id}>
+              Saved the exact official copy of <code>{event.artifact_id}</code>, fingerprint
+              recorded ✓
+            </li>
+          ))}
+          {evidence.length > 0 ? (
+            <li>
+              {evidence.length} evidence excerpt{evidence.length === 1 ? "" : "s"} extracted —
+              each one anchored to a page and checked against the document ✓
+            </li>
+          ) : stored.length > 0 ? (
+            <li>Reading the documents for anchored evidence…</li>
+          ) : null}
+          {compared ? (
+            <li>Promise compared with later records ✓ — finishing up</li>
+          ) : evidence.length > 0 ? (
+            <li>Comparing the promise with the later records…</li>
+          ) : null}
+        </ul>
+        <p className="mt-2 text-muted-foreground">
+          Every line above is a recorded step you can audit later in the case — this is the
+          system&apos;s work log, not a narration. Updates by itself; about 2–4 minutes total.
+        </p>
       </AlertDescription>
     </Alert>
   );
