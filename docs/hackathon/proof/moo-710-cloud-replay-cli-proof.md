@@ -64,7 +64,7 @@ POST /cases/case-tid121-bronzeville-arts-tech-hub/inquiry/approve   (wrong artif
 Ledger seq=18: `APPROVAL_REFUSED` (durable, auditable).
 Packets bucket: **empty** — no packet object was created.
 
-## Console screenshots — remaining human step
+## Console screenshots (captured 2026-08-20 via Claude driving Chrome)
 
 ego-browser could not inherit the Google Console session (2 sign-in attempts), so the
 PNGs are still to capture. One click each, save as `moo-710-*.png` in this folder:
