@@ -114,3 +114,34 @@ def test_unknown_artifact_id_is_an_error(
     event = manifest.source_event(PLAN_ID).model_copy(update={"artifact_id": "not-in-corpus"})
     with pytest.raises(KeyError):
         vault.fetch_and_store_sync(event)
+
+
+MEDIA_ID = "znd-committee-2026-07-28"
+
+
+def test_media_artifact_is_served_without_copying_bytes(
+    vault: LocalFixtureVault, manifest: CorpusManifest, tmp_path: Path
+) -> None:
+    """The reviewed recording was hash-verified at vaulting (MOO-715); the replay only
+    confirms a copy is reachable and never copies gigabytes into the local vault dir."""
+    artifact = vault.fetch_and_store_sync(manifest.source_event(MEDIA_ID))
+    assert artifact.availability is ArtifactAvailability.AVAILABLE
+    assert artifact.content_hash and artifact.content_hash.startswith("sha256:")
+    assert not list((tmp_path / "vault").glob("*.mp4"))
+
+
+def test_media_without_local_copy_falls_back_to_vaulted_transcript_audio(
+    manifest: CorpusManifest, tmp_path: Path
+) -> None:
+    """CI has no 2.9GB video: the committed transcript's vaulted-audio URI stands in."""
+    entry = manifest.media_entry(MEDIA_ID)
+    fixture_dir = tmp_path / manifest.fixture_dir
+    assert entry.transcript_path is not None
+    transcript_copy = fixture_dir / entry.transcript_path
+    transcript_copy.parent.mkdir(parents=True)
+    real_dir = REPO_ROOT / manifest.fixture_dir
+    transcript_copy.write_text((real_dir / entry.transcript_path).read_text())
+    vault = LocalFixtureVault(manifest=manifest, fixture_root=tmp_path, vault_dir=tmp_path / "v")
+    artifact = vault.fetch_and_store_sync(manifest.source_event(MEDIA_ID))
+    assert artifact.availability is ArtifactAvailability.AVAILABLE
+    assert artifact.storage_uri and artifact.storage_uri.startswith("gs://")

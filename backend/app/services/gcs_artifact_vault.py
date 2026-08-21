@@ -72,9 +72,24 @@ class GcsArtifactVault:
         entry = self._manifest.entry(event.artifact_id)
         if entry.availability is not ArtifactAvailability.AVAILABLE:
             return _unavailable_artifact(entry)
+        if self._manifest.is_media(entry.artifact_id):
+            return self._verify_media_present(entry)
         payload = self._fetch_bytes(entry)
         storage_uri = self._store_immutably(entry, payload)
         return _available_artifact(entry, storage_uri)
+
+    def _verify_media_present(self, entry: ManifestArtifact) -> Artifact:
+        """Meeting media is vaulted from the operator machine (MOO-715) — Granicus refuses
+        datacenter fetches, so the cloud never re-fetches it. We only confirm the reviewed
+        object is still in the vault; its bytes were hash-verified at vaulting."""
+        assert entry.local_path is not None
+        object_name = f"{entry.artifact_id}{Path(entry.local_path).suffix}"
+        blob = self._client.bucket(self._bucket_name).blob(object_name)
+        if not blob.exists():
+            raise ArtifactImmutabilityError(
+                f"{entry.artifact_id}: reviewed media object missing from the vault"
+            )
+        return _available_artifact(entry, f"gs://{self._bucket_name}/{object_name}")
 
     def _store_immutably(self, entry: ManifestArtifact, payload: bytes) -> str:
         assert entry.local_path is not None

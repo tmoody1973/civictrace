@@ -1,55 +1,102 @@
 {
-  "_schema_note": "Hand-written DecisionDeltaProposal per triggering artifact (the later record whose evidence was just accepted). Returned by FakeAgentRunner for role delta_investigator. Every evidence id below must exist in the ledger on the stated side; validate_delta enforces it. Wording must be neutral: comparison, not verdict.",
-  "fixture_delta_version": "v1-2026-08-19",
-  "proposals": {
-    "tid-annual-report-2024": {
-      "result_type": "NO_MATERIAL_DELTA",
-      "case_id": "case-tid121-bronzeville-arts-tech-hub",
-      "category": "EXPECTED_EVIDENCE_ARRIVED",
-      "neutral_summary": "The 2024 Annual TID Report (as of 12/31/2024) restates the authorized expenditure of $763,750 under resolution #240382 and records no expenditures to date. It does not revise the commitment stated in the 2024 Project Plan.",
-      "original_evidence_ids": ["ev-tid121-plan-capital-costs", "ev-tid121-plan-total-estimated"],
-      "later_evidence_ids": ["ev-tid121-annual2024-authorized", "ev-tid121-annual2024-expenditures", "ev-tid121-annual2024-completion-status"],
-      "what_is_established": [
-        "Authorized expenditure (excluding interest) is $763,750 under authorizing resolution #240382 (annual report p.163).",
-        "The Grant to Developer line shows a $700,000 budget with no appropriations, encumbrances, or expenditures as of 12/31/2024 (annual report p.164)."
-      ],
-      "what_is_not_established": [
-        "Completion status: the 'Completion Status' field is blank (annual report p.163).",
-        "Whether the project is within budget or on schedule: the check-box answers cannot be read from the extracted text."
-      ],
-      "next_evidence_needed": "2025 Annual Report of Tax Incremental Districts (expected DCD communication)",
-      "materiality": "LOW",
-      "limitations": ["Periodic status report; it reports on, but does not amend, the Project Plan."],
-      "requires_human_review": true,
-      "proposed_by_agent": "civictrace-delta_investigator",
-      "agent_version": "fixture"
-    },
-    "tid121-amendment-1-2026": {
-      "result_type": "DECISION_DELTA",
-      "case_id": "case-tid121-bronzeville-arts-tech-hub",
-      "category": "REVISED",
-      "neutral_summary": "The 2024 Project Plan set TID Capital Project Costs at an up-to amount of $700,000 (plan p.5). Amendment No. 1 (2026) sets TID Capital Project Costs at $2,345,000, adding an up-to $1,645,000 grant to the Developer/Commercial Owner (amendment p.3). The later document revises the City's stated contribution; the record supplied does not state why.",
-      "original_evidence_ids": ["ev-tid121-plan-capital-costs"],
-      "later_evidence_ids": ["ev-tid121-amend1-capital-costs", "ev-tid121-amend1-commercial-grant"],
-      "what_is_established": [
-        "2024 Project Plan, Table A: TOTAL Capital Project Costs $700,000, up-to amount (plan p.5).",
-        "Amendment No. 1: the City shall fund an estimated $2,345,000 in TID Capital Project Costs (amendment p.3).",
-        "Amendment No. 1, Table A: adds Grant to Project (Monetary Obligation to Developer/Commercial Owner) $1,645,000, up-to amount (amendment p.3)."
-      ],
-      "what_is_not_established": [
-        "Why the amendment was needed; the supplied record does not state a reason.",
-        "Whether any of the 60 housing units are built or occupied; no supplied record addresses construction or occupancy.",
-        "Whether any grant funds have been disbursed after 12/31/2024; the latest supplied status report is the 2024 Annual TID Report."
-      ],
-      "next_evidence_needed": "2025 Annual Report of Tax Incremental Districts (expected DCD communication)",
-      "materiality": "HIGH",
-      "limitations": [
-        "Both figures are up-to ceilings, not amounts spent.",
-        "This is a comparison of two public documents, not a finding about performance or conduct."
-      ],
-      "requires_human_review": true,
-      "proposed_by_agent": "civictrace-delta_investigator",
-      "agent_version": "fixture"
-    }
+ "_schema_note": "Hand-written DecisionDeltaProposal per triggering artifact (the later record whose evidence was just accepted). Returned by FakeAgentRunner for role delta_investigator. Every evidence id below must exist in the ledger on the stated side; validate_delta enforces it. Wording must be neutral: comparison, not verdict.",
+ "fixture_delta_version": "v1-2026-08-19",
+ "proposals": {
+  "tid-annual-report-2024": {
+   "result_type": "NO_MATERIAL_DELTA",
+   "case_id": "case-tid121-bronzeville-arts-tech-hub",
+   "category": "EXPECTED_EVIDENCE_ARRIVED",
+   "neutral_summary": "The 2024 Annual TID Report (as of 12/31/2024) restates the authorized expenditure of $763,750 under resolution #240382 and records no expenditures to date. It does not revise the commitment stated in the 2024 Project Plan.",
+   "original_evidence_ids": [
+    "ev-tid121-plan-capital-costs",
+    "ev-tid121-plan-total-estimated"
+   ],
+   "later_evidence_ids": [
+    "ev-tid121-annual2024-authorized",
+    "ev-tid121-annual2024-expenditures",
+    "ev-tid121-annual2024-completion-status"
+   ],
+   "what_is_established": [
+    "Authorized expenditure (excluding interest) is $763,750 under authorizing resolution #240382 (annual report p.163).",
+    "The Grant to Developer line shows a $700,000 budget with no appropriations, encumbrances, or expenditures as of 12/31/2024 (annual report p.164)."
+   ],
+   "what_is_not_established": [
+    "Completion status: the 'Completion Status' field is blank (annual report p.163).",
+    "Whether the project is within budget or on schedule: the check-box answers cannot be read from the extracted text."
+   ],
+   "next_evidence_needed": "2025 Annual Report of Tax Incremental Districts (expected DCD communication)",
+   "materiality": "LOW",
+   "limitations": [
+    "Periodic status report; it reports on, but does not amend, the Project Plan."
+   ],
+   "requires_human_review": true,
+   "proposed_by_agent": "civictrace-delta_investigator",
+   "agent_version": "fixture"
+  },
+  "tid121-amendment-1-2026": {
+   "result_type": "DECISION_DELTA",
+   "case_id": "case-tid121-bronzeville-arts-tech-hub",
+   "category": "REVISED",
+   "neutral_summary": "The 2024 Project Plan set TID Capital Project Costs at an up-to amount of $700,000 (plan p.5). Amendment No. 1 (2026) sets TID Capital Project Costs at $2,345,000, adding an up-to $1,645,000 grant to the Developer/Commercial Owner (amendment p.3). The later document revises the City's stated contribution; the record supplied does not state why.",
+   "original_evidence_ids": [
+    "ev-tid121-plan-capital-costs"
+   ],
+   "later_evidence_ids": [
+    "ev-tid121-amend1-capital-costs",
+    "ev-tid121-amend1-commercial-grant"
+   ],
+   "what_is_established": [
+    "2024 Project Plan, Table A: TOTAL Capital Project Costs $700,000, up-to amount (plan p.5).",
+    "Amendment No. 1: the City shall fund an estimated $2,345,000 in TID Capital Project Costs (amendment p.3).",
+    "Amendment No. 1, Table A: adds Grant to Project (Monetary Obligation to Developer/Commercial Owner) $1,645,000, up-to amount (amendment p.3)."
+   ],
+   "what_is_not_established": [
+    "Why the amendment was needed; the supplied record does not state a reason.",
+    "Whether any of the 60 housing units are built or occupied; no supplied record addresses construction or occupancy.",
+    "Whether any grant funds have been disbursed after 12/31/2024; the latest supplied status report is the 2024 Annual TID Report."
+   ],
+   "next_evidence_needed": "2025 Annual Report of Tax Incremental Districts (expected DCD communication)",
+   "materiality": "HIGH",
+   "limitations": [
+    "Both figures are up-to ceilings, not amounts spent.",
+    "This is a comparison of two public documents, not a finding about performance or conduct."
+   ],
+   "requires_human_review": true,
+   "proposed_by_agent": "civictrace-delta_investigator",
+   "agent_version": "fixture"
+  },
+  "znd-committee-2026-07-28": {
+   "result_type": "DECISION_DELTA",
+   "case_id": "case-tid121-bronzeville-arts-tech-hub",
+   "category": "ADVANCED",
+   "neutral_summary": "At the Zoning, Neighborhoods & Development Committee meeting of 2026-07-28, a Department of City Development presenter stated that Amendment No. 1 will fund the commercial component (segment 0:14-3:06), the developer stated the project is on track to start construction and close this fall (3:07-5:36), and the chair stated a motion to recommend adoption was ordered without objection (11:33-11:36). The hearing record advances the commitment stated in the 2024 Project Plan; it is a committee recommendation, not a final Common Council action.",
+   "original_evidence_ids": [
+    "ev-tid121-plan-capital-costs",
+    "ev-tid121-plan-total-estimated"
+   ],
+   "later_evidence_ids": [
+    "ev-znd-tid121-amendment-purpose",
+    "ev-znd-tid121-developer-timeline",
+    "ev-znd-tid121-committee-action"
+   ],
+   "what_is_established": [
+    "A DCD presenter stated Amendment No. 1 to the TID will fund the commercial component of the project (transcript 14000-186880 ms).",
+    "The developer stated the project is on track to start construction and close this fall (transcript 187280-336200 ms).",
+    "The committee chair stated a motion to recommend adoption was made and ordered without objection (transcript 693120-696360 ms)."
+   ],
+   "what_is_not_established": [
+    "Final Common Council adoption of Amendment No. 1; the supplied hearing record shows a committee recommendation only.",
+    "Actual construction start or closing; the timeline is a speaker statement about future events."
+   ],
+   "next_evidence_needed": "Common Council action record for file 260433 (Amendment No. 1)",
+   "materiality": "MEDIUM",
+   "limitations": [
+    "Speakers are diarization labels; identity is stated in the transcript text, not established by the system.",
+    "A committee recommendation is not a final institutional decision."
+   ],
+   "requires_human_review": true,
+   "proposed_by_agent": "civictrace-delta_investigator",
+   "agent_version": "fixture"
   }
+ }
 }

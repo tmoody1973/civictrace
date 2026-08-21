@@ -45,6 +45,13 @@ WAIT_SECONDS = 240
 def corpus_events(manifest_path: Path) -> list[SourceEvent]:
     manifest = load_corpus_manifest(manifest_path)
     artifact_ids = [entry.artifact_id for entry in manifest.artifacts]
+    # Meeting media (MOO-717): published after the documents so its transcript evidence
+    # lands as later evidence and its event triggers the hearing-citing delta run.
+    artifact_ids.extend(
+        entry.artifact_id
+        for entry in manifest.media_artifacts
+        if entry.transcript_path is not None
+    )
     artifact_ids.append(manifest.duplicate_event_fixture.artifact_id)
     return [manifest.source_event(artifact_id) for artifact_id in artifact_ids]
 

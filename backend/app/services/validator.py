@@ -5,15 +5,28 @@ from __future__ import annotations
 from collections.abc import Sequence
 from dataclasses import dataclass
 
-from app.domain.enums import AnchorType, ArtifactAvailability, DeltaResultType
+from app.domain.enums import (
+    AnchorType,
+    ArtifactAvailability,
+    DeltaResultType,
+    EvidenceObjectType,
+)
 from app.domain.errors import EvidenceValidationError
 from app.policies.language_policy import find_allegation_language, find_causal_language
 from app.policies.privacy_policy import find_pii, find_restricted_scope
 from app.schemas.case import CaseBundle, DecisionDelta, DecisionDeltaProposal
-from app.schemas.evidence import DocumentExtraction, Evidence, EvidenceAnchor
+from app.schemas.evidence import (
+    DocumentExtraction,
+    Evidence,
+    EvidenceAnchor,
+    MediaEvidence,
+    MediaExtraction,
+)
 from app.schemas.inquiry import InquiryProposal
 from app.schemas.source import Artifact
+from app.schemas.transcript import TranscriptArtifact
 from app.services.artifact_text import normalise_for_match
+from app.tools.transcript_tools import segments_overlapping
 
 
 @dataclass(frozen=True)
@@ -92,6 +105,122 @@ def _anchor_reasons(evidence_id: str, anchor: EvidenceAnchor, artifact: Artifact
 
 def _parse_page(value: str) -> int | None:
     return int(value) if value.isdigit() else None
+
+
+# Words that mark a committee/council action in a transcript span. A DECISION or VOTE
+# evidence object without one of these in its anchored span is discussion, not an action.
+ACTION_SPAN_TERMS = (
+    "motion",
+    "moved",
+    "move approval",
+    "second",
+    "aye",
+    "vote",
+    "passes",
+    "passed",
+    "carried",
+    "recommend",
+    "adopted",
+    "approval",
+)
+
+
+def validate_media_extraction(
+    extraction: MediaExtraction, artifact: Artifact, transcript: TranscriptArtifact
+) -> ValidationResult:
+    """Deterministic gate for meeting evidence: exact timestamp anchors, quotes that exist in
+    the transcript, and diarization labels that stay labels."""
+    reasons: list[str] = []
+    if artifact.availability is not ArtifactAvailability.AVAILABLE:
+        reasons.append(
+            f"artifact {artifact.artifact_id} is {artifact.availability}; no evidence allowed"
+        )
+    if extraction.artifact_id != artifact.artifact_id:
+        reasons.append(
+            f"extraction targets {extraction.artifact_id}, artifact is {artifact.artifact_id}"
+        )
+    if extraction.transcript_id != transcript.transcript_id:
+        reasons.append(
+            f"extraction cites transcript {extraction.transcript_id}, "
+            f"supplied transcript is {transcript.transcript_id}"
+        )
+    for item in extraction.evidence:
+        reasons.extend(_media_evidence_reasons(item, artifact, transcript))
+    return ValidationResult(tuple(reasons))
+
+
+def _media_evidence_reasons(
+    item: MediaEvidence, artifact: Artifact, transcript: TranscriptArtifact
+) -> list[str]:
+    reasons: list[str] = []
+    if not item.anchors:
+        reasons.append(f"{item.evidence_id}: no anchor")
+    for kind in find_pii(item.verbatim_excerpt + " " + item.neutral_statement):
+        reasons.append(f"{item.evidence_id}: {kind} pattern in evidence text")
+    for term in find_allegation_language(item.neutral_statement):
+        reasons.append(f"{item.evidence_id}: allegation language in neutral_statement ({term!r})")
+    if item.artifact_id != artifact.artifact_id:
+        reasons.append(f"{item.evidence_id}: evidence names unknown artifact {item.artifact_id}")
+    spans = []
+    for anchor in item.anchors:
+        if anchor.artifact_id != artifact.artifact_id:
+            reasons.append(
+                f"{item.evidence_id}: anchor names unknown artifact {anchor.artifact_id}"
+            )
+            continue
+        span_reasons, span = _transcript_anchor_reasons(item.evidence_id, anchor, transcript)
+        reasons.extend(span_reasons)
+        if span is not None:
+            spans.append(span)
+    if spans:
+        span_text = normalise_for_match(
+            " ".join(
+                segment.text
+                for start_ms, end_ms in spans
+                for segment in segments_overlapping(transcript, start_ms, end_ms)
+            )
+        )
+        span_labels = {
+            segment.speaker_label
+            for start_ms, end_ms in spans
+            for segment in segments_overlapping(transcript, start_ms, end_ms)
+        }
+        if normalise_for_match(item.verbatim_excerpt) not in span_text:
+            reasons.append(f"{item.evidence_id}: quoted words not found in the anchored span")
+        if item.speaker_label is not None and item.speaker_label not in span_labels:
+            reasons.append(
+                f"{item.evidence_id}: speaker_label {item.speaker_label!r} is not a "
+                "diarization label of the anchored span (a name is not a label)"
+            )
+        if (
+            item.object_type in (EvidenceObjectType.DECISION, EvidenceObjectType.VOTE)
+            and not any(term in span_text for term in ACTION_SPAN_TERMS)
+        ):
+            reasons.append(
+                f"{item.evidence_id}: {item.object_type} anchored to a span with no "
+                "motion/vote language; meeting discussion is not an institutional action"
+            )
+    return reasons
+
+
+def _transcript_anchor_reasons(
+    evidence_id: str, anchor: EvidenceAnchor, transcript: TranscriptArtifact
+) -> tuple[list[str], tuple[int, int] | None]:
+    """Anchors must be `start_ms-end_ms` inside the transcribed segment. Returns the span."""
+    if anchor.anchor_type is not AnchorType.TRANSCRIPT_TIME:
+        return [f"{evidence_id}: media evidence requires a transcript_time anchor"], None
+    parts = anchor.anchor_value.split("-")
+    if len(parts) != 2 or not all(part.isdigit() for part in parts):
+        return [
+            f"{evidence_id}: anchor {anchor.anchor_value!r} is not '<start_ms>-<end_ms>'"
+        ], None
+    start_ms, end_ms = int(parts[0]), int(parts[1])
+    duration_ms = transcript.duration_seconds() * 1000
+    if start_ms >= end_ms or end_ms > duration_ms:
+        return [
+            f"{evidence_id}: anchor {anchor.anchor_value!r} outside 0..{duration_ms} ms"
+        ], None
+    return [], (start_ms, end_ms)
 
 
 def validate_delta(

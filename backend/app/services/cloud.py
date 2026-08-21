@@ -21,7 +21,7 @@ from app.policies.source_policy import SourcePolicy
 from app.repositories.firestore_cases import FirestoreLedger
 from app.repositories.firestore_jobs import FirestoreJobRepository
 from app.schemas.corpus import CorpusManifest
-from app.services.agents_service import build_agents_service
+from app.services.agents_service import build_agents_service, load_media_transcript
 from app.services.bigquery_corpus import BigQueryCorpusPrefilter
 from app.services.corpus import load_corpus_manifest
 from app.services.gcs_artifact_vault import GcsArtifactVault
@@ -148,6 +148,10 @@ def build_cloud_workflow(
         policy=CivicTracePolicyService(
             source_policy=source_policy,
             uri_resolver=GcsUriResolver(storage_client),
+            # The diarized transcript ships committed in the image; the vault video does not.
+            transcript_for=lambda artifact_id: load_media_transcript(
+                manifest, config.fixture_root / manifest.fixture_dir, artifact_id
+            ),
         ),
         agents=agents,
         routes=CityRouteRegistry(),

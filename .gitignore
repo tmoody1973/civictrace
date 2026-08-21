@@ -61,3 +61,4 @@ pulumi.*.yaml
 *.zip
 tfplan*
 backend/tests/fixtures/*/media/*.mp4
+backend/tests/fixtures/*/media/*.flac

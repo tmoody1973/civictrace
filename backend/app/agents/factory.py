@@ -116,11 +116,13 @@ class GoogleAdkStructuredRunner:
         model: str,
         page_reader_factory: Callable[[str], Any],
         usage_log: Any,
+        transcript_reader_factory: Callable[[str], Any] | None = None,
         run_agent: Callable[..., Awaitable[tuple[str, dict[str, int]]]] | None = None,
         clock: Callable[[], float] = time.monotonic,
     ) -> None:
         self._model = model
         self._page_reader_factory = page_reader_factory
+        self._transcript_reader_factory = transcript_reader_factory
         self._usage_log = usage_log
         self._run_agent = run_agent or _run_adk_agent
         self._clock = clock
@@ -137,7 +139,7 @@ class GoogleAdkStructuredRunner:
         )
         task_json = payload.model_dump_json()
         if definition.role == "document_evidence":
-            # Only the document role reads pages; every other role reasons over the
+            # Only the extraction roles get a read tool; every other role reasons over the
             # already-validated evidence in its task payload — no tools, no browsing.
             reader = self._page_reader_factory(artifact_id)
             tools: list[Any] = [reader.read_pages]
@@ -149,6 +151,18 @@ class GoogleAdkStructuredRunner:
                 "least one evidence object to that exact page. If an official form field on a page "
                 "you read is present but blank (for example a status field with no value), record "
                 "that as an evidence object with status UNKNOWN quoting the field label."
+            )
+        elif definition.role == "media_evidence":
+            if self._transcript_reader_factory is None:
+                raise ValueError(f"{artifact_id}: media_evidence has no transcript reader")
+            reader = self._transcript_reader_factory(artifact_id)
+            tools = [reader.read_transcript_span]
+            message = (
+                f"Task input (JSON):\n{task_json}\n\n"
+                "Read the transcript with your read_transcript_span tool before extracting "
+                "anything; times are 0-based milliseconds within the transcribed segment and "
+                f"the segment ends at {reader.duration_ms} ms. Copy anchor bounds exactly from "
+                "the [start-end ms] markers of the lines you quote."
             )
         else:
             reader = None

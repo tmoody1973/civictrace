@@ -126,6 +126,7 @@ media_artifacts:
     byte_length: 3094814441
     duration_seconds: 11566
     local_path: media/znd-committee-2026-07-28.mp4
+    transcript_path: transcripts/znd-2026-07-28-tid121.json
     availability: AVAILABLE
     focus_segment:
       start_seconds: 5287

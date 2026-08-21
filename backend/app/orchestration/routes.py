@@ -9,10 +9,12 @@ from app.domain.enums import ArtifactAvailability
 from app.schemas.source import Artifact
 
 DOCUMENT_MEDIA_TYPES = frozenset({"application/pdf", "text/html"})
+MEETING_MEDIA_TYPES = frozenset({"video/mp4", "audio/flac"})
 
 
 class RouteKind(StrEnum):
     DOCUMENT = "document"
+    MEDIA = "media"
     UNAVAILABLE = "unavailable"
     NO_ACTION = "no_action"
 
@@ -31,10 +33,15 @@ class CityRouteRegistry:
             )
         if artifact.media_type in DOCUMENT_MEDIA_TYPES:
             return Route(RouteKind.DOCUMENT)
+        if artifact.media_type in MEETING_MEDIA_TYPES:
+            return Route(RouteKind.MEDIA)
         return Route(RouteKind.NO_ACTION, f"no City MVP route for {artifact.media_type}")
 
     def requires_document_extraction(self, artifact: Artifact) -> bool:
         return self.for_artifact(artifact).kind is RouteKind.DOCUMENT
+
+    def requires_media_extraction(self, artifact: Artifact) -> bool:
+        return self.for_artifact(artifact).kind is RouteKind.MEDIA
 
     def is_unavailable(self, artifact: Artifact) -> bool:
         return self.for_artifact(artifact).kind is RouteKind.UNAVAILABLE

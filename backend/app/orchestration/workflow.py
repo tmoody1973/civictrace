@@ -11,7 +11,7 @@ from typing import Protocol
 
 from app.domain.enums import DeltaResultType, JobStatus
 from app.schemas.case import CaseBundle, CaseLinkProposal, DecisionDeltaProposal, ReviewDecision
-from app.schemas.evidence import DocumentExtraction, EntityLinkBatch
+from app.schemas.evidence import DocumentExtraction, EntityLinkBatch, MediaExtraction
 from app.schemas.inquiry import InquiryProposal
 from app.schemas.source import Artifact, SourceEvent
 
@@ -119,6 +119,9 @@ class PolicyService(Protocol):
     def validate_document_extraction(
         self, extraction: DocumentExtraction, artifact: Artifact
     ) -> ExtractionVerdict: ...
+    def validate_media_extraction(
+        self, extraction: MediaExtraction, artifact: Artifact
+    ) -> ExtractionVerdict: ...
     def validate_entity_links(
         self, links: EntityLinkBatch, extraction: DocumentExtraction
     ) -> None: ...
@@ -136,6 +139,9 @@ class AgentService(Protocol):
     async def document_evidence(
         self, artifact: Artifact, *, context: WorkflowContext
     ) -> DocumentExtraction: ...
+    async def media_evidence(
+        self, artifact: Artifact, *, context: WorkflowContext
+    ) -> MediaExtraction: ...
     async def entity_resolution(
         self, extraction: DocumentExtraction, *, context: WorkflowContext
     ) -> EntityLinkBatch: ...
@@ -168,6 +174,7 @@ class AgentService(Protocol):
 
 class RouteRegistry(Protocol):
     def requires_document_extraction(self, artifact: Artifact) -> bool: ...
+    def requires_media_extraction(self, artifact: Artifact) -> bool: ...
     def is_unavailable(self, artifact: Artifact) -> bool: ...
 
 
@@ -230,16 +237,23 @@ class CityDocumentWorkflow:
 
             await self._cases.record_artifact_stored(artifact, context=context)
 
-            if not self._routes.requires_document_extraction(artifact):
+            if self._routes.requires_document_extraction(artifact):
+                extraction = await self._agents.document_evidence(artifact, context=context)
+                verdict = self._policy.validate_document_extraction(extraction, artifact)
+            elif self._routes.requires_media_extraction(artifact):
+                # Meeting evidence: the agent reads bounded transcript spans, the media gate
+                # validates timestamps/quotes/labels, then the converted extraction joins the
+                # exact same tail (ledger append, case link, delta) as a document.
+                media = await self._agents.media_evidence(artifact, context=context)
+                verdict = self._policy.validate_media_extraction(media, artifact)
+                extraction = media.to_document_extraction()
+            else:
                 await self._jobs.succeed(job_key, context=context)
                 return WorkflowResult(
                     status=JobStatus.NO_ACTION,
                     job_key=job_key,
                     reason="The City MVP document route does not handle this artifact type.",
                 )
-
-            extraction = await self._agents.document_evidence(artifact, context=context)
-            verdict = self._policy.validate_document_extraction(extraction, artifact)
             if not verdict.ok:
                 await self._cases.record_rejected_extraction(
                     artifact, verdict.reasons, context=context

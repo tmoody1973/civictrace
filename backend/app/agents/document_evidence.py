@@ -5,6 +5,8 @@ one case per corpus (# ponytail: agentic Case Linker when there is more than one
 
 from __future__ import annotations
 
+from collections.abc import Callable
+
 from app.agents.factory import AgentDefinition, StructuredAgentRunner
 from app.domain.enums import LinkStatus
 from app.orchestration.workflow import WorkflowContext
@@ -15,7 +17,13 @@ from app.schemas.case import (
     ReviewDecision,
     ReviewRequest,
 )
-from app.schemas.evidence import DocumentEvidenceTask, DocumentExtraction, EntityLinkBatch
+from app.schemas.evidence import (
+    DocumentEvidenceTask,
+    DocumentExtraction,
+    EntityLinkBatch,
+    MediaEvidenceTask,
+    MediaExtraction,
+)
 from app.schemas.inquiry import InquiryProposal, InquiryTask
 from app.schemas.source import Artifact
 
@@ -47,6 +55,13 @@ INQUIRY_PLANNER_DEFINITION = AgentDefinition(
     output_model=InquiryProposal,
     tools=(),
 )
+MEDIA_EVIDENCE_DEFINITION = AgentDefinition(
+    name="civictrace-media_evidence",
+    role="media_evidence",
+    model="fixture",
+    output_model=MediaExtraction,
+    tools=(),
+)
 
 
 class DocumentEvidenceAgentService:
@@ -56,10 +71,12 @@ class DocumentEvidenceAgentService:
         *,
         case_id: str,
         hint_pages: dict[str, list[int]] | None = None,
+        media_task_for: Callable[[str], MediaEvidenceTask] | None = None,
     ) -> None:
         self._runner = runner
         self._case_id = case_id
         self._hint_pages = hint_pages or {}
+        self._media_task_for = media_task_for
 
     async def document_evidence(
         self, artifact: Artifact, *, context: WorkflowContext
@@ -76,6 +93,17 @@ class DocumentEvidenceAgentService:
             DOCUMENT_EVIDENCE_DEFINITION, task, trace_id=context.trace_id
         )
         return DocumentExtraction.model_validate(result.model_dump())
+
+    async def media_evidence(
+        self, artifact: Artifact, *, context: WorkflowContext
+    ) -> MediaExtraction:
+        if self._media_task_for is None:
+            raise ValueError(f"{artifact.artifact_id}: no media task builder configured")
+        task = self._media_task_for(artifact.artifact_id)
+        result = await self._runner.run(
+            MEDIA_EVIDENCE_DEFINITION, task, trace_id=context.trace_id
+        )
+        return MediaExtraction.model_validate(result.model_dump())
 
     async def entity_resolution(
         self, extraction: DocumentExtraction, *, context: WorkflowContext

@@ -19,7 +19,7 @@ from app.policies.source_policy import SourcePolicy
 from app.repositories.cases import InMemoryLedger, LedgerRecorder
 from app.repositories.jobs import InMemoryJobRepository
 from app.schemas.corpus import CorpusManifest
-from app.services.agents_service import build_agents_service
+from app.services.agents_service import build_agents_service, load_media_transcript
 from app.services.artifact_vault import LocalFixtureVault
 from app.services.corpus import load_corpus_manifest
 
@@ -112,7 +112,10 @@ def build_workflow(
         jobs=InMemoryJobRepository(),
         cases=ledger,
         policy=CivicTracePolicyService(
-            source_policy=SourcePolicy.from_yaml(options.allowlist_path)
+            source_policy=SourcePolicy.from_yaml(options.allowlist_path),
+            transcript_for=lambda artifact_id: load_media_transcript(
+                manifest, options.fixture_root / manifest.fixture_dir, artifact_id
+            ),
         ),
         agents=agents,
         routes=CityRouteRegistry(),
@@ -128,6 +131,13 @@ def replay_corpus(
     workflow, ledger, usage_log = build_workflow(manifest, options, clock=clock)
     report = ReplayReport(manifest=manifest, ledger=ledger)
     artifact_ids = [entry.artifact_id for entry in manifest.artifacts]
+    # Meeting media replays after the documents: its evidence is later evidence, and its
+    # event triggers the delta comparison that can cite the hearing.
+    artifact_ids.extend(
+        entry.artifact_id
+        for entry in manifest.media_artifacts
+        if entry.transcript_path is not None
+    )
     if options.replay_duplicate:
         artifact_ids.append(manifest.duplicate_event_fixture.artifact_id)
     for index, artifact_id in enumerate(artifact_ids):

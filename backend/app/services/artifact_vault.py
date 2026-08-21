@@ -7,6 +7,7 @@ extraction may run. Slice 1 ships the local fixture implementation only.
 from __future__ import annotations
 
 import hashlib
+import json
 from pathlib import Path
 
 from app.domain.enums import ArtifactAvailability
@@ -49,9 +50,34 @@ class LocalFixtureVault:
         entry = self._manifest.entry(event.artifact_id)
         if entry.availability is not ArtifactAvailability.AVAILABLE:
             return _unavailable_artifact(entry)
+        if self._manifest.is_media(entry.artifact_id):
+            return self._verify_media_present(entry)
         payload = self._read_verified_fixture(entry)
         stored_path = self._store_immutably(entry, payload)
         return _available_artifact(entry, stored_path.resolve().as_uri())
+
+    def _verify_media_present(self, entry: ManifestArtifact) -> Artifact:
+        """Meeting media entered the vault via the operator machine (MOO-715) and was
+        hash-verified then; here we only confirm a reviewed copy is reachable.
+        Re-reading gigabytes per replay would add cost, not information.
+
+        The full recording is too large to commit, so CI machines do not have it. There
+        the committed transcript's vaulted-audio URI stands in: it names real preserved
+        segment bytes (with a recorded hash) in the immutable cloud vault."""
+        assert entry.local_path is not None
+        media_path = self._fixture_dir / entry.local_path
+        if media_path.exists():
+            if entry.byte_length is not None and media_path.stat().st_size != entry.byte_length:
+                raise FixtureIntegrityError(
+                    f"{entry.artifact_id}: media byte length differs from the manifest"
+                )
+            return _available_artifact(entry, media_path.resolve().as_uri())
+        if entry.transcript_path is not None:
+            transcript = json.loads((self._fixture_dir / entry.transcript_path).read_text())
+            return _available_artifact(entry, str(transcript["audio_uri"]))
+        raise FixtureIntegrityError(
+            f"{entry.artifact_id}: no reviewed media copy and no committed transcript"
+        )
 
     def _read_verified_fixture(self, entry: ManifestArtifact) -> bytes:
         return read_verified_fixture(self._fixture_dir, entry)

@@ -1,0 +1,69 @@
+{
+  "extractions": {
+    "znd-committee-2026-07-28": {
+      "artifact_id": "znd-committee-2026-07-28",
+      "transcript_id": "tr-znd-2026-07-28-tid121",
+      "agent_name": "civictrace-media_evidence",
+      "agent_version": "fixture-2026-08-21",
+      "evidence": [
+        {
+          "evidence_id": "ev-znd-tid121-amendment-purpose",
+          "artifact_id": "znd-committee-2026-07-28",
+          "object_type": "CLAIM",
+          "verbatim_excerpt": "Amendment one to this TID will fund the commercial component of the project.",
+          "neutral_statement": "A Department of City Development presenter stated that Amendment No. 1 to the TID will fund the commercial component of the project.",
+          "anchors": [
+            {
+              "artifact_id": "znd-committee-2026-07-28",
+              "anchor_type": "transcript_time",
+              "anchor_value": "14000-186880"
+            }
+          ],
+          "status": "SUPPORTED",
+          "limitations": [
+            "Presentation statement in committee; not itself a final Common Council action."
+          ],
+          "speaker_label": "SPEAKER_1"
+        },
+        {
+          "evidence_id": "ev-znd-tid121-developer-timeline",
+          "artifact_id": "znd-committee-2026-07-28",
+          "object_type": "CLAIM",
+          "verbatim_excerpt": "so we are um on track to start construction and close on a project this fall",
+          "neutral_statement": "The developer stated the project is on track to start construction and close this fall.",
+          "anchors": [
+            {
+              "artifact_id": "znd-committee-2026-07-28",
+              "anchor_type": "transcript_time",
+              "anchor_value": "187280-336200"
+            }
+          ],
+          "status": "SUPPORTED",
+          "limitations": [
+            "Speaker claim about a future timeline; the record does not establish completion."
+          ],
+          "speaker_label": "SPEAKER_2"
+        },
+        {
+          "evidence_id": "ev-znd-tid121-committee-action",
+          "artifact_id": "znd-committee-2026-07-28",
+          "object_type": "DECISION",
+          "verbatim_excerpt": "Alderwoman Cox moves to recommend adoption. Hearing no objections, so ordered.",
+          "neutral_statement": "The committee chair stated that a motion to recommend adoption was made and ordered without objection.",
+          "anchors": [
+            {
+              "artifact_id": "znd-committee-2026-07-28",
+              "anchor_type": "transcript_time",
+              "anchor_value": "693120-696360"
+            }
+          ],
+          "status": "SUPPORTED",
+          "limitations": [
+            "Committee recommendation only; final adoption is a later Common Council action."
+          ],
+          "speaker_label": "SPEAKER_0"
+        }
+      ]
+    }
+  }
+}

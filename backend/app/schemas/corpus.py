@@ -67,6 +67,8 @@ class ManifestArtifact(BaseModel):
     granicus_clip_id: int | None = None
     duration_seconds: int | None = None
     focus_segment: MediaSegment | None = None
+    # Committed diarized transcript of the focus segment (MOO-716), relative to fixture_dir.
+    transcript_path: str | None = None
 
 
 class DuplicateEventFixture(BaseModel):
@@ -93,12 +95,18 @@ class CorpusManifest(BaseModel):
     prohibited_fixture_content: list[str] = Field(default_factory=list)
 
     def entry(self, artifact_id: str) -> ManifestArtifact:
-        by_id = {entry.artifact_id: entry for entry in self.artifacts}
+        """Look up any reviewed artifact, document or media, by id."""
+        by_id = {
+            entry.artifact_id: entry for entry in (*self.artifacts, *self.media_artifacts)
+        }
         return by_id[artifact_id]
 
     def media_entry(self, artifact_id: str) -> ManifestArtifact:
         by_id = {entry.artifact_id: entry for entry in self.media_artifacts}
         return by_id[artifact_id]
+
+    def is_media(self, artifact_id: str) -> bool:
+        return any(entry.artifact_id == artifact_id for entry in self.media_artifacts)
 
     def source_event(self, artifact_id: str) -> SourceEvent:
         entry = self.entry(artifact_id)

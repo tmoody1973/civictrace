@@ -26,7 +26,7 @@ def client(ledger_json: tuple[Path, list]) -> TestClient:
 
 def test_replay_results_show_every_state(ledger_json: tuple[Path, list]) -> None:
     statuses = [result.status for result in ledger_json[1]]
-    assert statuses.count(JobStatus.SUCCEEDED) == 3
+    assert statuses.count(JobStatus.SUCCEEDED) == 4  # 3 documents + the meeting recording
     assert statuses.count(JobStatus.NOT_PUBLISHED) == 1
     assert statuses.count(JobStatus.DUPLICATE_SUPPRESSED) == 1
     assert JobStatus.EXTRACTION_REJECTED not in statuses
@@ -58,10 +58,13 @@ def test_trace_shows_anchored_evidence_and_not_published(client: TestClient) -> 
     events = data["events"]
 
     accepted = [event for event in events if event["event_type"] == "EVIDENCE_ACCEPTED"]
-    assert len(accepted) == 8
+    assert len(accepted) == 11  # 8 document + 3 meeting-transcript evidence objects
     assert all(event["anchors"] for event in accepted), "every evidence event has >= 1 anchor"
     assert all(
-        event["canonical_url"].startswith("https://milwaukee.legistar1.com/") for event in accepted
+        event["canonical_url"].startswith(
+            ("https://milwaukee.legistar1.com/", "https://milwaukee.granicus.com/")
+        )
+        for event in accepted
     )
     assert all(event["verbatim_excerpt"] and event["neutral_statement"] for event in accepted)
     pages = {
@@ -71,6 +74,7 @@ def test_trace_shows_anchored_evidence_and_not_published(client: TestClient) -> 
     }
     assert ("tid121-project-plan-2024", "5") in pages  # manifest required_anchors
     assert ("tid121-amendment-1-2026", "3") in pages
+    assert ("znd-committee-2026-07-28", "693120-696360") in pages  # committee action moment
 
     missing = [event for event in events if event["event_type"] == "ARTIFACT_NOT_PUBLISHED"]
     assert len(missing) == 1
@@ -79,7 +83,7 @@ def test_trace_shows_anchored_evidence_and_not_published(client: TestClient) -> 
     assert missing[0]["reason"] and "2026-08-19" in missing[0]["reason"]
 
     stored = [event for event in events if event["event_type"] == "ARTIFACT_STORED"]
-    assert len(stored) == 3 and all(event["content_hash"].startswith("sha256:") for event in stored)
+    assert len(stored) == 4 and all(event["content_hash"].startswith("sha256:") for event in stored)
 
     assert len({event["event_id"] for event in events}) == len(events), (
         "duplicate run added nothing"
@@ -119,7 +123,14 @@ def test_cli_main_exit_code_and_stdout(tmp_path: Path, capsys: pytest.CaptureFix
 def test_trace_shows_delta_and_review_rows(client: TestClient) -> None:
     events = client.get(f"/cases/{CASE_ID}/trace").json()["data"]["events"]
     staged = [e for e in events if e["event_type"] == "DELTA_STAGED"]
-    assert len(staged) == 1
+    assert len(staged) == 2  # the amendment revision, then the hearing-citing advance
+    hearing = staged[1]
+    assert hearing["category"] == "ADVANCED"
+    assert set(hearing["later_evidence_ids"]) == {
+        "ev-znd-tid121-amendment-purpose",
+        "ev-znd-tid121-developer-timeline",
+        "ev-znd-tid121-committee-action",
+    }
     row = staged[0]
     assert row["status"] == "DELTA_STAGED"
     assert row["category"] == "REVISED"
@@ -155,17 +166,17 @@ def test_case_summary_endpoint(client: TestClient) -> None:
     assert "Tax Incremental District No. 121" in data["case_topic"]
     assert data["state"] == "DELTA_STAGED"
     assert data["counts"] == {
-        "artifacts_stored": 3,
-        "evidence_accepted": 8,
+        "artifacts_stored": 4,
+        "evidence_accepted": 11,
         "not_published": 1,
         "extractions_rejected": 0,
-        "deltas_proposed": 1,
+        "deltas_proposed": 2,
         "deltas_rejected": 0,
     }
     latest = data["latest_delta"]
-    assert latest["category"] == "REVISED" and latest["review_outcome"] == "APPROVE"
+    assert latest["category"] == "ADVANCED" and latest["review_outcome"] == "APPROVE"
     assert latest["requires_human_review"] is True
-    assert "2025 Annual Report" in data["next_evidence_needed"]
+    assert "Common Council action record" in data["next_evidence_needed"]
     assert not {"summary", "narrative", "reasoning"} & set(data)
 
 
@@ -182,7 +193,7 @@ def test_cli_prints_case_outcome_line(tmp_path: Path, capsys: pytest.CaptureFixt
     cli.main([str(MANIFEST_PATH), "--vault-dir", str(tmp_path / "vault")])
     out = capsys.readouterr().out
     assert (
-        "DELTA_STAGED (REVISED)" in out
+        "DELTA_STAGED (ADVANCED)" in out
         and "reviewer=APPROVE" in out
-        and "2025 Annual Report" in out
+        and "Common Council action record" in out
     )
