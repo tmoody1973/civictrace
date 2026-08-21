@@ -23,6 +23,20 @@ class ExpectedBasis(BaseModel):
     prior_intro_dates: list[date]
 
 
+class MediaSegment(BaseModel):
+    """A bounded time range inside a meeting recording (Slice 6, MOO-715).
+
+    Segment bounds come from Legistar's own EventItemVideoIndex values — the official
+    per-agenda-item timestamps — never from guessing.
+    """
+
+    model_config = ConfigDict(extra="forbid")
+
+    start_seconds: int
+    end_seconds: int
+    basis: str
+
+
 class ManifestArtifact(BaseModel):
     model_config = ConfigDict(extra="forbid")
 
@@ -48,6 +62,11 @@ class ManifestArtifact(BaseModel):
     required_anchors: list[RequiredAnchor] = Field(default_factory=list)
     expected_basis: ExpectedBasis | None = None
     proof_of_absence: str | None = None
+    # Media-only fields (Slice 6, MOO-715): meeting recordings referenced from Legistar.
+    legistar_event_id: int | None = None
+    granicus_clip_id: int | None = None
+    duration_seconds: int | None = None
+    focus_segment: MediaSegment | None = None
 
 
 class DuplicateEventFixture(BaseModel):
@@ -66,12 +85,19 @@ class CorpusManifest(BaseModel):
     case_topic: str
     fixture_dir: str
     artifacts: list[ManifestArtifact]
+    # Meeting recordings (Slice 6). A separate list on purpose: the document replay
+    # iterates `artifacts`; media flows through the transcription pipeline instead.
+    media_artifacts: list[ManifestArtifact] = Field(default_factory=list)
     duplicate_event_fixture: DuplicateEventFixture
     required_demo_outcomes: list[str] = Field(default_factory=list)
     prohibited_fixture_content: list[str] = Field(default_factory=list)
 
     def entry(self, artifact_id: str) -> ManifestArtifact:
         by_id = {entry.artifact_id: entry for entry in self.artifacts}
+        return by_id[artifact_id]
+
+    def media_entry(self, artifact_id: str) -> ManifestArtifact:
+        by_id = {entry.artifact_id: entry for entry in self.media_artifacts}
         return by_id[artifact_id]
 
     def source_event(self, artifact_id: str) -> SourceEvent:

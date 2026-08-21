@@ -3,6 +3,12 @@
 # Adding a domain is a source-policy change: needs review, a fixture, and a test (CLAUDE.md rule 8).
 #
 # Change log
+#   2026-08-20  Granicus meeting-video domains added (MOO-715, reviewed by Tarik: he selected the
+#               ZND Committee 2026-07-28 recording, clip 5262, as the Slice 6 media fixture).
+#               milwaukee.granicus.com hosts the City's official meeting player (linked from
+#               Legistar EventMedia); archive-video.granicus.com serves the archive MP4.
+#               NOTE (Gavel-verified): archive MP4 403s datacenter IPs — media is fetched at
+#               ingest from an operator machine into the vault; cloud services read vault bytes only.
 #   2026-08-20  Live canonical retrieval enabled (MOO-714, Tarik's call): the cloud vault now
 #               fetches each reviewed artifact's canonical_url from these same allowlisted
 #               domains at ingest and refuses any bytes that do not match the manifest hash.
@@ -22,10 +28,13 @@ jurisdictions:
           - milwaukee.legistar.com
           - webapi.legistar.com
           - milwaukee.legistar1.com   # attachment host (PDF/DOCX binaries) for milwaukee.legistar.com
+          - milwaukee.granicus.com    # official meeting-video player, linked from Legistar EventMedia (MOO-715)
+          - archive-video.granicus.com # archive MP4 host behind the player (MOO-715; ingest-host fetch only)
         allowed_content_types:
           - application/json
           - text/html
           - application/pdf
+          - video/mp4
         refresh_policy: replay_only   # Slice 1: local fixture replay; no scheduled retrieval
         minimum_interval_minutes: 30
         evidence_authority: primary

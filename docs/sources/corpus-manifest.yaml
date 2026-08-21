@@ -103,6 +103,38 @@ artifacts:
       prior_intro_dates: ["2025-07-31", "2024-09-03", "2023-07-11", "2022-06-21", "2021-07-07", "2020-07-07", "2019-07-09", "2018-07-10", "2017-07-11", "2015-12-15"]
     proof_of_absence: provenance/annual-tid-report-matters-query-2026-08-19.json
 
+media_artifacts:
+  # Slice 6 (MOO-715). Reviewed and selected by Tarik Moody on 2026-08-20: the ZND Committee
+  # meeting where Amendment No. 1 (file 260433) was recommended for adoption. Full unmodified
+  # recording preserved (vault + local, not committed — see fixture media/README.md); the
+  # focus segment bounds come from Legistar's own per-item EventItemVideoIndex timestamps.
+  - artifact_id: znd-committee-2026-07-28
+    role: later_evidence
+    source_id: milwaukee_legistar
+    legistar_file: "260433"
+    legistar_matter_id: 74415
+    legistar_event_id: 13443
+    granicus_clip_id: 5262
+    canonical_url: https://milwaukee.granicus.com/MediaPlayer.php?clip_id=5262
+    matter_url: https://webapi.legistar.com/v1/milwaukee/events/13443
+    external_id: "event/13443/media/5262"
+    title: Zoning, Neighborhoods & Development Committee meeting of 2026-07-28 (Room 301-B, City Hall)
+    council_action_date: 2026-07-28
+    retrieved_at: 2026-08-21T03:15:00Z
+    content_hash: sha256:7c343dc9f8feac967ab84bb70d83c254c1bd260faa294f684c8f28013ea035f6
+    media_type: video/mp4
+    byte_length: 3094814441
+    duration_seconds: 11566
+    local_path: media/znd-committee-2026-07-28.mp4
+    availability: AVAILABLE
+    focus_segment:
+      start_seconds: 5287
+      end_seconds: 5990
+      basis: >
+        Legistar EventItemVideoIndex for agenda item 493916 (file 260433, Amendment No. 1 to the
+        TID 121 Project Plan; committee action: Pass) through the next item's index (file 260435
+        at 5990s). Provenance: provenance/znd-event-13443-items-2026-08-20.json.
+
 duplicate_event_fixture:
   # Slice 1.4/1.6: the replay re-sends this event unchanged; the second delivery must be DUPLICATE_SUPPRESSED.
   artifact_id: tid121-project-plan-2024
