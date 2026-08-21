@@ -46,6 +46,7 @@ export interface TraceEventView {
   canonical_url: string | null;
   status: string;
   content_hash: string | null;
+  media_type: string | null;
   evidence_id: string | null;
   anchors: AnchorView[];
   verbatim_excerpt: string | null;
@@ -110,6 +111,26 @@ export interface PacketView {
 export interface TraceResponse {
   case_id: string;
   events: TraceEventView[];
+}
+
+export interface TranscriptSegmentView {
+  start_ms: number;
+  end_ms: number;
+  speaker_label: string;
+  text: string;
+  confidence: number | null;
+}
+
+export interface TranscriptView {
+  transcript_id: string;
+  artifact_id: string;
+  segment_start_seconds: number;
+  segment_end_seconds: number;
+  stt_provider: string;
+  stt_model: string;
+  diarization: boolean;
+  confidence_note: string;
+  segments: TranscriptSegmentView[];
 }
 
 export interface CaseCounts {

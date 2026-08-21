@@ -53,7 +53,7 @@ describe("EvidenceTraceView (real TID 121 ledger rows)", () => {
     const handler = vi.fn();
     window.addEventListener(ARTIFACT_JUMP_EVENT, (event) => handler((event as CustomEvent).detail));
     fireEvent.click(screen.getAllByRole("button", { name: /tid121-amendment-1-2026 at page 3/ })[0]);
-    expect(handler).toHaveBeenCalledWith({ artifactId: "tid121-amendment-1-2026", page: 3 });
+    expect(handler).toHaveBeenCalledWith({ artifactId: "tid121-amendment-1-2026", page: 3, span: null });
   });
 
   it("a delta chip focus opens the trace and highlights the matching evidence row", () => {

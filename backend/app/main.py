@@ -11,7 +11,13 @@ from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import JSONResponse
 from starlette.exceptions import HTTPException
 
-from app.api import routes_approval, routes_artifacts, routes_cases, routes_health
+from app.api import (
+    routes_approval,
+    routes_artifacts,
+    routes_cases,
+    routes_health,
+    routes_transcripts,
+)
 from app.api.routes_approval import ApprovalGateway
 from app.core.dependencies import (
     LEDGER_JSON_ENV,
@@ -50,6 +56,7 @@ def create_app(
     app.include_router(routes_health.router)
     app.include_router(routes_cases.router)
     app.include_router(routes_artifacts.router)
+    app.include_router(routes_transcripts.router)
     app.include_router(routes_approval.router)
     app.add_exception_handler(HTTPException, _http_error_as_envelope)  # type: ignore[arg-type]
     return app

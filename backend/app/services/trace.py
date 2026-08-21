@@ -74,6 +74,7 @@ def _artifact_view(event: LedgerEvent) -> TraceEventView:
         canonical_url=artifact.canonical_url,
         status=str(status),
         content_hash=artifact.content_hash,
+        media_type=artifact.media_type,
         reason=event.reason,
     )
 

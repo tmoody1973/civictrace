@@ -46,6 +46,7 @@ class TraceEventView(BaseModel):
     canonical_url: str | None
     status: str
     content_hash: str | None = None
+    media_type: str | None = None
     evidence_id: str | None = None
     anchors: list[AnchorView] = Field(default_factory=list)
     verbatim_excerpt: str | None = None
@@ -83,6 +84,36 @@ class TraceResponse(BaseModel):
 
     case_id: str
     events: list[TraceEventView]
+
+
+class TranscriptSegmentView(BaseModel):
+    model_config = ConfigDict(extra="forbid")
+
+    start_ms: int
+    end_ms: int
+    speaker_label: str
+    text: str
+    confidence: float | None
+
+
+class TranscriptView(BaseModel):
+    """The committed diarized transcript of one meeting's focus segment (MOO-718).
+
+    All segment times are milliseconds relative to `segment_start_seconds` into the
+    full recording; the UI shows meeting-absolute time so it matches the official player.
+    """
+
+    model_config = ConfigDict(extra="forbid")
+
+    transcript_id: str
+    artifact_id: str
+    segment_start_seconds: int
+    segment_end_seconds: int
+    stt_provider: str
+    stt_model: str
+    diarization: bool
+    confidence_note: str
+    segments: list[TranscriptSegmentView]
 
 
 class CaseCounts(BaseModel):

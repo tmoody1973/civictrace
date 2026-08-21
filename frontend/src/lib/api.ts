@@ -9,6 +9,7 @@ import type {
   InquiryStagedView,
   PacketView,
   TraceResponse,
+  TranscriptView,
 } from "@/lib/api-types";
 
 export const API_BASE_URL = process.env.NEXT_PUBLIC_API_BASE_URL ?? "http://localhost:8000";
@@ -82,6 +83,8 @@ export const api = {
   caseSummary: (caseId: string) => getJson<CaseSummaryView>(`/cases/${encodeURIComponent(caseId)}`),
   caseTrace: (caseId: string) => getJson<TraceResponse>(`/cases/${encodeURIComponent(caseId)}/trace`),
   artifactFileUrl: (artifactId: string) => `${API_BASE_URL}/artifacts/${encodeURIComponent(artifactId)}/file`,
+  artifactTranscript: (artifactId: string) =>
+    getJson<TranscriptView>(`/artifacts/${encodeURIComponent(artifactId)}/transcript`),
   stagedInquiry: (caseId: string) => getJson<InquiryStagedView>(`/cases/${encodeURIComponent(caseId)}/inquiry`),
   casePacket: (caseId: string) => getJson<PacketView>(`/cases/${encodeURIComponent(caseId)}/packet`),
   approveInquiry: (caseId: string, body: { reviewer_name: string; artifact_hash: string }) =>

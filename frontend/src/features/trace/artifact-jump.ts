@@ -2,7 +2,9 @@
 
 export const ARTIFACT_JUMP_EVENT = "civictrace:jump-artifact";
 
-export type ArtifactJumpDetail = { artifactId: string; page: number | null };
+export type TranscriptSpan = { startMs: number; endMs: number };
+
+export type ArtifactJumpDetail = { artifactId: string; page: number | null; span?: TranscriptSpan | null };
 
 export function jumpToArtifact(detail: ArtifactJumpDetail): void {
   window.dispatchEvent(new CustomEvent<ArtifactJumpDetail>(ARTIFACT_JUMP_EVENT, { detail }));

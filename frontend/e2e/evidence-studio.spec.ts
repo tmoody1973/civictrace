@@ -14,23 +14,26 @@ test.describe("Evidence Studio — TID 121 replay", () => {
   test("mouse path: card → trace → NOT_PUBLISHED → $2,345,000 anchor → PDF page 3 → Matches ledger", async ({ page }) => {
     await page.goto(STUDIO);
 
-    // Promise Card + Decision Delta, in words
+    // Promise Card + Decision Delta, in words. The latest staged delta cites the
+    // ZND hearing (MOO-717), so the card now speaks about the committee meeting.
     await expect(page.getByTestId("state-badge")).toHaveText(/Change staged — awaiting human review/);
-    await expect(page.getByTestId("delta-summary")).toContainText("$700,000");
-    await expect(page.getByTestId("delta-summary")).toContainText("$2,345,000");
-    await expect(page.getByTestId("delta-next-evidence")).toContainText("2025 Annual Report");
+    await expect(page.getByTestId("delta-summary")).toContainText("Amendment No. 1");
+    await expect(page.getByTestId("delta-summary")).toContainText("committee");
+    await expect(page.getByTestId("delta-next-evidence")).toContainText("Common Council action record");
     await expectNoSeriousAxeViolations(page, "studio loaded");
 
     // Evidence Trace, collapsed by default → open → honest gap visible
     const toggle = page.getByRole("button", { name: "Toggle Evidence Trace" });
-    await expect(toggle).toContainText("Evidence Trace · 17 rows · 3 source artifacts");
+    await expect(toggle).toContainText("Evidence Trace · 24 rows · 4 source artifacts");
     await expect(page.getByRole("list", { name: "Ledger rows" })).toHaveCount(0);
     await toggle.click();
     const notPublished = page.getByTestId("trace-row-ARTIFACT_NOT_PUBLISHED");
     await expect(notPublished).toBeVisible();
     await expect(notPublished).toContainText("NOT_PUBLISHED");
     await expect(notPublished).toContainText("Absence of the record is recorded as NOT_PUBLISHED");
-    await expect(page.getByTestId("trace-row-DELTA_STAGED")).toHaveAttribute("data-human-step", "true");
+    // Two staged deltas since MOO-717: the amendment revision and the hearing-citing advance
+    await expect(page.getByTestId("trace-row-DELTA_STAGED")).toHaveCount(2);
+    await expect(page.getByTestId("trace-row-DELTA_STAGED").last()).toHaveAttribute("data-human-step", "true");
     await expectNoSeriousAxeViolations(page, "trace expanded");
 
     // Anchor → real PDF page 3 → hash proof
@@ -49,6 +52,30 @@ test.describe("Evidence Studio — TID 121 replay", () => {
       .getByRole("button", { name: "Show evidence ev-tid121-plan-capital-costs in the Evidence Trace" })
       .click();
     await expect(page.locator('[data-evidence-id="ev-tid121-plan-capital-costs"]')).toHaveClass(/ring-2/);
+  });
+
+  test("meeting evidence anchor → transcript pane jumps to the cited span (MOO-718)", async ({ page }) => {
+    await page.goto(STUDIO);
+    await page.getByRole("button", { name: "Toggle Evidence Trace" }).click();
+
+    // The committee-action anchor lands on the transcript, not the PDF viewer
+    await page
+      .getByRole("button", { name: "Open znd-committee-2026-07-28 at transcript time 693120-696360" })
+      .first()
+      .click();
+    await expect(page.getByTestId("artifact-header")).toContainText("znd-committee-2026-07-28");
+    const pane = page.getByTestId("transcript-pane");
+    await expect(pane).toBeVisible();
+    await expect(pane).toContainText("Speaker numbers are diarization labels");
+    await expect(pane).toContainText("Confidence not reported");
+
+    const highlighted = page.getByTestId("transcript-segment-highlighted");
+    await expect(highlighted).toBeVisible();
+    await expect(highlighted).toContainText("so ordered");
+    await expect(highlighted).toContainText("1:39:40"); // meeting-absolute time = the official player's clock
+    await expect(highlighted).toContainText("Cited evidence span");
+    await expectNoSeriousAxeViolations(page, "transcript pane open");
+    await page.screenshot({ path: "test-results/studio-transcript-span.png", fullPage: false });
   });
 
   test("keyboard-only path: Tab/Enter opens the trace and jumps to an anchored page", async ({ page }) => {
