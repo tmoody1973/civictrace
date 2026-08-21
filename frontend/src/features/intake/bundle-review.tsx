@@ -123,7 +123,7 @@ export function BundleReview({ bundle }: { bundle: CandidateBundleView }) {
                 rows={2}
                 value={topic}
                 onChange={(event) => setTopic(event.target.value)}
-                placeholder="e.g. The City's commitment in file 260433 and its public follow-through"
+                placeholder={`e.g. The City's commitment in file ${bundle.legistar_file} and what later public records show about follow-through`}
               />
             </label>
             <label className="block text-sm">
