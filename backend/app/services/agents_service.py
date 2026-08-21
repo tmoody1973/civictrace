@@ -90,5 +90,13 @@ def _runner(
         page_reader_factory=page_reader_for,
         usage_log=usage_log,
     )
-    # Real model for document evidence only; delta/reviewer/planner stay on fixtures.
-    return RoleRoutingRunner({"document_evidence": adk_runner}, default=fake_runner), usage_log
+    # The full agent chain runs on the live model: extraction reads real pages, and the
+    # investigator/reviewer/planner reason over validated evidence. Fixtures remain only
+    # as the no-credentials default (runner_kind="fake") for local dev and CI.
+    live_roles: dict[str, StructuredAgentRunner] = {
+        "document_evidence": adk_runner,
+        "delta_investigator": adk_runner,
+        "quality_reviewer": adk_runner,
+        "inquiry_planner": adk_runner,
+    }
+    return RoleRoutingRunner(live_roles, default=fake_runner), usage_log

@@ -32,5 +32,16 @@ echo "-- model usage (local usage.jsonl files, if any) --"
 find "$(git rev-parse --show-toplevel 2>/dev/null || echo .)/backend" -name "usage.jsonl" \
   -exec sh -c 'echo "$1: $(wc -l < "$1") calls"' _ {} \; 2>/dev/null || true
 
+echo "-- cloud model usage (worker model_usage log lines, last 24h) --"
+gcloud logging read 'resource.type="cloud_run_revision" AND resource.labels.service_name="civictrace-worker" AND textPayload:"model_usage"' \
+  --project "$PROJECT" --freshness 24h --limit 200 --format="value(textPayload)" 2>/dev/null \
+  | python3 -c '
+import json, sys
+rows = [json.loads(line.split("model_usage ", 1)[1]) for line in sys.stdin if "model_usage " in line]
+tin = sum(r["input_tokens"] for r in rows); tout = sum(r["output_tokens"] for r in rows)
+usd = sum(r["estimated_usd"] for r in rows)
+print(f"{len(rows)} model calls · {tin} in / {tout} out tokens · est \${usd:.4f} (list-price estimate; the bill is authoritative)")
+' || echo "(no cloud model usage in the last 24h)"
+
 echo "-- exact month-to-date spend --"
 echo "https://console.cloud.google.com/billing/${BILLING_ACCOUNT}/reports?project=${PROJECT}"

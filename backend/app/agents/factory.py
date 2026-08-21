@@ -132,18 +132,32 @@ class GoogleAdkStructuredRunner:
         *,
         trace_id: str,
     ) -> BaseModel:
-        artifact_id = getattr(payload, "artifact_id", "")
-        reader = self._page_reader_factory(artifact_id)
-        task_json = payload.model_dump_json()
-        message = (
-            f"Task input (JSON):\n{task_json}\n\n"
-            "Read the artifact with your read_pages tool before extracting anything. "
-            "hint_pages are suggestions from the corpus manifest, not answers. "
-            "Read every hint page; when a hint page contains extractable content, anchor at "
-            "least one evidence object to that exact page. If an official form field on a page "
-            "you read is present but blank (for example a status field with no value), record "
-            "that as an evidence object with status UNKNOWN quoting the field label."
+        artifact_id = getattr(payload, "artifact_id", "") or getattr(
+            payload, "trigger_artifact_id", ""
         )
+        task_json = payload.model_dump_json()
+        if definition.role == "document_evidence":
+            # Only the document role reads pages; every other role reasons over the
+            # already-validated evidence in its task payload — no tools, no browsing.
+            reader = self._page_reader_factory(artifact_id)
+            tools: list[Any] = [reader.read_pages]
+            message = (
+                f"Task input (JSON):\n{task_json}\n\n"
+                "Read the artifact with your read_pages tool before extracting anything. "
+                "hint_pages are suggestions from the corpus manifest, not answers. "
+                "Read every hint page; when a hint page contains extractable content, anchor at "
+                "least one evidence object to that exact page. If an official form field on a page "
+                "you read is present but blank (for example a status field with no value), record "
+                "that as an evidence object with status UNKNOWN quoting the field label."
+            )
+        else:
+            reader = None
+            tools = []
+            message = (
+                f"Task input (JSON):\n{task_json}\n\n"
+                "Use ONLY the evidence and fields in the task input above. "
+                "Return ONLY the JSON output object required by your instructions."
+            )
         last_error: Exception | None = None
         for attempt in (1, 2):  # exactly one retry on malformed output
             started = self._clock()
@@ -152,7 +166,7 @@ class GoogleAdkStructuredRunner:
                 name=definition.name,
                 instruction=build_instruction(definition.role),
                 output_model=definition.output_model,
-                tools=[reader.read_pages],
+                tools=tools,
                 message=message,
             )
             latency_ms = int((self._clock() - started) * 1000)
@@ -166,7 +180,7 @@ class GoogleAdkStructuredRunner:
                     latency_ms=latency_ms,
                     input_tokens=usage.get("input_tokens", 0),
                     output_tokens=usage.get("output_tokens", 0),
-                    tool_calls=getattr(reader, "calls", 0),
+                    tool_calls=getattr(reader, "calls", 0) if reader is not None else 0,
                     retried=attempt == 2,
                 )
             )

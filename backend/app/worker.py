@@ -104,6 +104,7 @@ class WorkflowIngestor:
         workflow: SourceEventIngestor | None = None,
         prefilter: CorpusPrefilter | None = None,
     ) -> None:
+        usage_log = None
         if workflow is None:
             from app.services.cloud import (
                 CloudConfig,
@@ -113,9 +114,11 @@ class WorkflowIngestor:
 
             config = CloudConfig.from_env()
             prefilter = build_corpus_prefilter(config)
-            workflow, _, _ = build_cloud_workflow(config, prefilter=prefilter)
+            workflow, _, _, usage_log = build_cloud_workflow(config, prefilter=prefilter)
         self._workflow = workflow
         self._prefilter = prefilter
+        self._usage_log = usage_log
+        self._usage_seen = 0
 
     async def run(self, event: SourceEvent, *, trace_id: str) -> WorkflowResult:
         if self._prefilter is not None and self._prefilter.manifest_row(event.artifact_id) is None:
@@ -131,7 +134,23 @@ class WorkflowIngestor:
                 job_key=f"prefilter:{event.artifact_id}",
                 reason="artifact not in the reviewed corpus (BigQuery prefilter)",
             )
-        return await self._workflow.run(event, trace_id=trace_id)
+        try:
+            return await self._workflow.run(event, trace_id=trace_id)
+        finally:
+            self._log_model_usage()
+
+    def _log_model_usage(self) -> None:
+        """One structured Cloud Logging line per model call: tokens, latency, estimated USD."""
+        if self._usage_log is None:
+            return
+        from dataclasses import asdict
+
+        for record in self._usage_log.records[self._usage_seen :]:
+            logger.info(
+                "model_usage %s",
+                json.dumps({**asdict(record), "estimated_usd": round(record.estimated_usd(), 6)}),
+            )
+        self._usage_seen = len(self._usage_log.records)
 
 
 class CloudTasksEnqueuer:

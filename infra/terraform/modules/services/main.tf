@@ -87,6 +87,12 @@ resource "google_cloud_run_v2_service" "worker" {
         value = "1"
       }
       env {
+        # Live Gemini Flash for the full agent chain (extraction, delta, review,
+        # inquiry). "fake" remains the local/CI default; only the worker runs live.
+        name  = "CIVICTRACE_RUNNER"
+        value = "adk"
+      }
+      env {
         name  = "CIVICTRACE_BQ_DATASET"
         value = "civictrace_dev"
       }

@@ -12,6 +12,7 @@ from dataclasses import dataclass
 from datetime import UTC, datetime
 from pathlib import Path
 
+from app.agents.usage_log import UsageLog
 from app.orchestration.idempotency import SourceJobKeys
 from app.orchestration.routes import CityRouteRegistry
 from app.orchestration.workflow import CityDocumentWorkflow
@@ -111,13 +112,21 @@ def build_cloud_workflow(
     *,
     clock: Callable[[], datetime] = lambda: datetime.now(UTC),
     prefilter: BigQueryCorpusPrefilter | None = None,
-) -> tuple[CityDocumentWorkflow, FirestoreLedger, CorpusManifest]:
+) -> tuple[CityDocumentWorkflow, FirestoreLedger, CorpusManifest, UsageLog | None]:
+    """usage_log is non-None when the runner is 'adk' (live model); the worker logs it."""
     from google.cloud import firestore  # noqa: I001
     from google.cloud import storage  # type: ignore[attr-defined]
 
     manifest = load_corpus_manifest(config.manifest_path)
     ledger = build_cloud_ledger(config, manifest, clock=clock)
     storage_client = storage.Client(project=config.project)
+    agents, usage_log = build_agents_service(
+        manifest,
+        extraction_path=config.extraction_path,
+        fixture_root=config.fixture_root,
+        runner_kind=config.runner_kind,
+        hint_pages=prefilter.hint_pages() if prefilter is not None else None,
+    )
     workflow = CityDocumentWorkflow(
         artifacts=GcsArtifactVault(
             manifest=manifest,
@@ -131,14 +140,8 @@ def build_cloud_workflow(
             source_policy=SourcePolicy.from_yaml(config.allowlist_path),
             uri_resolver=GcsUriResolver(storage_client),
         ),
-        agents=build_agents_service(
-            manifest,
-            extraction_path=config.extraction_path,
-            fixture_root=config.fixture_root,
-            runner_kind=config.runner_kind,
-            hint_pages=prefilter.hint_pages() if prefilter is not None else None,
-        )[0],
+        agents=agents,
         routes=CityRouteRegistry(),
         idempotency=SourceJobKeys(),
     )
-    return workflow, ledger, manifest
+    return workflow, ledger, manifest, usage_log
