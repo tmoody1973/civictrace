@@ -32,7 +32,9 @@ export default defineConfig({
       url: `http://localhost:${WEB_PORT}/`,
       reuseExistingServer: !process.env.CI,
       timeout: 240_000,
-      env: { NEXT_PUBLIC_API_BASE_URL: `http://localhost:${API_PORT}` },
+      // Explicit values beat .env.local: e2e stays local even when the developer's
+      // .env.local points the studio at the cloud API (MOO-711 cloud mode).
+      env: { NEXT_PUBLIC_API_BASE_URL: `http://localhost:${API_PORT}`, NEXT_PUBLIC_API_BEARER: "" },
       stdout: "ignore",
       stderr: "pipe",
     },

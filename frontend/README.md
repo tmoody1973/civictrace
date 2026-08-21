@@ -73,3 +73,15 @@ in the timeline pane. CI (`.github/workflows/ci.yml`) runs backend pytest/ruff/m
 `src/lib/api-types.ts` are a hand-written mirror of `backend/app/schemas/api.py`. API base URL:
 `NEXT_PUBLIC_API_BASE_URL` (default `http://localhost:8000`). No AI/provider key exists in the browser.
 Proof screenshots: `docs/hackathon/proof/moo-695-*.png`.
+
+## Cloud mode (MOO-711, demo only)
+
+Point the same studio at the deployed dev API by setting BOTH values in `.env.local`:
+`NEXT_PUBLIC_API_BASE_URL=https://civictrace-api-<hash>-uc.a.run.app` and
+`NEXT_PUBLIC_API_BEARER=<token>` (fetch it with
+`gcloud secrets versions access latest --secret civictrace-api-bearer --project civictrace-dev-tm`).
+The client attaches `Authorization: Bearer …` to every request, including the PDF byte fetch.
+
+**The bearer token lives ONLY in `.env.local`, which is gitignored. Never commit it, never put
+it in `.env.example`, never paste it into code, docs, or CI.** It is a shared dev-demo gate,
+not user auth (post-hackathon). Restore local mode with `cp .env.example .env.local`.

@@ -3,7 +3,7 @@
 import { useQuery } from "@tanstack/react-query";
 
 import { sha256Hex } from "@/features/artifact/hash";
-import { api, ApiError, unwrapEnvelope } from "@/lib/api";
+import { api, ApiError, authHeaders, unwrapEnvelope } from "@/lib/api";
 
 export type ArtifactFile = {
   artifactId: string;
@@ -17,7 +17,7 @@ export type ArtifactFile = {
 export async function fetchArtifactFile(artifactId: string, fetchImpl: typeof fetch = fetch): Promise<ArtifactFile> {
   let response: Response;
   try {
-    response = await fetchImpl(api.artifactFileUrl(artifactId));
+    response = await fetchImpl(api.artifactFileUrl(artifactId), { headers: authHeaders() });
   } catch (cause) {
     throw new ApiError("Cannot reach the CivicTrace API for this document", null, { cause });
   }

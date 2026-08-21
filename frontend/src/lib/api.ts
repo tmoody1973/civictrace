@@ -13,6 +13,14 @@ import type {
 
 export const API_BASE_URL = process.env.NEXT_PUBLIC_API_BASE_URL ?? "http://localhost:8000";
 
+// Shared dev bearer for the cloud API, read from frontend/.env.local (gitignored).
+// Empty in plain local mode, so local dev sends no auth header at all.
+const API_BEARER = process.env.NEXT_PUBLIC_API_BEARER ?? "";
+
+export function authHeaders(): Record<string, string> {
+  return API_BEARER ? { Authorization: `Bearer ${API_BEARER}` } : {};
+}
+
 export class ApiError extends Error {
   constructor(
     message: string,
@@ -42,7 +50,9 @@ export function unwrapEnvelope<T>(body: unknown, status: number): T {
 async function getJson<T>(path: string, fetchImpl: typeof fetch = fetch): Promise<T> {
   let response: Response;
   try {
-    response = await fetchImpl(`${API_BASE_URL}${path}`, { headers: { Accept: "application/json" } });
+    response = await fetchImpl(`${API_BASE_URL}${path}`, {
+      headers: { Accept: "application/json", ...authHeaders() },
+    });
   } catch (cause) {
     throw new ApiError(`Cannot reach the CivicTrace API at ${API_BASE_URL}`, null, { cause });
   }
@@ -55,7 +65,7 @@ async function postJson<T>(path: string, payload: unknown, fetchImpl: typeof fet
   try {
     response = await fetchImpl(`${API_BASE_URL}${path}`, {
       method: "POST",
-      headers: { Accept: "application/json", "Content-Type": "application/json" },
+      headers: { Accept: "application/json", "Content-Type": "application/json", ...authHeaders() },
       body: JSON.stringify(payload),
     });
   } catch (cause) {
@@ -66,7 +76,8 @@ async function postJson<T>(path: string, payload: unknown, fetchImpl: typeof fet
 }
 
 export const api = {
-  health: () => getJson<HealthResponse>("/healthz"),
+  // /health, not /healthz: Google's front end swallows the exact path /healthz on run.app.
+  health: () => getJson<HealthResponse>("/health"),
   listCases: () => getJson<CaseSummaryView[]>("/cases"),
   caseSummary: (caseId: string) => getJson<CaseSummaryView>(`/cases/${encodeURIComponent(caseId)}`),
   caseTrace: (caseId: string) => getJson<TraceResponse>(`/cases/${encodeURIComponent(caseId)}/trace`),
