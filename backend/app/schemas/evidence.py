@@ -48,6 +48,9 @@ class DocumentEvidenceTask(BaseModel):
     media_type: str | None = None
     page_count: int | None = None
     hint_pages: list[int] = Field(default_factory=list)
+    # Validator reasons from a rejected previous attempt (MOO-719): the one bounded
+    # retry carries them so the agent corrects exact quotes instead of repeating them.
+    revision_notes: list[str] = Field(default_factory=list)
 
 
 class DocumentExtraction(BaseModel):

@@ -79,7 +79,11 @@ class DocumentEvidenceAgentService:
         self._media_task_for = media_task_for
 
     async def document_evidence(
-        self, artifact: Artifact, *, context: WorkflowContext
+        self,
+        artifact: Artifact,
+        *,
+        context: WorkflowContext,
+        revision_notes: list[str] | None = None,
     ) -> DocumentExtraction:
         task = DocumentEvidenceTask(
             artifact_id=artifact.artifact_id,
@@ -88,6 +92,7 @@ class DocumentEvidenceAgentService:
             media_type=artifact.media_type,
             page_count=artifact.page_count,
             hint_pages=self._hint_pages.get(artifact.artifact_id, []),
+            revision_notes=revision_notes or [],
         )
         result = await self._runner.run(
             DOCUMENT_EVIDENCE_DEFINITION, task, trace_id=context.trace_id

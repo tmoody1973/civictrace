@@ -152,6 +152,14 @@ class GoogleAdkStructuredRunner:
                 "you read is present but blank (for example a status field with no value), record "
                 "that as an evidence object with status UNKNOWN quoting the field label."
             )
+            if getattr(payload, "revision_notes", []):
+                message += (
+                    "\n\nIMPORTANT — your previous attempt was REJECTED by deterministic "
+                    "validation for the reasons in revision_notes. Every verbatim_excerpt must "
+                    "be an EXACT contiguous copy of text as the read_pages tool returns it for "
+                    "the anchored page — re-read the page and copy the words precisely; never "
+                    "reconstruct table layouts or normalize wording."
+                )
         elif definition.role == "media_evidence":
             if self._transcript_reader_factory is None:
                 raise ValueError(f"{artifact_id}: media_evidence has no transcript reader")

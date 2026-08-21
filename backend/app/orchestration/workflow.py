@@ -137,7 +137,11 @@ class PolicyService(Protocol):
 
 class AgentService(Protocol):
     async def document_evidence(
-        self, artifact: Artifact, *, context: WorkflowContext
+        self,
+        artifact: Artifact,
+        *,
+        context: WorkflowContext,
+        revision_notes: list[str] | None = None,
     ) -> DocumentExtraction: ...
     async def media_evidence(
         self, artifact: Artifact, *, context: WorkflowContext
@@ -240,6 +244,14 @@ class CityDocumentWorkflow:
             if self._routes.requires_document_extraction(artifact):
                 extraction = await self._agents.document_evidence(artifact, context=context)
                 verdict = self._policy.validate_document_extraction(extraction, artifact)
+                if not verdict.ok:
+                    # One bounded correction pass: the agent gets the validator's exact
+                    # reasons and re-reads the pages. Still gated — a second failure is
+                    # rejected below like any other. Models propose; code validates.
+                    extraction = await self._agents.document_evidence(
+                        artifact, context=context, revision_notes=list(verdict.reasons)
+                    )
+                    verdict = self._policy.validate_document_extraction(extraction, artifact)
             elif self._routes.requires_media_extraction(artifact):
                 # Meeting evidence: the agent reads bounded transcript spans, the media gate
                 # validates timestamps/quotes/labels, then the converted extraction joins the
