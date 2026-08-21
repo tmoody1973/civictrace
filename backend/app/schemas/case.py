@@ -15,7 +15,7 @@ from app.domain.enums import (
     ReviewOutcome,
 )
 from app.schemas.approval import ApprovalToken
-from app.schemas.evidence import Evidence
+from app.schemas.evidence import EntityLink, Evidence
 from app.schemas.inquiry import InquiryProposal
 from app.schemas.source import Artifact
 
@@ -153,6 +153,7 @@ class LedgerEvent(BaseModel):
     occurred_at: datetime
     actor: str
     evidence: Evidence | None = None
+    entity_link: EntityLink | None = None
     artifact: Artifact | None = None
     delta: DecisionDeltaProposal | None = None
     review: ReviewDecision | None = None

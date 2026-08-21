@@ -26,7 +26,7 @@ from app.schemas.case import (
     LedgerEvent,
     ReviewDecision,
 )
-from app.schemas.evidence import DocumentExtraction
+from app.schemas.evidence import DocumentExtraction, EntityLinkBatch
 from app.schemas.inquiry import InquiryProposal
 from app.schemas.source import Artifact, SourceEvent
 
@@ -135,6 +135,20 @@ class LedgerRecorder(ABC):
             self.append(
                 self._new_event(
                     context, LedgerEventType.EVIDENCE_ACCEPTED, item.evidence_id, evidence=item
+                )
+            )
+
+    async def record_entity_links(
+        self, links: EntityLinkBatch, *, context: WorkflowContext
+    ) -> None:
+        """One row per surviving link (MOO-720); the studio shows CANDIDATE vs CONFIRMED."""
+        for link in links.links:
+            self.append(
+                self._new_event(
+                    context,
+                    LedgerEventType.ENTITY_LINKED,
+                    f"{link.evidence_id}->{link.entity_id}",
+                    entity_link=link,
                 )
             )
 

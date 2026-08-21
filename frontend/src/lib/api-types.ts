@@ -9,6 +9,7 @@ export type LedgerEventType =
   | "ARTIFACT_STORED"
   | "ARTIFACT_NOT_PUBLISHED"
   | "EVIDENCE_ACCEPTED"
+  | "ENTITY_LINKED"
   | "EXTRACTION_REJECTED"
   | "NO_MATERIAL_DELTA"
   | "DELTA_PROPOSED"
@@ -48,6 +49,8 @@ export interface TraceEventView {
   content_hash: string | null;
   media_type: string | null;
   evidence_id: string | null;
+  entity_id: string | null;
+  link_status: string | null;
   anchors: AnchorView[];
   verbatim_excerpt: string | null;
   neutral_statement: string | null;
@@ -194,4 +197,5 @@ export interface CaseSummaryView {
   counts: CaseCounts;
   latest_delta: LatestDeltaView | null;
   next_evidence_needed: string | null;
+  last_event_at: string | null;
 }

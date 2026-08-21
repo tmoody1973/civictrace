@@ -33,6 +33,7 @@ const summary = (state: CaseSummaryView["state"]): CaseSummaryView => ({
   },
   latest_delta: state === "NO_DELTA" ? null : delta,
   next_evidence_needed: null,
+  last_event_at: null,
 });
 
 describe("DecisionDeltaHeader", () => {

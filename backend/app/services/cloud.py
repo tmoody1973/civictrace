@@ -24,6 +24,7 @@ from app.schemas.corpus import CorpusManifest, ManifestArtifact
 from app.services.agents_service import build_agents_service, load_media_transcript
 from app.services.bigquery_corpus import BigQueryCorpusPrefilter
 from app.services.corpus import load_corpus_manifest
+from app.services.entity_registry import entity_candidates_from_manifests
 from app.services.gcs_artifact_vault import GcsArtifactVault
 from app.services.uri_bytes import GcsUriResolver
 
@@ -96,6 +97,24 @@ def build_cloud_ledger(
     )
 
 
+def _known_manifests(config: CloudConfig, current: CorpusManifest) -> list[CorpusManifest]:
+    """Every case recipe the system knows: the reviewed corpus + journalist cases."""
+    from google.cloud import firestore
+
+    from app.repositories.intake import FirestoreIntakeStore
+
+    manifests = {current.corpus_id: current}
+    yaml_manifest = load_corpus_manifest(config.manifest_path)
+    manifests.setdefault(yaml_manifest.corpus_id, yaml_manifest)
+    try:
+        store = FirestoreIntakeStore(firestore.Client(project=config.project))
+        for manifest in store.list_manifests():
+            manifests.setdefault(manifest.corpus_id, manifest)
+    except Exception:  # noqa: BLE001 — a registry outage costs candidates, never the run
+        pass
+    return list(manifests.values())
+
+
 def build_corpus_prefilter(config: CloudConfig) -> BigQueryCorpusPrefilter | None:
     """The BQ bounded-evidence prefilter; None keeps local/fake mode on the manifest file."""
     if not config.bq_prefilter:
@@ -155,6 +174,7 @@ def build_cloud_workflow_for_manifest(
             f"gs://{config.vault_bucket}/{entry.artifact_id}{suffix}"
         )
 
+    candidates = entity_candidates_from_manifests(_known_manifests(config, manifest))
     agents, usage_log = build_agents_service(
         manifest,
         extraction_path=config.extraction_path,
@@ -162,6 +182,7 @@ def build_cloud_workflow_for_manifest(
         runner_kind=config.runner_kind,
         hint_pages=hint_pages,
         pdf_path_for=pdf_path_for,
+        entity_candidates=candidates,
     )
     source_policy = SourcePolicy.from_yaml(config.allowlist_path)
     fetch_bytes = None
@@ -186,6 +207,7 @@ def build_cloud_workflow_for_manifest(
             transcript_for=lambda artifact_id: load_media_transcript(
                 manifest, config.fixture_root / manifest.fixture_dir, artifact_id
             ),
+            entity_candidates=candidates,
         ),
         agents=agents,
         routes=CityRouteRegistry(),

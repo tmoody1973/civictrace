@@ -23,7 +23,12 @@ export function CaseRail({ activeCaseId }: { activeCaseId?: string }) {
               className="block rounded-md px-2 py-1.5 text-sm hover:bg-accent aria-[current=page]:bg-accent"
             >
               <span className="block truncate font-medium">{item.case_topic || item.case_id}</span>
-              <span className="block text-xs text-foreground/90">{STATE_COPY[item.state].label}</span>
+              <span className="block text-xs text-foreground/90">
+                {STATE_COPY[item.state].label}
+                {item.last_event_at
+                  ? ` · last activity ${new Date(item.last_event_at).toLocaleDateString()}`
+                  : ""}
+              </span>
             </Link>
           </li>
         ))}

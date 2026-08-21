@@ -48,6 +48,9 @@ class CaseRepository(Protocol):
     async def append_validated_extraction(
         self, extraction: DocumentExtraction, *, context: WorkflowContext
     ) -> None: ...
+    async def record_entity_links(
+        self, links: EntityLinkBatch, *, context: WorkflowContext
+    ) -> None: ...
     async def active_case_summaries(
         self, *, candidate_entity_ids: list[str]
     ) -> list[dict[str, object]]: ...
@@ -124,7 +127,7 @@ class PolicyService(Protocol):
     ) -> ExtractionVerdict: ...
     def validate_entity_links(
         self, links: EntityLinkBatch, extraction: DocumentExtraction
-    ) -> None: ...
+    ) -> EntityLinkBatch: ...
     def validate_case_link(self, proposal: CaseLinkProposal) -> None: ...
     def validate_delta(
         self, delta: DecisionDeltaProposal, case_bundle: CaseBundle
@@ -279,7 +282,8 @@ class CityDocumentWorkflow:
             await self._cases.append_validated_extraction(extraction, context=context)
 
             entity_links = await self._agents.entity_resolution(extraction, context=context)
-            self._policy.validate_entity_links(entity_links, extraction)
+            entity_links = self._policy.validate_entity_links(entity_links, extraction)
+            await self._cases.record_entity_links(entity_links, context=context)
             candidate_entities = entity_links.confirmed_or_candidate_entity_ids()
             case_summaries = await self._cases.active_case_summaries(
                 candidate_entity_ids=candidate_entities

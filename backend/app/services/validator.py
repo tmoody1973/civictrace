@@ -10,6 +10,7 @@ from app.domain.enums import (
     ArtifactAvailability,
     DeltaResultType,
     EvidenceObjectType,
+    LinkStatus,
 )
 from app.domain.errors import EvidenceValidationError
 from app.policies.language_policy import find_allegation_language, find_causal_language
@@ -17,6 +18,9 @@ from app.policies.privacy_policy import find_pii, find_restricted_scope
 from app.schemas.case import CaseBundle, DecisionDelta, DecisionDeltaProposal
 from app.schemas.evidence import (
     DocumentExtraction,
+    EntityCandidate,
+    EntityLink,
+    EntityLinkBatch,
     Evidence,
     EvidenceAnchor,
     MediaEvidence,
@@ -105,6 +109,52 @@ def _anchor_reasons(evidence_id: str, anchor: EvidenceAnchor, artifact: Artifact
 
 def _parse_page(value: str) -> int | None:
     return int(value) if value.isdigit() else None
+
+
+def sanitize_entity_links(
+    batch: EntityLinkBatch,
+    extraction: DocumentExtraction,
+    candidates: list[EntityCandidate],
+) -> EntityLinkBatch:
+    """The candidate-versus-confirmed gate (MOO-720). The matcher proposes; this code
+    enforces the strong-match rule:
+
+    - a link naming unknown evidence or an unknown candidate is dropped;
+    - CONFIRMED survives only when one of the candidate's exact identifier strings
+      literally appears in the linked evidence's text — otherwise it is demoted to
+      CANDIDATE with the demotion recorded in the rationale. Never the other way up.
+    """
+    evidence_by_id = {item.evidence_id: item for item in extraction.evidence}
+    candidates_by_id = {candidate.entity_id: candidate for candidate in candidates}
+    kept: list[EntityLink] = []
+    for link in batch.links:
+        item = evidence_by_id.get(link.evidence_id)
+        candidate = candidates_by_id.get(link.entity_id)
+        if item is None or candidate is None:
+            continue  # invented ids never enter the ledger
+        if link.link_status is LinkStatus.CONFIRMED and not _identifier_in_evidence(
+            candidate, item
+        ):
+            kept.append(
+                link.model_copy(
+                    update={
+                        "link_status": LinkStatus.CANDIDATE,
+                        "rationale": link.rationale
+                        + " [demoted to CANDIDATE: no exact identifier in the evidence text]",
+                    }
+                )
+            )
+            continue
+        kept.append(link)
+    return EntityLinkBatch(links=kept)
+
+
+def _identifier_in_evidence(candidate: EntityCandidate, item: Evidence) -> bool:
+    text = normalise_for_match(item.verbatim_excerpt + " " + item.neutral_statement)
+    return any(
+        identifier and normalise_for_match(identifier) in text
+        for identifier in candidate.identifiers
+    )
 
 
 # Words that mark a committee/council action in a transcript span. A DECISION or VOTE

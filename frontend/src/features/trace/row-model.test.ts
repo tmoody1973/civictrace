@@ -8,7 +8,7 @@ const trace = fixture as TraceResponse;
 
 // Keys that exist on the API contract (backend/app/schemas/api.py TraceEventView).
 const CONTRACT_KEYS = new Set<keyof TraceEventView>([
-  "event_id", "event_type", "occurred_at", "actor", "artifact_id", "canonical_url", "status", "content_hash", "media_type",
+  "event_id", "event_type", "occurred_at", "actor", "artifact_id", "canonical_url", "status", "content_hash", "media_type", "entity_id", "link_status",
   "evidence_id", "anchors", "verbatim_excerpt", "neutral_statement", "limitations", "reason", "category",
   "neutral_summary", "original_evidence_ids", "later_evidence_ids", "what_is_established",
   "what_is_not_established", "next_evidence_needed", "requires_human_review", "review_outcome",

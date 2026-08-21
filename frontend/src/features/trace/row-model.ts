@@ -42,6 +42,7 @@ export function stepStatusFor(eventType: LedgerEventType, status: string): StepS
   if (HUMAN_STEPS.has(eventType)) return "active";
   if (GAP_STEPS.has(eventType)) return "pending";
   if (status === "UNKNOWN" || status === "CONFLICTING" || status === "HUMAN_REVIEW") return "pending";
+  if (status === "CANDIDATE") return "pending"; // a possible entity match is never shown as settled
   return "complete";
 }
 

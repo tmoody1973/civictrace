@@ -32,6 +32,8 @@ def build_trace(case_id: str, events: list[LedgerEvent]) -> TraceResponse:
 
 
 def _view(event: LedgerEvent, urls: dict[str, str | None]) -> TraceEventView:
+    if event.entity_link is not None:
+        return _entity_link_view(event)
     if event.evidence is not None:
         return _evidence_view(event, urls.get(event.evidence.artifact_id))
     if event.artifact is not None and event.event_type in ARTIFACT_EVENTS:
@@ -57,6 +59,25 @@ def _evidence_view(event: LedgerEvent, canonical_url: str | None) -> TraceEventV
         verbatim_excerpt=item.verbatim_excerpt,
         neutral_statement=item.neutral_statement,
         limitations=list(item.limitations),
+    )
+
+
+def _entity_link_view(event: LedgerEvent) -> TraceEventView:
+    """CANDIDATE vs CONFIRMED stays visible; the rationale is the agent's cited basis."""
+    assert event.entity_link is not None
+    link = event.entity_link
+    return TraceEventView(
+        event_id=event.event_id,
+        event_type=event.event_type,
+        occurred_at=event.occurred_at,
+        actor=event.actor,
+        artifact_id=event.payload_ref,
+        canonical_url=None,
+        status=str(link.link_status),
+        evidence_id=link.evidence_id,
+        entity_id=link.entity_id,
+        link_status=str(link.link_status),
+        reason=link.rationale,
     )
 
 
@@ -137,6 +158,7 @@ def build_case_summary(case_id: str, case_topic: str, events: list[LedgerEvent])
         counts=counts,
         latest_delta=latest,
         next_evidence_needed=latest.next_evidence_needed if latest else None,
+        last_event_at=events[-1].occurred_at if events else None,
     )
 
 

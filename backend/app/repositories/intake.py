@@ -26,6 +26,7 @@ class IntakeStore(Protocol):
     ) -> None: ...
     def save_manifest(self, manifest: CorpusManifest) -> None: ...
     def get_manifest(self, corpus_id: str) -> CorpusManifest | None: ...
+    def list_manifests(self) -> list[CorpusManifest]: ...
 
 
 class InMemoryIntakeStore:
@@ -66,6 +67,9 @@ class InMemoryIntakeStore:
 
     def get_manifest(self, corpus_id: str) -> CorpusManifest | None:
         return self._manifests.get(corpus_id)
+
+    def list_manifests(self) -> list[CorpusManifest]:
+        return list(self._manifests.values())
 
 
 class FirestoreIntakeStore:
@@ -122,3 +126,9 @@ class FirestoreIntakeStore:
         if not snapshot.exists:
             return None
         return CorpusManifest.model_validate(snapshot.to_dict()["manifest"])
+
+    def list_manifests(self) -> list[CorpusManifest]:
+        return [
+            CorpusManifest.model_validate(doc.to_dict()["manifest"])
+            for doc in self._manifests.stream()
+        ]

@@ -36,7 +36,9 @@
       "review_outcome": null,
       "blocking_issues": [],
       "review_notes": [],
-      "media_type": "application/pdf"
+      "media_type": "application/pdf",
+      "entity_id": null,
+      "link_status": null
     },
     {
       "event_id": "evt_418e238061da94bbedffe626aea505cd",
@@ -80,7 +82,9 @@
       "review_outcome": null,
       "blocking_issues": [],
       "review_notes": [],
-      "media_type": null
+      "media_type": null,
+      "entity_id": null,
+      "link_status": null
     },
     {
       "event_id": "evt_4b484d47300cfd8e348bc4b120a4ed4b",
@@ -124,7 +128,9 @@
       "review_outcome": null,
       "blocking_issues": [],
       "review_notes": [],
-      "media_type": null
+      "media_type": null,
+      "entity_id": null,
+      "link_status": null
     },
     {
       "event_id": "evt_dd4b1eb84de6badfdc7c7239b3fb3144",
@@ -166,7 +172,9 @@
       "review_outcome": null,
       "blocking_issues": [],
       "review_notes": [],
-      "media_type": null
+      "media_type": null,
+      "entity_id": null,
+      "link_status": null
     },
     {
       "event_id": "evt_7724c62a5f4c2fac8174d0bfa7ccbc82",
@@ -203,7 +211,9 @@
       "review_outcome": null,
       "blocking_issues": [],
       "review_notes": [],
-      "media_type": null
+      "media_type": null,
+      "entity_id": null,
+      "link_status": null
     },
     {
       "event_id": "evt_98f48a33b4b0c981e4ff7835ce6d8169",
@@ -240,7 +250,9 @@
       "review_outcome": null,
       "blocking_issues": [],
       "review_notes": [],
-      "media_type": "application/pdf"
+      "media_type": "application/pdf",
+      "entity_id": null,
+      "link_status": null
     },
     {
       "event_id": "evt_6da7e5041b7f339d1bddf52b87a5b9d4",
@@ -282,7 +294,9 @@
       "review_outcome": null,
       "blocking_issues": [],
       "review_notes": [],
-      "media_type": null
+      "media_type": null,
+      "entity_id": null,
+      "link_status": null
     },
     {
       "event_id": "evt_f00768b8c620539ced5ce218d7559ccb",
@@ -326,7 +340,9 @@
       "review_outcome": null,
       "blocking_issues": [],
       "review_notes": [],
-      "media_type": null
+      "media_type": null,
+      "entity_id": null,
+      "link_status": null
     },
     {
       "event_id": "evt_bd93aa06a8e4f78e72985b0ce3faa2d9",
@@ -370,7 +386,9 @@
       "review_outcome": null,
       "blocking_issues": [],
       "review_notes": [],
-      "media_type": null
+      "media_type": null,
+      "entity_id": null,
+      "link_status": null
     },
     {
       "event_id": "evt_e14af3ff2bef18d702223f5c41cda772",
@@ -420,7 +438,9 @@
       "review_outcome": null,
       "blocking_issues": [],
       "review_notes": [],
-      "media_type": null
+      "media_type": null,
+      "entity_id": null,
+      "link_status": null
     },
     {
       "event_id": "evt_a6c43d1de45880e36905a99b3c70a72c",
@@ -457,7 +477,9 @@
       "review_outcome": null,
       "blocking_issues": [],
       "review_notes": [],
-      "media_type": "application/pdf"
+      "media_type": "application/pdf",
+      "entity_id": null,
+      "link_status": null
     },
     {
       "event_id": "evt_cea90afe571d43f295275c5c714174a5",
@@ -499,7 +521,9 @@
       "review_outcome": null,
       "blocking_issues": [],
       "review_notes": [],
-      "media_type": null
+      "media_type": null,
+      "entity_id": null,
+      "link_status": null
     },
     {
       "event_id": "evt_679ff45349f368f239a07499fe35abff",
@@ -543,7 +567,9 @@
       "review_outcome": null,
       "blocking_issues": [],
       "review_notes": [],
-      "media_type": null
+      "media_type": null,
+      "entity_id": null,
+      "link_status": null
     },
     {
       "event_id": "evt_6e0d0673a0222464218a4574ff85167e",
@@ -593,7 +619,9 @@
       "review_outcome": null,
       "blocking_issues": [],
       "review_notes": [],
-      "media_type": null
+      "media_type": null,
+      "entity_id": null,
+      "link_status": null
     },
     {
       "event_id": "evt_022648f3c2cd93a68f61f497f8242d40",
@@ -647,7 +675,9 @@
         "Language is comparative, not causal; 'does not state why' preserves the gap.",
         "Limitations name the up-to ceilings; next evidence (2025 Annual TID Report) directly resolves the disbursement gap."
       ],
-      "media_type": null
+      "media_type": null,
+      "entity_id": null,
+      "link_status": null
     },
     {
       "event_id": "evt_4b84bc890de71700e94b2e0fe057a2c7",
@@ -692,7 +722,9 @@
       "review_outcome": null,
       "blocking_issues": [],
       "review_notes": [],
-      "media_type": null
+      "media_type": null,
+      "entity_id": null,
+      "link_status": null
     },
     {
       "event_id": "evt_dc01b2861374ee7a6249061d59ac9afc",
@@ -729,7 +761,9 @@
       "review_outcome": null,
       "blocking_issues": [],
       "review_notes": [],
-      "media_type": null
+      "media_type": null,
+      "entity_id": null,
+      "link_status": null
     },
     {
       "event_id": "evt_7a788bc2ec1e102d1b698554c4713e50",
@@ -766,7 +800,9 @@
       "review_outcome": null,
       "blocking_issues": [],
       "review_notes": [],
-      "media_type": null
+      "media_type": null,
+      "entity_id": null,
+      "link_status": null
     },
     {
       "event_id": "evt_b7971a0f5a5ffdc8c78fa80ac8a062fa",
@@ -803,7 +839,9 @@
       "review_outcome": null,
       "blocking_issues": [],
       "review_notes": [],
-      "media_type": null
+      "media_type": null,
+      "entity_id": null,
+      "link_status": null
     },
     {
       "event_id": "evt_59b090b6e28b1fa0ffb286a28a4d5c66",
@@ -840,7 +878,9 @@
       "review_outcome": null,
       "blocking_issues": [],
       "review_notes": [],
-      "media_type": null
+      "media_type": null,
+      "entity_id": null,
+      "link_status": null
     }
   ]
 }

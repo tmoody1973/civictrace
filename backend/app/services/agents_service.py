@@ -16,7 +16,7 @@ from app.agents.routing_runner import RoleRoutingRunner
 from app.agents.usage_log import UsageLog
 from app.core.config import apply_vertex_env, require_vertex_config
 from app.schemas.corpus import CorpusManifest, ManifestArtifact
-from app.schemas.evidence import MediaEvidenceTask
+from app.schemas.evidence import EntityCandidate, MediaEvidenceTask
 from app.schemas.transcript import TranscriptArtifact
 from app.tools.artifact_tools import ArtifactPageReader
 from app.tools.transcript_tools import TranscriptSpanReader
@@ -34,6 +34,7 @@ def build_agents_service(
     media_path: Path | None = None,
     hint_pages: dict[str, list[int]] | None = None,
     pdf_path_for: Callable[[ManifestArtifact], Path] | None = None,
+    entity_candidates: list[EntityCandidate] | None = None,
 ) -> tuple[DocumentEvidenceAgentService, UsageLog | None]:
     fixture_dir = fixture_root / manifest.fixture_dir
     fake_runner = _fake_runner(
@@ -58,6 +59,9 @@ def build_agents_service(
         case_id=manifest.case_id,
         hint_pages=hint_pages,
         media_task_for=lambda artifact_id: _media_task(manifest, fixture_dir, artifact_id),
+        # Entity matching runs only on the live runner; the fake runner has no entity
+        # fixtures and an empty candidate list keeps it a no-op (CI unchanged).
+        entity_candidates=entity_candidates if runner_kind == "adk" else None,
     )
     return service, usage_log
 
@@ -158,6 +162,7 @@ def _runner(
     live_roles: dict[str, StructuredAgentRunner] = {
         "document_evidence": adk_runner,
         "media_evidence": adk_runner,
+        "entity_resolution": adk_runner,
         "delta_investigator": adk_runner,
         "quality_reviewer": adk_runner,
         "inquiry_planner": adk_runner,

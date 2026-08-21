@@ -22,6 +22,7 @@ from app.schemas.corpus import CorpusManifest
 from app.services.agents_service import build_agents_service, load_media_transcript
 from app.services.artifact_vault import LocalFixtureVault
 from app.services.corpus import load_corpus_manifest
+from app.services.entity_registry import entity_candidates_from_manifests
 
 OK_STATUSES = frozenset(
     {JobStatus.SUCCEEDED, JobStatus.DUPLICATE_SUPPRESSED, JobStatus.NOT_PUBLISHED}
@@ -96,6 +97,7 @@ def build_workflow(
         ),
         clock=clock,
     )
+    candidates = entity_candidates_from_manifests([manifest])
     agents, usage_log = build_agents_service(
         manifest,
         extraction_path=options.extraction_path,
@@ -104,6 +106,7 @@ def build_workflow(
         delta_path=options.delta_path,
         review_path=options.review_path,
         inquiry_path=options.inquiry_path,
+        entity_candidates=candidates,
     )
     workflow = CityDocumentWorkflow(
         artifacts=LocalFixtureVault(
@@ -116,6 +119,7 @@ def build_workflow(
             transcript_for=lambda artifact_id: load_media_transcript(
                 manifest, options.fixture_root / manifest.fixture_dir, artifact_id
             ),
+            entity_candidates=candidates,
         ),
         agents=agents,
         routes=CityRouteRegistry(),

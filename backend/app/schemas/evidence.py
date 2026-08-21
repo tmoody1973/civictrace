@@ -138,6 +138,39 @@ class MediaExtraction(BaseModel):
         )
 
 
+class EntityCandidate(BaseModel):
+    """One thing the system already knows about, offered to the matcher (MOO-720).
+
+    Candidates are built deterministically from case recipes — never from a model, never
+    from the open web. Identifiers are the exact strings a strong match must cite.
+    """
+
+    model_config = ConfigDict(extra="forbid")
+
+    entity_id: str
+    kind: str
+    name: str
+    identifiers: list[str] = Field(default_factory=list)
+
+
+class EntityEvidenceSummary(BaseModel):
+    """The bounded slice of one evidence item the matcher may see."""
+
+    model_config = ConfigDict(extra="forbid")
+
+    evidence_id: str
+    neutral_statement: str
+    verbatim_excerpt: str
+
+
+class EntityResolutionTask(BaseModel):
+    model_config = ConfigDict(extra="forbid")
+
+    artifact_id: str
+    evidence: list[EntityEvidenceSummary]
+    candidates: list[EntityCandidate]
+
+
 class EntityLink(BaseModel):
     model_config = ConfigDict(extra="forbid")
 

@@ -27,6 +27,7 @@ export const EVENT_LABEL: Record<LedgerEventType, string> = {
   ARTIFACT_STORED: "Source preserved",
   ARTIFACT_NOT_PUBLISHED: "Expected record not published",
   EVIDENCE_ACCEPTED: "Evidence extracted and checked",
+  ENTITY_LINKED: "Matched to something the system knows",
   EXTRACTION_REJECTED: "Extraction refused by checks",
   NO_MATERIAL_DELTA: "No material change found",
   DELTA_PROPOSED: "Later evidence compared",

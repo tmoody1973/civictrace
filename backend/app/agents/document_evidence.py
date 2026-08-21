@@ -20,7 +20,10 @@ from app.schemas.case import (
 from app.schemas.evidence import (
     DocumentEvidenceTask,
     DocumentExtraction,
+    EntityCandidate,
+    EntityEvidenceSummary,
     EntityLinkBatch,
+    EntityResolutionTask,
     MediaEvidenceTask,
     MediaExtraction,
 )
@@ -62,6 +65,13 @@ MEDIA_EVIDENCE_DEFINITION = AgentDefinition(
     output_model=MediaExtraction,
     tools=(),
 )
+ENTITY_RESOLUTION_DEFINITION = AgentDefinition(
+    name="civictrace-entity_resolution",
+    role="entity_resolution",
+    model="fixture",
+    output_model=EntityLinkBatch,
+    tools=(),
+)
 
 
 class DocumentEvidenceAgentService:
@@ -72,11 +82,13 @@ class DocumentEvidenceAgentService:
         case_id: str,
         hint_pages: dict[str, list[int]] | None = None,
         media_task_for: Callable[[str], MediaEvidenceTask] | None = None,
+        entity_candidates: list[EntityCandidate] | None = None,
     ) -> None:
         self._runner = runner
         self._case_id = case_id
         self._hint_pages = hint_pages or {}
         self._media_task_for = media_task_for
+        self._entity_candidates = entity_candidates or []
 
     async def document_evidence(
         self,
@@ -113,7 +125,26 @@ class DocumentEvidenceAgentService:
     async def entity_resolution(
         self, extraction: DocumentExtraction, *, context: WorkflowContext
     ) -> EntityLinkBatch:
-        return EntityLinkBatch(links=[])
+        # No candidates means nothing to match against (fake/CI mode, or an empty
+        # registry) — an empty batch, never an unconstrained agent call.
+        if not self._entity_candidates or not extraction.evidence:
+            return EntityLinkBatch(links=[])
+        task = EntityResolutionTask(
+            artifact_id=extraction.artifact_id,
+            evidence=[
+                EntityEvidenceSummary(
+                    evidence_id=item.evidence_id,
+                    neutral_statement=item.neutral_statement,
+                    verbatim_excerpt=item.verbatim_excerpt,
+                )
+                for item in extraction.evidence
+            ],
+            candidates=self._entity_candidates,
+        )
+        result = await self._runner.run(
+            ENTITY_RESOLUTION_DEFINITION, task, trace_id=context.trace_id
+        )
+        return EntityLinkBatch.model_validate(result.model_dump())
 
     async def case_linker(
         self,

@@ -48,6 +48,9 @@ class TraceEventView(BaseModel):
     content_hash: str | None = None
     media_type: str | None = None
     evidence_id: str | None = None
+    # entity link rows (MOO-720)
+    entity_id: str | None = None
+    link_status: str | None = None
     anchors: list[AnchorView] = Field(default_factory=list)
     verbatim_excerpt: str | None = None
     neutral_statement: str | None = None
@@ -154,6 +157,7 @@ class CaseSummaryView(BaseModel):
     counts: CaseCounts
     latest_delta: LatestDeltaView | None
     next_evidence_needed: str | None
+    last_event_at: datetime | None = None
 
 
 class HealthResponse(BaseModel):

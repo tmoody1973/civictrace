@@ -8,7 +8,12 @@ from app.domain.enums import ArtifactAvailability
 from app.domain.errors import FixtureIntegrityError
 from app.policies.source_policy import SourcePolicy
 from app.schemas.case import CaseBundle, CaseLinkProposal, DecisionDeltaProposal, ReviewDecision
-from app.schemas.evidence import DocumentExtraction, EntityLinkBatch, MediaExtraction
+from app.schemas.evidence import (
+    DocumentExtraction,
+    EntityCandidate,
+    EntityLinkBatch,
+    MediaExtraction,
+)
 from app.schemas.inquiry import InquiryProposal
 from app.schemas.source import Artifact, SourceEvent
 from app.schemas.transcript import TranscriptArtifact
@@ -17,6 +22,7 @@ from app.services.artifact_vault import HASH_PREFIX, sha256_hex
 from app.services.uri_bytes import LocalUriResolver
 from app.services.validator import (
     ValidationResult,
+    sanitize_entity_links,
     validate_delta,
     validate_extraction,
     validate_inquiry,
@@ -36,11 +42,13 @@ class CivicTracePolicyService:
         source_policy: SourcePolicy,
         uri_resolver: LocalUriResolver | None = None,
         transcript_for: Callable[[str], TranscriptArtifact] | None = None,
+        entity_candidates: list[EntityCandidate] | None = None,
     ) -> None:
         self._source_policy = source_policy
         # gs:// URIs work when the cloud services inject a GcsUriResolver (MOO-709).
         self._uri_resolver = uri_resolver or LocalUriResolver()
         self._transcript_for = transcript_for
+        self._entity_candidates = entity_candidates or []
 
     def assert_source_event_allowed(self, event: SourceEvent) -> None:
         self._source_policy.assert_source_event_allowed(event)
@@ -81,8 +89,11 @@ class CivicTracePolicyService:
         transcript = self._transcript_for(artifact.artifact_id)
         return validate_media_extraction(extraction, artifact, transcript)
 
-    def validate_entity_links(self, links: EntityLinkBatch, extraction: DocumentExtraction) -> None:
-        return None
+    def validate_entity_links(
+        self, links: EntityLinkBatch, extraction: DocumentExtraction
+    ) -> EntityLinkBatch:
+        """Enforce the candidate-versus-confirmed rule; over-claims are demoted, never kept."""
+        return sanitize_entity_links(links, extraction, self._entity_candidates)
 
     def validate_case_link(self, proposal: CaseLinkProposal) -> None:
         return None

@@ -69,7 +69,8 @@ class RejectNTimesPolicy:
             return ValidationResult(("ev-1: quoted words not found on page 6",))
         return ValidationResult()
 
-    def validate_entity_links(self, links, extraction) -> None: ...  # noqa: ANN001
+    def validate_entity_links(self, links, extraction):  # noqa: ANN001, ANN202
+        return links
     def validate_case_link(self, proposal) -> None: ...  # noqa: ANN001
 
 

@@ -1,6 +1,7 @@
 "use client";
 
 import {
+  Link2,
   AlertTriangle,
   Ban,
   CheckCircle2,
@@ -28,6 +29,7 @@ const ICONS: Record<LedgerEventType, typeof CheckCircle2> = {
   ARTIFACT_STORED: FileCheck2,
   ARTIFACT_NOT_PUBLISHED: FileX2,
   EVIDENCE_ACCEPTED: CheckCircle2,
+  ENTITY_LINKED: Link2,
   EXTRACTION_REJECTED: Ban,
   NO_MATERIAL_DELTA: CircleDashed,
   DELTA_PROPOSED: GitCompareArrows,
@@ -91,6 +93,20 @@ export function TraceRowView({ row, highlighted }: { row: TraceRow; highlighted:
         </Detail>
       )}
       {event.event_type === "EVIDENCE_ACCEPTED" && <EvidenceBody row={row} />}
+      {event.event_type === "ENTITY_LINKED" && (
+        <Detail
+          label={
+            event.link_status === "CONFIRMED"
+              ? "Confirmed match — an exact identifier appears in the evidence"
+              : "Possible match — not confirmed; a human decides"
+          }
+        >
+          <p className="text-xs leading-relaxed">
+            Evidence <code>{event.evidence_id}</code> → <code>{event.entity_id}</code>
+            {event.reason ? ` — ${event.reason}` : null}
+          </p>
+        </Detail>
+      )}
       {(event.event_type === "NO_MATERIAL_DELTA" || event.event_type === "DELTA_REJECTED") && event.reason && !row.isGap && (
         <Detail label={TRACE_COPY.reason}>
           <p className="text-xs">{event.reason}</p>
