@@ -53,9 +53,33 @@ export function BundleReview({ bundle }: { bundle: CandidateBundleView }) {
         <StatusNotice bundle={bundle} />
         {bundle.status === "DRAFT" ? (
           <>
+            <div className="rounded-md border bg-muted/40 p-3 text-sm">
+              <p className="font-medium">How this works</p>
+              <ol className="mt-1 list-decimal space-y-1 pl-5">
+                <li>
+                  Pick <strong>the promise</strong> — the document where the City commits to
+                  something (money, housing, a project). Open each official source if you are
+                  not sure; usually it is the plan or agreement.
+                </li>
+                <li>
+                  Mark <strong>later evidence</strong> — documents that show follow-through,
+                  cost, or an independent check (reports, review letters).
+                </li>
+                <li>
+                  Say what to watch, sign your name, approve. The system then downloads those
+                  exact documents from the City, fingerprints them so they can never silently
+                  change, and builds the case. You review everything it finds before anything
+                  leaves the system.
+                </li>
+              </ol>
+              <p className="mt-1 text-muted-foreground">
+                &ldquo;Not used&rdquo; keeps a document out of the case. You can always look the
+                file up again and choose differently.
+              </p>
+            </div>
             <fieldset className="space-y-2">
               <legend className="text-sm font-medium">
-                Which document states the promise? Which are later evidence?
+                Which document states the promise? Which show what happened after?
               </legend>
               {bundle.attachments.length === 0 ? (
                 <p className="text-sm text-muted-foreground">
@@ -76,8 +100,8 @@ export function BundleReview({ bundle }: { bundle: CandidateBundleView }) {
                     }
                   >
                     <option value="none">Not used</option>
-                    <option value="promise">The promise</option>
-                    <option value="later">Later evidence</option>
+                    <option value="promise">The promise — what the City committed to</option>
+                    <option value="later">What happened after — follow-through or review</option>
                   </select>
                   <span>{attachment.name}</span>
                   <a
