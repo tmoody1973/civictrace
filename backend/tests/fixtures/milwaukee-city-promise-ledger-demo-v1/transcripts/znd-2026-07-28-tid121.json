@@ -1,0 +1,308 @@
+{
+ "transcript_id": "tr-znd-2026-07-28-tid121",
+ "source_artifact_id": "znd-committee-2026-07-28",
+ "segment_start_seconds": 5287,
+ "segment_end_seconds": 5990,
+ "audio_uri": "gs://civictrace-dev-tm-civictrace-vault/znd-2026-07-28-tid121-segment.flac",
+ "audio_hash": "sha256:27ffdd521665f9cc86b6bc27ab6f861db0efaf9319a82916fbea32320d978029",
+ "stt_provider": "google-speech-v2",
+ "stt_model": "chirp_3",
+ "diarization": true,
+ "created_at": "2026-08-21T03:41:22.067173Z",
+ "segments": [
+  {
+   "start_ms": 0,
+   "end_ms": 13840,
+   "speaker_label": "SPEAKER_0",
+   "text": "approving amendment number one to the project plan and authorizing expenditures for tax incremental district number 121, Bronzeville and Art Bronzeville Arts and Tech Hub in the 6th aldermanic district sponsored by Alderwoman Cox. All right, what do we have here?",
+   "confidence": null
+  },
+  {
+   "start_ms": 14000,
+   "end_ms": 186880,
+   "speaker_label": "SPEAKER_1",
+   "text": "Good morning, Mr. Chairman, members of the committee. Lori Lutska with the Department of City Development. I'm here with Michael Ed Toral, the developer. I will kick off the slide presentation, give you a little bit of insight on the project we're presenting today, and I'll have Michael then introduce himself and give you a little history of the work he's done. So you may have remembered in 2024, the Bronzeville Arts and Tech TID was created and provided a $700,000 developer finance TIF for the residential portion of the larger mixed-use development that includes new housing and commercial space in the Bronzeville cultural cultural and entertainment district in the 6th aldermanic district represented by Alderwoman Cox. The development is located on former vacant Racam owned land at the northwest corner of West North Avenue and North 6th Street. The developer, Michael Ed Toral of FIT Investment Group, responded to an RFP and the proposal, the Bronzeville Arts and Tech Hub was selected. It was viewed as catalytic and the Arts and Tech Hub met the vision of the Bronzeville cultural and entertainment district. Here is a picture of the first phase, the housing component now completed, and it includes 61, 2, 3, and 4 bedroom units across affordable income levels, and it includes 48 units that are affordable to families with incomes below 60% of the area median income. The building is almost fully leased with the live work units remaining. Amendment one to this TID will fund the commercial component of the project. It will be a creative industry hub and includes approximately 29,000 square feet designed for nonprofits, creative industry startups, and entrepreneurs. The space will contain office, co-working, studio, production, and performance space, as well as a cafe. The Bronzeville Arts and Tech Hub aligns with the vision of the Bronzeville cultural and entertainment district highlighted in the new Northeast Side Plan. The Bronzeville cultural and entertainment district is a redevelopment project plan to revitalize a commercial district and surrounding neighborhood in the historic heart of Milwaukee's African-American community. The hub also supports the cultural arts and entertainment uses proposed in the plan. The site is also identified for redevelopment in the Equitable Growth Through Transit Oriented Development Plan, an official amendment to the Northeast Side Plan. Again, with me today is Michael Ed Toral, and I will have him introduce himself and give you a little insight of the developments that he has completed in the city.",
+   "confidence": null
+  },
+  {
+   "start_ms": 187280,
+   "end_ms": 336200,
+   "speaker_label": "SPEAKER_2",
+   "text": "Mhm. All right. Uh good good morning, everyone. Uh my name is Michael uh Ed Toral with FIT Investment Group. Um so we are affordable housing and community development firm based here in Milwaukee. Um you know, we're really passionate about uh community development, um working on projects um that are uh impactful, that have big impact, uh multiple layers of impact, um you know, that are transformative, that um address challenges. Um I think this project is really um I think a good project that highlights um some of those elements. Um you know, the theme of this project was really centered around um you know, supporting entrepreneurs, kind of elevating arts and and our creative community. And so as Lori mentioned, it's a mixed-use project. Um uh you know, uh phase phase one uh is a WIDA project that we completed that just uh completed construction, um fully leased up. And then phase two um is this creative hub um that really is centered around supporting entrepreneurs. Um and so this this uh financing is really a uh uh the last piece of that that that's needed. And so we're really excited to be moving forward to this uh phase of the project. Um you know, some of our anchor tenants include uh the Wisconsin Conservatory of Music. Um one of the things um that's really um it was really important to me to this project is finding um uses that support programming and opportunities for our young people. Um I think growing up for me, it was really cool to be able to um you know, walk to um you know, camps, um you know, music education and things of that nature. And so um you know, this is really trying to to kind of uh uh do that same thing here. Um another one of our anchor tenants is Black Arts MKE, um who is a a very um well-known uh black theater group in Milwaukee. And so they're going to be um this will be their new office location as well as a space for programming. Um and they also have youth camps, etc. Um so we are um on track to start construction and close on a project this fall. Um and so um we're just looking forward and are really excited uh to move this forward.",
+   "confidence": null
+  },
+  {
+   "start_ms": 338400,
+   "end_ms": 449040,
+   "speaker_label": "SPEAKER_1",
+   "text": "Thank you, Michael. So the Arts and Tech Tech Hub will be constructed within the current TID boundary, which is located between North 6th and North 7th Streets, just north of West Door North Avenue. This phase of the project will be constructed on the southeast corner of the site. Here you can see the boundary of the TID. Okay, as Michael kind of indicated, but I'll give you a little bit more detail. Um it is a new construction of a commercial component of the overall project. In total, it's approximately 29,000 square feet. It's four stories. And again, it's designed for nonprofits, creative industry startups, and entrepreneurs. Michael named the tenants um announced to date, and he will also have a cafe. Estimated completion is the winter of 2027. So overall, quick uh construction timeline. So the financing. Um in total, the development costs are approximately, or actually, they're north of $29.3 million. This phase of the project is 11.1 million. We are proposing a $1.645 million developer finance TIF, amortized over 25 years at a 3.5% interest rate. Sources for the project include new market tax credits, a first mortgage, loans provided by the Greater Milwaukee Foundation, Northwestern Mutual, Racam through their brownfield revolving loan program, Legacy Redevelopment Corp, Milwaukee Development Corp, and the developer's equity. Because the TID is greater than $1 million, a human resource agreement will be entered into with with the requirement of 40% RPP and 25% SBE. So with that, we are going to open it up for questions. Thank you.",
+   "confidence": null
+  },
+  {
+   "start_ms": 450000,
+   "end_ms": 467920,
+   "speaker_label": "SPEAKER_3",
+   "text": "Sure. Yes. Um congratulations, ma'am. I'm excited for you, for the district. Um could you did you break down a little bit about that that 11 million for the Arts and Tech Hub? Like, is that brick and mortar? Is that for programming? That I mean that that part of this project sounds so exciting, so I just wanted to",
+   "confidence": null
+  },
+  {
+   "start_ms": 468440,
+   "end_ms": 469040,
+   "speaker_label": "SPEAKER_2",
+   "text": "Yeah, so that",
+   "confidence": null
+  },
+  {
+   "start_ms": 469120,
+   "end_ms": 470280,
+   "speaker_label": "SPEAKER_3",
+   "text": "Have you expand on some of that?",
+   "confidence": null
+  },
+  {
+   "start_ms": 470360,
+   "end_ms": 509040,
+   "speaker_label": "SPEAKER_2",
+   "text": "That budget is is um entirely construction and build-out related. So that's supporting um the the construction uh site work, um and then build-out of all the spaces. So um we'll have uh office, creative office, some studio spaces, um the cafe as Lori mentioned. Um and it's four stories, so just all of those spaces. The only space that isn't um initially built out is the the fourth floor, which we're um we're still uh working on and identifying a tenant for that space. And so we're going to work with that wherever that tenant is to to build out that space.",
+   "confidence": null
+  },
+  {
+   "start_ms": 509160,
+   "end_ms": 509400,
+   "speaker_label": "SPEAKER_3",
+   "text": "Okay.",
+   "confidence": null
+  },
+  {
+   "start_ms": 509480,
+   "end_ms": 512320,
+   "speaker_label": "SPEAKER_2",
+   "text": "But floors one one through three will be built out.",
+   "confidence": null
+  },
+  {
+   "start_ms": 512400,
+   "end_ms": 522280,
+   "speaker_label": "SPEAKER_3",
+   "text": "And then and then I mean you I'm assuming through other entities or opportunities that you'll look at what that space how you fund that programming of that, right?",
+   "confidence": null
+  },
+  {
+   "start_ms": 522480,
+   "end_ms": 561720,
+   "speaker_label": "SPEAKER_2",
+   "text": "Yeah, so I I think one of the things um you know, we wanted to make sure we left some room for growth, um and wanted to find the the right partners. I think the the tenants the partners that we have right now, I think are um are really set the stage for the quality that we're looking for. Um all of our um leases are 10 years or longer. Um just from a uh sustainability perspective, that was important. Um and so that's really the goal, and I think it you know, we'll have the time to um you know, we'll expect whoever that tenant is to bring in some of their own funding, but we'll also help help fundraise for them as well.",
+   "confidence": null
+  },
+  {
+   "start_ms": 561960,
+   "end_ms": 563480,
+   "speaker_label": "SPEAKER_3",
+   "text": "Okay. Thank you. I appreciate that.",
+   "confidence": null
+  },
+  {
+   "start_ms": 563560,
+   "end_ms": 563800,
+   "speaker_label": "SPEAKER_2",
+   "text": "Yep.",
+   "confidence": null
+  },
+  {
+   "start_ms": 564520,
+   "end_ms": 568760,
+   "speaker_label": "SPEAKER_0",
+   "text": "Okay. Any other questions or comments? Hearing none.",
+   "confidence": null
+  },
+  {
+   "start_ms": 568840,
+   "end_ms": 570120,
+   "speaker_label": "SPEAKER_3",
+   "text": "Oh, yeah. Go ahead, Alderwoman",
+   "confidence": null
+  },
+  {
+   "start_ms": 570200,
+   "end_ms": 574920,
+   "speaker_label": "SPEAKER_4",
+   "text": "Sure. I I Michael, who's doing your management of your uh RPP and SBE?",
+   "confidence": null
+  },
+  {
+   "start_ms": 575640,
+   "end_ms": 580680,
+   "speaker_label": "SPEAKER_2",
+   "text": "Uh it'll be Cross Management. Um they they did the housing for us, so they'll do the commercial as well.",
+   "confidence": null
+  },
+  {
+   "start_ms": 581040,
+   "end_ms": 582120,
+   "speaker_label": "SPEAKER_4",
+   "text": "Really successful with that one?",
+   "confidence": null
+  },
+  {
+   "start_ms": 582960,
+   "end_ms": 609560,
+   "speaker_label": "SPEAKER_2",
+   "text": "Yes, so I think um I think the final numbers are still um going to be summarized, but we did improve I think throughout the project, there was constant improvement. But from what I looked at last, I think we were in the mid-30s, excuse me, mid-30s, um which is higher than even the previous maybe a couple of quarters. So significant improvement.",
+   "confidence": null
+  },
+  {
+   "start_ms": 609920,
+   "end_ms": 618960,
+   "speaker_label": "SPEAKER_4",
+   "text": "Okay. And uh any workers continuing on this project from our first development to construction to this one?",
+   "confidence": null
+  },
+  {
+   "start_ms": 619640,
+   "end_ms": 647680,
+   "speaker_label": "SPEAKER_2",
+   "text": "Correct. Yeah, so for the for the second phase, um we're actually um working with a new contractor. We're going to be likely um working with JCP on the on the second phase. Um but yeah, so that we're basically going through the planning for that right now um and just getting everything pulled together. We have um our basic building permit, but some of the build-out permits are still being pulled together. Yeah.",
+   "confidence": null
+  },
+  {
+   "start_ms": 647960,
+   "end_ms": 649480,
+   "speaker_label": "SPEAKER_4",
+   "text": "Now you said it's leased up. Are people in there?",
+   "confidence": null
+  },
+  {
+   "start_ms": 650120,
+   "end_ms": 650480,
+   "speaker_label": "SPEAKER_2",
+   "text": "Say it again?",
+   "confidence": null
+  },
+  {
+   "start_ms": 650560,
+   "end_ms": 652560,
+   "speaker_label": "SPEAKER_4",
+   "text": "You said it's leased up. Are people living there?",
+   "confidence": null
+  },
+  {
+   "start_ms": 652640,
+   "end_ms": 653960,
+   "speaker_label": "SPEAKER_2",
+   "text": "Oh, for the for the housing?",
+   "confidence": null
+  },
+  {
+   "start_ms": 654040,
+   "end_ms": 654320,
+   "speaker_label": "SPEAKER_4",
+   "text": "Yes.",
+   "confidence": null
+  },
+  {
+   "start_ms": 654400,
+   "end_ms": 665240,
+   "speaker_label": "SPEAKER_2",
+   "text": "Yes. Yeah. The housing is um 57 of the 60 are leased up. Uh the only remaining units are the live work units.",
+   "confidence": null
+  },
+  {
+   "start_ms": 666360,
+   "end_ms": 669200,
+   "speaker_label": "SPEAKER_4",
+   "text": "Okay. I mean, I pass all the time. Where's the parking? Is it in the back?",
+   "confidence": null
+  },
+  {
+   "start_ms": 669520,
+   "end_ms": 670160,
+   "speaker_label": "SPEAKER_2",
+   "text": "Yeah, yeah. So the",
+   "confidence": null
+  },
+  {
+   "start_ms": 670280,
+   "end_ms": 675240,
+   "speaker_label": "SPEAKER_4",
+   "text": "Oh, you don't see I saw you out there one time, but I don't you don't see anybody going in and out the building.",
+   "confidence": null
+  },
+  {
+   "start_ms": 675440,
+   "end_ms": 680720,
+   "speaker_label": "SPEAKER_2",
+   "text": "Yeah, so the um we have indoor you see you don't see it, we have indoor garage parking.",
+   "confidence": null
+  },
+  {
+   "start_ms": 680800,
+   "end_ms": 681240,
+   "speaker_label": "SPEAKER_4",
+   "text": "Okay.",
+   "confidence": null
+  },
+  {
+   "start_ms": 681320,
+   "end_ms": 687040,
+   "speaker_label": "SPEAKER_2",
+   "text": "So it's indoor. Most of it is indoor. And then um I think a portion of it is behind the building.",
+   "confidence": null
+  },
+  {
+   "start_ms": 687720,
+   "end_ms": 688320,
+   "speaker_label": "SPEAKER_4",
+   "text": "Smooth?",
+   "confidence": null
+  },
+  {
+   "start_ms": 688680,
+   "end_ms": 688840,
+   "speaker_label": "SPEAKER_2",
+   "text": "Yeah.",
+   "confidence": null
+  },
+  {
+   "start_ms": 689160,
+   "end_ms": 690520,
+   "speaker_label": "SPEAKER_4",
+   "text": "Thank you for sharing. Congratulations.",
+   "confidence": null
+  },
+  {
+   "start_ms": 691280,
+   "end_ms": 692480,
+   "speaker_label": "SPEAKER_0",
+   "text": "Okay, any other questions or comments?",
+   "confidence": null
+  },
+  {
+   "start_ms": 692680,
+   "end_ms": 693040,
+   "speaker_label": "SPEAKER_4",
+   "text": "No, sir.",
+   "confidence": null
+  },
+  {
+   "start_ms": 693120,
+   "end_ms": 696360,
+   "speaker_label": "SPEAKER_0",
+   "text": "Hearing none. Alderwoman Cox moves to recommend adoption. Hearing no objections, so ordered.",
+   "confidence": null
+  },
+  {
+   "start_ms": 696440,
+   "end_ms": 697840,
+   "speaker_label": "SPEAKER_2",
+   "text": "All right, Michael. Thank you. Thanks.",
+   "confidence": null
+  },
+  {
+   "start_ms": 697920,
+   "end_ms": 703000,
+   "speaker_label": "SPEAKER_0",
+   "text": "All right, moving on to items nine, file 260435. Substitute resolution pro",
+   "confidence": null
+  }
+ ]
+}

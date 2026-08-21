@@ -54,7 +54,8 @@ def main(argv: list[str] | None = None) -> int:
     audio_uri = f"gs://{bucket.name}/{AUDIO.name}"
 
     transcriber = GoogleSttV2Transcriber(
-        project=args.project, output_gcs_prefix=f"gs://{args.project}-civictrace-packets/stt-out"
+        project=args.project,
+        output_gcs_prefix=f"gs://{args.project}-civictrace-packets/stt-out",
     )
     segments, diarized = transcriber.transcribe(audio_uri)
     artifact = TranscriptArtifact(
@@ -65,7 +66,7 @@ def main(argv: list[str] | None = None) -> int:
         audio_uri=audio_uri,
         audio_hash=audio_hash,
         stt_provider="google-speech-v2",
-        stt_model="latest_long",
+        stt_model="chirp_3",
         diarization=diarized,
         created_at=datetime.now(UTC),
         segments=segments,

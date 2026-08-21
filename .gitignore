@@ -35,6 +35,9 @@ coverage/
 artifacts/
 transcripts/
 recordings/
+# Reviewed transcript fixtures ARE corpus evidence (MOO-716) — committed on purpose.
+!backend/tests/fixtures/*/transcripts/
+!backend/tests/fixtures/*/transcripts/*.json
 *.sqlite
 
 # Terraform/Pulumi local state and sensitive variable files

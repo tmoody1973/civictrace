@@ -76,8 +76,8 @@ class GoogleSttV2Transcriber:
         *,
         project: str,
         output_gcs_prefix: str,
-        location: str = "global",
-        model: str = "latest_long",
+        location: str = "us",
+        model: str = "chirp_3",  # the one V2 model+location pair that diarizes (probed 2026-08-20)
         language: str = "en-US",
         timeout_seconds: int = 1800,
     ) -> None:
@@ -96,10 +96,15 @@ class GoogleSttV2Transcriber:
             return self._run(audio_uri, diarization=False), False
 
     def _run(self, audio_uri: str, *, diarization: bool) -> list[TranscriptSegment]:
+        from google.api_core.client_options import ClientOptions
         from google.cloud import speech_v2
         from google.cloud.speech_v2.types import cloud_speech
 
-        client = speech_v2.SpeechClient()
+        options = None
+        if self._location != "global":
+            # Regional features (diarization among them) need the regional endpoint.
+            options = ClientOptions(api_endpoint=f"{self._location}-speech.googleapis.com")
+        client = speech_v2.SpeechClient(client_options=options)
         features = cloud_speech.RecognitionFeatures(
             enable_word_time_offsets=True,
             enable_automatic_punctuation=True,
@@ -126,6 +131,8 @@ class GoogleSttV2Transcriber:
         response = operation.result(timeout=self._timeout)  # type: ignore[no-untyped-call]
         words: list[dict[str, Any]] = []
         for file_result in response.results.values():
+            if file_result.error.message:
+                raise RuntimeError(f"STT file error: {file_result.error.message}")
             for result in file_result.transcript.results:
                 if not result.alternatives:
                     continue
