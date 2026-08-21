@@ -3,6 +3,10 @@
 # Adding a domain is a source-policy change: needs review, a fixture, and a test (CLAUDE.md rule 8).
 #
 # Change log
+#   2026-08-20  Live canonical retrieval enabled (MOO-714, Tarik's call): the cloud vault now
+#               fetches each reviewed artifact's canonical_url from these same allowlisted
+#               domains at ingest and refuses any bytes that do not match the manifest hash.
+#               No new domains; refresh remains replay-driven (no scheduled polling yet).
 #   2026-08-19  Created from source-allowlist.example.yaml for Slice 1. Only milwaukee_city/milwaukee_legistar
 #               is enrolled. Added milwaukee.legistar1.com: it is the attachment host for the same Legistar
 #               system (PDF links returned by webapi.legistar.com point there). Reviewed by Tarik on MOO-685.

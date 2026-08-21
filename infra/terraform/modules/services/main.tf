@@ -93,6 +93,12 @@ resource "google_cloud_run_v2_service" "worker" {
         value = "adk"
       }
       env {
+        # The vault retrieves canonical bytes from the City's allowlisted servers
+        # at ingest, hash-verified against the reviewed manifest (MOO-714).
+        name  = "CIVICTRACE_LIVE_FETCH"
+        value = "1"
+      }
+      env {
         name  = "CIVICTRACE_BQ_DATASET"
         value = "civictrace_dev"
       }

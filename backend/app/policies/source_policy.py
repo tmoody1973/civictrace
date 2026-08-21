@@ -42,6 +42,10 @@ class SourcePolicy:
     def domains_for(self, source_id: str) -> frozenset[str]:
         return self._rule(source_id).domains
 
+    def assert_url_allowed(self, source_id: str, url: str) -> None:
+        """Raise SourcePolicyError unless url is HTTPS on an allowlisted domain for source_id."""
+        _assert_url_allowed(self._rule(source_id), url)
+
     def assert_source_event_allowed(self, event: SourceEvent) -> None:
         rule = self._rule(event.source_id)
         if event.canonical_url is not None:

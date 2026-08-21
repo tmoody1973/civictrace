@@ -42,6 +42,7 @@ class CloudConfig:
     runner_kind: str
     bq_prefilter: bool
     bq_dataset: str
+    live_fetch: bool
     manifest_path: Path
     allowlist_path: Path
     extraction_path: Path
@@ -63,6 +64,7 @@ class CloudConfig:
             worker_url=os.environ.get("CIVICTRACE_WORKER_URL", ""),
             runner_kind=os.environ.get("CIVICTRACE_RUNNER", "fake"),
             bq_prefilter=os.environ.get("CIVICTRACE_BQ_PREFILTER") == "1",
+            live_fetch=os.environ.get("CIVICTRACE_LIVE_FETCH") == "1",
             bq_dataset=os.environ.get("CIVICTRACE_BQ_DATASET", "civictrace_dev"),
             manifest_path=_REPO_ROOT / "docs" / "sources" / "corpus-manifest.yaml",
             allowlist_path=_REPO_ROOT / "docs" / "sources" / "source-allowlist.yaml",
@@ -127,17 +129,24 @@ def build_cloud_workflow(
         runner_kind=config.runner_kind,
         hint_pages=prefilter.hint_pages() if prefilter is not None else None,
     )
+    source_policy = SourcePolicy.from_yaml(config.allowlist_path)
+    fetch_bytes = None
+    if config.live_fetch:
+        from app.services.artifact_fetch import LiveSourceFetcher
+
+        fetch_bytes = LiveSourceFetcher(source_policy=source_policy).fetch
     workflow = CityDocumentWorkflow(
         artifacts=GcsArtifactVault(
             manifest=manifest,
             fixture_root=config.fixture_root,
             storage_client=storage_client,
             bucket_name=config.vault_bucket,
+            fetch_bytes=fetch_bytes,
         ),
         jobs=FirestoreJobRepository(firestore.Client(project=config.project)),
         cases=ledger,
         policy=CivicTracePolicyService(
-            source_policy=SourcePolicy.from_yaml(config.allowlist_path),
+            source_policy=source_policy,
             uri_resolver=GcsUriResolver(storage_client),
         ),
         agents=agents,

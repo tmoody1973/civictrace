@@ -8,6 +8,7 @@ Immutability is enforced by GCS itself via the create-only precondition
 
 from __future__ import annotations
 
+from collections.abc import Callable
 from pathlib import Path
 from typing import Protocol
 
@@ -52,11 +53,17 @@ class GcsArtifactVault:
         fixture_root: Path,
         storage_client: StorageClient,
         bucket_name: str,
+        fetch_bytes: Callable[[ManifestArtifact], bytes] | None = None,
     ) -> None:
         self._manifest = manifest
         self._fixture_dir = fixture_root / manifest.fixture_dir
         self._client = storage_client
         self._bucket_name = bucket_name
+        # Default: reviewed fixture bytes. Live mode injects a LiveSourceFetcher that
+        # retrieves the canonical official URL and hash-verifies it (MOO-714).
+        self._fetch_bytes = fetch_bytes or (
+            lambda entry: read_verified_fixture(self._fixture_dir, entry)
+        )
 
     async def fetch_and_store(self, event: SourceEvent, *, context: WorkflowContext) -> Artifact:
         return self.fetch_and_store_sync(event)
@@ -65,7 +72,7 @@ class GcsArtifactVault:
         entry = self._manifest.entry(event.artifact_id)
         if entry.availability is not ArtifactAvailability.AVAILABLE:
             return _unavailable_artifact(entry)
-        payload = read_verified_fixture(self._fixture_dir, entry)
+        payload = self._fetch_bytes(entry)
         storage_uri = self._store_immutably(entry, payload)
         return _available_artifact(entry, storage_uri)
 
