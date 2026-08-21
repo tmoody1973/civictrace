@@ -90,8 +90,9 @@ export function BundleReview({ bundle }: { bundle: CandidateBundleView }) {
                 <div key={attachment.attachment_id} className="flex flex-wrap items-center gap-2 text-sm">
                   <select
                     aria-label={`Role for ${attachment.name}`}
-                    className="rounded-md border bg-background px-2 py-1 text-sm"
+                    className="rounded-md border bg-background px-2 py-1 text-sm disabled:opacity-60"
                     value={roles[attachment.attachment_id] ?? "none"}
+                    disabled={!isPdf(attachment.url)}
                     onChange={(event) =>
                       setRoles((current) => ({
                         ...current,
@@ -104,6 +105,9 @@ export function BundleReview({ bundle }: { bundle: CandidateBundleView }) {
                     <option value="later">What happened after — follow-through or review</option>
                   </select>
                   <span>{attachment.name}</span>
+                  {!isPdf(attachment.url) ? (
+                    <Badge variant="outline">Word file — can&apos;t be used yet, PDFs only</Badge>
+                  ) : null}
                   <a
                     className="inline-flex items-center gap-1 text-xs underline underline-offset-2"
                     href={attachment.url}
@@ -195,6 +199,10 @@ function StatusNotice({ bundle }: { bundle: CandidateBundleView }) {
       </AlertDescription>
     </Alert>
   );
+}
+
+function isPdf(url: string): boolean {
+  return url.toLowerCase().endsWith(".pdf");
 }
 
 function ids(roles: Record<number, Role>, role: Role): number[] {
