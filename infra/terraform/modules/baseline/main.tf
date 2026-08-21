@@ -167,6 +167,18 @@ resource "google_storage_bucket_iam_member" "api_packets_read" {
   member = google_service_account.api.member
 }
 
+data "google_project" "this" {
+  project_id = var.project_id
+}
+
+# STT V2 batch jobs read segment audio directly from the vault (MOO-716).
+# Read-only, bucket-scoped, for Google's Speech service agent — nothing else widens.
+resource "google_storage_bucket_iam_member" "speech_agent_vault_read" {
+  bucket = google_storage_bucket.vault.name
+  role   = "roles/storage.objectViewer"
+  member = "serviceAccount:service-${data.google_project.this.number}@gcp-sa-speech.iam.gserviceaccount.com"
+}
+
 # --- BigQuery: queryable copy of the reviewed corpus manifest (MOO-710) ----------
 # The worker's bounded-evidence prefilter queries this table per source event.
 # Rows are loaded from the manifest by backend/scripts/load_corpus_bigquery.py.
