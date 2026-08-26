@@ -2,6 +2,7 @@
 
 from __future__ import annotations
 
+import hashlib
 from datetime import UTC, datetime
 
 import pytest
@@ -51,11 +52,15 @@ def _selection() -> IntakeSelection:
     )
 
 
-def _service(payload: bytes = PDF_BYTES) -> tuple[CaseIntakeService, dict]:
+def _service(
+    payload: bytes = PDF_BYTES,
+    convert_to_pdf=None,
+    load_vaulted_pdf=None,
+) -> tuple[CaseIntakeService, dict]:
     recorded: dict = {"stored": [], "manifests": []}
 
     def store_bytes(entry: ManifestArtifact, data: bytes) -> str:
-        recorded["stored"].append((entry.artifact_id, len(data)))
+        recorded["stored"].append((entry.local_path, len(data)))
         return f"memory://{entry.artifact_id}"
 
     def save_manifest(manifest: CorpusManifest) -> None:
@@ -67,6 +72,8 @@ def _service(payload: bytes = PDF_BYTES) -> tuple[CaseIntakeService, dict]:
         save_manifest=save_manifest,
         http_get=lambda url: payload,
         clock=lambda: NOW,
+        **({"convert_to_pdf": convert_to_pdf} if convert_to_pdf else {}),
+        **({"load_vaulted_pdf": load_vaulted_pdf} if load_vaulted_pdf else {}),
     )
     return service, recorded
 
@@ -75,7 +82,7 @@ def test_approved_bundle_becomes_a_vaulted_case_with_ordered_events() -> None:
     service, recorded = _service()
     manifest, events = service.create_case(_bundle(), _selection())
     assert manifest.case_id == "case-intake-260433"
-    assert recorded["stored"] == [(manifest.artifacts[0].artifact_id, len(PDF_BYTES))]
+    assert recorded["stored"] == [(manifest.artifacts[0].local_path, len(PDF_BYTES))]
     assert recorded["manifests"] == [manifest]
     assert [event.artifact_id for event in events] == [manifest.artifacts[0].artifact_id]
     locked_hash = manifest.artifacts[0].content_hash
@@ -111,8 +118,71 @@ def test_off_allowlist_url_is_refused() -> None:
     assert recorded["manifests"] == []
 
 
-def test_non_pdf_bytes_are_refused() -> None:
+def test_unsupported_bytes_are_refused() -> None:
     service, recorded = _service(payload=b"<html>not a public document</html>")
-    with pytest.raises(CaseIntakeError, match="not a PDF document"):
+    with pytest.raises(CaseIntakeError, match="not a PDF or Word document"):
         service.create_case(_bundle(), _selection())
     assert recorded["manifests"] == []
+
+
+def _docx_bytes() -> bytes:
+    import io
+    import zipfile
+
+    buffer = io.BytesIO()
+    with zipfile.ZipFile(buffer, "w") as archive:
+        archive.writestr("word/document.xml", "<w:document/>")
+    return buffer.getvalue()
+
+
+CONVERTED = b"%PDF-1.7 converted from word"
+
+
+def test_word_attachment_is_converted_and_both_copies_vaulted() -> None:
+    """MOO-726: the pipeline reads the conversion; the canonical original stays vaulted."""
+    docx = _docx_bytes()
+    service, recorded = _service(payload=docx, convert_to_pdf=lambda data: CONVERTED)
+    manifest, _ = service.create_case(_bundle(), _selection())
+    entry = manifest.artifacts[0]
+    assert entry.media_type == "application/pdf"
+    assert entry.content_hash == "sha256:" + hashlib.sha256(CONVERTED).hexdigest()
+    assert entry.original_content_hash == (
+        "sha256:" + hashlib.sha256(docx).hexdigest()
+    )
+    assert entry.original_media_type and entry.original_media_type.endswith(
+        "wordprocessingml.document"
+    )
+    assert entry.original_local_path and entry.original_local_path.endswith(".docx")
+    assert recorded["stored"] == [
+        (entry.local_path, len(CONVERTED)),
+        (entry.original_local_path, len(docx)),
+    ]
+
+
+def test_failed_conversion_refuses_with_a_showable_reason() -> None:
+    from app.services.office_convert import ConversionError
+
+    def convert(data: bytes) -> bytes:
+        raise ConversionError("the file may be damaged")
+
+    service, recorded = _service(payload=_docx_bytes(), convert_to_pdf=convert)
+    with pytest.raises(CaseIntakeError, match="damaged"):
+        service.create_case(_bundle(), _selection())
+    assert recorded["manifests"] == []
+
+
+def test_retry_adopts_the_already_vaulted_conversion() -> None:
+    """LibreOffice output varies run to run; a Cloud Tasks retry must not re-convert."""
+
+    def never_convert(data: bytes) -> bytes:
+        raise AssertionError("retry must adopt the vaulted conversion, not convert again")
+
+    service, recorded = _service(
+        payload=_docx_bytes(),
+        convert_to_pdf=never_convert,
+        load_vaulted_pdf=lambda object_name: CONVERTED,
+    )
+    manifest, _ = service.create_case(_bundle(status=BundleStatus.CREATING), _selection())
+    assert manifest.artifacts[0].content_hash == (
+        "sha256:" + hashlib.sha256(CONVERTED).hexdigest()
+    )

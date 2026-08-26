@@ -85,7 +85,12 @@ class IntakeSelection(BaseModel):
 
 
 class FetchedAttachment(BaseModel):
-    """One attachment after canonical retrieval: the bytes are hashed and vaulted."""
+    """One attachment after canonical retrieval: the bytes are hashed and vaulted.
+
+    For a Word attachment (MOO-726) the content fields describe the labeled PDF
+    conversion the pipeline reads; the original_* fields hash-lock the canonical
+    Word bytes the City actually published.
+    """
 
     model_config = ConfigDict(extra="forbid")
 
@@ -93,6 +98,10 @@ class FetchedAttachment(BaseModel):
     content_hash: str
     byte_length: int
     page_count: int | None = None
+    original_content_hash: str | None = None
+    original_media_type: str | None = None
+    original_byte_length: int | None = None
+    original_suffix: str | None = None
 
 
 def intake_corpus_id(legistar_file: str) -> str:
@@ -152,6 +161,9 @@ def _manifest_artifact(
     retrieved_at: datetime,
 ) -> ManifestArtifact:
     artifact_id = f"{intake_corpus_id(bundle.legistar_file)}-att{attachment.attachment_id}"
+    original_local_path = (
+        f"records/{artifact_id}{locked.original_suffix}" if locked.original_suffix else None
+    )
     return ManifestArtifact(
         artifact_id=artifact_id,
         role=role,
@@ -170,4 +182,8 @@ def _manifest_artifact(
         matter_url=bundle.matter_url,
         byte_length=locked.byte_length,
         page_count=locked.page_count,
+        original_content_hash=locked.original_content_hash,
+        original_media_type=locked.original_media_type,
+        original_local_path=original_local_path,
+        original_byte_length=locked.original_byte_length,
     )

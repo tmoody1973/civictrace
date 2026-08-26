@@ -92,7 +92,7 @@ export function BundleReview({ bundle }: { bundle: CandidateBundleView }) {
                     aria-label={`Role for ${attachment.name}`}
                     className="rounded-md border bg-background px-2 py-1 text-sm disabled:opacity-60"
                     value={roles[attachment.attachment_id] ?? "none"}
-                    disabled={!isPdf(attachment.url)}
+                    disabled={!isUsable(attachment.url)}
                     onChange={(event) =>
                       setRoles((current) => ({
                         ...current,
@@ -105,8 +105,15 @@ export function BundleReview({ bundle }: { bundle: CandidateBundleView }) {
                     <option value="later">What happened after — follow-through or review</option>
                   </select>
                   <span>{attachment.name}</span>
-                  {!isPdf(attachment.url) ? (
-                    <Badge variant="outline">Word file — can&apos;t be used yet, PDFs only</Badge>
+                  {isWord(attachment.url) ? (
+                    <Badge variant="outline">
+                      Word file — we keep the City&apos;s original and make a PDF copy to read
+                    </Badge>
+                  ) : null}
+                  {!isUsable(attachment.url) ? (
+                    <Badge variant="outline">
+                      This file type can&apos;t be used yet — PDF and Word only
+                    </Badge>
                   ) : null}
                   <a
                     className="inline-flex items-center gap-1 text-xs underline underline-offset-2"
@@ -243,8 +250,13 @@ function CreationProgress({ bundle }: { bundle: CandidateBundleView }) {
   );
 }
 
-function isPdf(url: string): boolean {
-  return url.toLowerCase().endsWith(".pdf");
+function isWord(url: string): boolean {
+  const path = url.toLowerCase().split("?")[0];
+  return path.endsWith(".doc") || path.endsWith(".docx");
+}
+
+function isUsable(url: string): boolean {
+  return url.toLowerCase().split("?")[0].endsWith(".pdf") || isWord(url);
 }
 
 function ids(roles: Record<number, Role>, role: Role): number[] {

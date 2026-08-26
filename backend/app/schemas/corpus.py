@@ -59,6 +59,13 @@ class ManifestArtifact(BaseModel):
     council_action_date: date | None = None
     byte_length: int | None = None
     page_count: int | None = None
+    # Word-conversion provenance (MOO-726): when the City published a Word file, the
+    # pipeline reads a labeled PDF conversion; these fields keep the canonical original
+    # first-class — its hash is what a re-fetch of canonical_url must match.
+    original_content_hash: str | None = None
+    original_media_type: str | None = None
+    original_local_path: str | None = None
+    original_byte_length: int | None = None
     required_anchors: list[RequiredAnchor] = Field(default_factory=list)
     expected_basis: ExpectedBasis | None = None
     proof_of_absence: str | None = None

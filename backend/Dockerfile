@@ -6,6 +6,12 @@
 
 FROM python:3.13-slim
 
+# Word→PDF conversion at intake (MOO-726): LibreOffice headless is the converter.
+# Cost: image grows ~400 MB; accepted in the MOO-726 infra note.
+RUN apt-get update \
+    && apt-get install -y --no-install-recommends libreoffice-writer fonts-liberation \
+    && rm -rf /var/lib/apt/lists/*
+
 COPY --from=ghcr.io/astral-sh/uv:0.9 /uv /usr/local/bin/uv
 
 WORKDIR /app/backend

@@ -24,10 +24,18 @@ from app.schemas.intake import (
     FetchedAttachment,
     IntakeSelection,
     build_intake_manifest,
+    intake_corpus_id,
 )
 from app.schemas.source import SourceEvent
 from app.services.artifact_fetch import USER_AGENT, _default_http_get
 from app.services.artifact_vault import HASH_PREFIX, sha256_hex
+from app.services.office_convert import (
+    ConversionError,
+    classify_attachment,
+    convert_word_to_pdf,
+    word_media_type,
+    word_suffix,
+)
 
 logger = logging.getLogger("civictrace.intake")
 
@@ -47,12 +55,18 @@ class CaseIntakeService:
         save_manifest: Callable[[CorpusManifest], None],
         http_get: Callable[[str], bytes] = _default_http_get,
         clock: Callable[[], datetime],
+        convert_to_pdf: Callable[[bytes], bytes] = convert_word_to_pdf,
+        load_vaulted_pdf: Callable[[str], bytes | None] = lambda object_name: None,
     ) -> None:
         self._policy = source_policy
         self._store_bytes = store_bytes
         self._save_manifest = save_manifest
         self._http_get = http_get
         self._clock = clock
+        self._convert_to_pdf = convert_to_pdf
+        # LibreOffice output is not byte-identical across runs; a Cloud Tasks retry must
+        # adopt the conversion already in the immutable vault instead of re-converting.
+        self._load_vaulted_pdf = load_vaulted_pdf
 
     def create_case(
         self, bundle: CandidateBundle, selection: IntakeSelection
@@ -73,17 +87,34 @@ class CaseIntakeService:
         by_id = {attachment.attachment_id: attachment for attachment in bundle.attachments}
         fetched: dict[int, FetchedAttachment] = {}
         payloads: dict[int, bytes] = {}
+        originals: dict[int, bytes] = {}
         for attachment_id in selected_ids:
             attachment = by_id.get(attachment_id)
             if attachment is None:
                 raise CaseIntakeError(f"attachment {attachment_id} is not in the bundle")
             self._assert_allowlisted(attachment.url)
             payload = self._http_get(attachment.url)
-            if not payload.startswith(b"%PDF"):
+            kind = classify_attachment(payload, attachment.url)
+            if kind == "unsupported":
                 raise CaseIntakeError(
-                    f"attachment {attachment_id} at {attachment.url} is not a PDF document; "
-                    "only public document evidence may enter a case"
+                    f"attachment {attachment_id} at {attachment.url} is not a PDF or Word "
+                    "document; this format cannot become case evidence yet"
                 )
+            if kind == "word":
+                originals[attachment_id] = payload
+                converted = self._conversion_for(bundle, attachment_id, payload)
+                payloads[attachment_id] = converted
+                fetched[attachment_id] = FetchedAttachment(
+                    attachment_id=attachment_id,
+                    content_hash=HASH_PREFIX + sha256_hex(converted),
+                    byte_length=len(converted),
+                    page_count=_page_count(converted),
+                    original_content_hash=HASH_PREFIX + sha256_hex(payload),
+                    original_media_type=word_media_type(payload),
+                    original_byte_length=len(payload),
+                    original_suffix=word_suffix(payload),
+                )
+                continue
             payloads[attachment_id] = payload
             fetched[attachment_id] = FetchedAttachment(
                 attachment_id=attachment_id,
@@ -101,6 +132,15 @@ class CaseIntakeService:
             assert entry.legistar_attachment_id is not None
             storage_uri = self._store_bytes(entry, payloads[entry.legistar_attachment_id])
             logger.info("intake vaulted %s at %s", entry.artifact_id, storage_uri)
+            if entry.original_local_path is not None:
+                original_uri = self._store_bytes(
+                    _original_entry(entry), originals[entry.legistar_attachment_id]
+                )
+                logger.info(
+                    "intake vaulted canonical original of %s at %s",
+                    entry.artifact_id,
+                    original_uri,
+                )
         self._save_manifest(manifest)
         events = [
             manifest.source_event(entry.artifact_id)
@@ -110,11 +150,42 @@ class CaseIntakeService:
         ]
         return manifest, events
 
+    def _conversion_for(
+        self, bundle: CandidateBundle, attachment_id: int, original: bytes
+    ) -> bytes:
+        """The vault's existing conversion wins on retry; otherwise convert now."""
+        object_name = f"{intake_corpus_id(bundle.legistar_file)}-att{attachment_id}.pdf"
+        existing = self._load_vaulted_pdf(object_name)
+        if existing is not None:
+            logger.info("intake adopting already-vaulted conversion %s", object_name)
+            return existing
+        try:
+            return self._convert_to_pdf(original)
+        except ConversionError as exc:
+            raise CaseIntakeError(f"attachment {attachment_id}: {exc}") from exc
+
     def _assert_allowlisted(self, url: str) -> None:
         try:
             self._policy.assert_url_allowed(INTAKE_SOURCE_ID, url)
         except SourcePolicyError as exc:
             raise CaseIntakeError(str(exc)) from exc
+
+
+def _original_entry(entry: ManifestArtifact) -> ManifestArtifact:
+    """The canonical Word bytes get their own vault object under the same artifact id."""
+    return entry.model_copy(
+        update={
+            "content_hash": entry.original_content_hash,
+            "media_type": entry.original_media_type,
+            "local_path": entry.original_local_path,
+            "byte_length": entry.original_byte_length,
+            "page_count": None,
+            "original_content_hash": None,
+            "original_media_type": None,
+            "original_local_path": None,
+            "original_byte_length": None,
+        }
+    )
 
 
 def _page_count(payload: bytes) -> int | None:

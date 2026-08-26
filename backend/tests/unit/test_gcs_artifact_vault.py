@@ -114,3 +114,52 @@ def test_missing_artifact_stays_not_published_and_stores_nothing(vault: Any) -> 
     assert artifact.availability is ArtifactAvailability.NOT_PUBLISHED
     assert artifact.storage_uri is None
     assert client.buckets == {} or not client.buckets.get("test-vault", FakeBucket("x")).objects
+
+
+def _conversion_manifest():
+    """A manifest whose first artifact is a labeled Word→PDF conversion (MOO-726)."""
+    manifest = load_corpus_manifest(MANIFEST_PATH)
+    converted = manifest.artifacts[0].model_copy(
+        update={
+            "original_content_hash": "sha256:" + "ab" * 32,
+            "original_media_type": "application/msword",
+            "original_local_path": "records/converted-original.doc",
+            "original_byte_length": 123,
+        }
+    )
+    return manifest.model_copy(update={"artifacts": [converted, *manifest.artifacts[1:]]})
+
+
+def test_conversion_is_verified_present_never_refetched() -> None:
+    manifest = _conversion_manifest()
+    client = FakeStorageClient()
+    entry = manifest.artifacts[0]
+    object_name = f"{entry.artifact_id}.pdf"
+    client.bucket("test-vault").objects[object_name] = b"%PDF-1.7 vaulted conversion"
+
+    def refuse_fetch(_entry):
+        raise AssertionError("a conversion must never be re-fetched from the canonical URL")
+
+    built = GcsArtifactVault(
+        manifest=manifest,
+        fixture_root=REPO_ROOT,
+        storage_client=client,  # type: ignore[arg-type]
+        bucket_name="test-vault",
+        fetch_bytes=refuse_fetch,
+    )
+    artifact = built.fetch_and_store_sync(manifest.source_event(entry.artifact_id))
+    assert artifact.availability is ArtifactAvailability.AVAILABLE
+    assert artifact.storage_uri == f"gs://test-vault/{object_name}"
+
+
+def test_missing_conversion_fails_closed() -> None:
+    manifest = _conversion_manifest()
+    built = GcsArtifactVault(
+        manifest=manifest,
+        fixture_root=REPO_ROOT,
+        storage_client=FakeStorageClient(),  # type: ignore[arg-type]
+        bucket_name="test-vault",
+    )
+    entry = manifest.artifacts[0]
+    with pytest.raises(ArtifactImmutabilityError, match="converted document missing"):
+        built.fetch_and_store_sync(manifest.source_event(entry.artifact_id))

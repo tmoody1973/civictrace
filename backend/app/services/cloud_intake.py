@@ -95,6 +95,7 @@ class CloudCaseCreator:
                 store_bytes=_vault_writer(config, storage_client),
                 save_manifest=store.save_manifest,
                 clock=lambda: datetime.now(UTC),
+                load_vaulted_pdf=_vault_reader(config, storage_client),
             )
             manifest, events = service.create_case(bundle, selection)
         except CaseIntakeError as exc:
@@ -124,6 +125,19 @@ def _vault_writer(
         return store_gcs_bytes(storage_client, config.vault_bucket, entry, payload)  # type: ignore[arg-type]
 
     return store_bytes
+
+
+def _vault_reader(config: CloudConfig, storage_client: object) -> Callable[[str], bytes | None]:
+    """Retry support (MOO-726): an already-vaulted Word→PDF conversion is adopted, never
+    re-converted, so the hash-lock stays stable across Cloud Tasks retries."""
+
+    def load_vaulted_pdf(object_name: str) -> bytes | None:
+        blob = storage_client.bucket(config.vault_bucket).blob(object_name)  # type: ignore[attr-defined]
+        if not blob.exists():
+            return None
+        return bytes(blob.download_as_bytes())
+
+    return load_vaulted_pdf
 
 
 def _log_usage(usage_log: UsageLog | None) -> None:
