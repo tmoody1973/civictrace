@@ -1,0 +1,9 @@
+# The image needs the reviewed records/transcripts, never the local media copies —
+# meeting video is vaulted from the operator machine (MOO-715) and 2.9 GB of it was
+# silently inflating the image to 13 GB before this file existed.
+backend/tests/fixtures/**/media
+.git
+frontend
+infra
+docs/handoff
+docs/research
