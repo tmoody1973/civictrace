@@ -8,8 +8,8 @@ export default function Intake() {
       <main className="mx-auto w-full max-w-2xl overflow-y-auto p-6">
         <h1 className="mb-1 text-lg font-semibold">Start a case</h1>
         <p className="mb-4 text-sm text-muted-foreground">
-          Look up a City of Milwaukee Legistar file, review what the official record lists, and
-          approve it into a Promise Ledger case.
+          Search the City of Milwaukee&apos;s official record in plain words, review what it
+          lists, and approve it into a Promise Ledger case. Nothing becomes a case without you.
         </p>
         <IntakePage />
       </main>

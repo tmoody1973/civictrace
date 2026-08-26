@@ -118,6 +118,15 @@ export interface TraceResponse {
 
 export type BundleStatus = "DRAFT" | "APPROVED" | "CREATING" | "CASE_CREATED" | "FAILED";
 
+export interface MatterSearchResultView {
+  legistar_file: string;
+  matter_id: number;
+  title: string;
+  matter_type: string | null;
+  matter_status: string | null;
+  intro_date: string | null;
+}
+
 export interface CandidateAttachmentView {
   attachment_id: number;
   name: string;

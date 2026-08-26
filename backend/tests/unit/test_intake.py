@@ -9,6 +9,7 @@ from __future__ import annotations
 
 from datetime import UTC, datetime
 from typing import Any
+from urllib.parse import unquote
 
 import pytest
 
@@ -142,3 +143,52 @@ class TestManifestConversion:
             _selection(promise_attachment_ids=[])
         with pytest.raises(ValueError):
             _selection(case_topic="short")
+
+
+SEARCH_ROWS = [
+    {
+        "MatterId": 74417,
+        "MatterFile": "260435",
+        "MatterTitle": "Substitute resolution ... Amani Homeownership Initiative ...",
+        "MatterTypeName": "Resolution",
+        "MatterStatusName": "Passed",
+        "MatterIntroDate": "2026-07-14T00:00:00",
+    }
+]
+
+
+class TestSearchMatters:
+    def test_plain_words_build_an_and_of_or_filters_and_map_rows(self) -> None:
+        seen: list[str] = []
+
+        def get_json(url: str):  # noqa: ANN202
+            seen.append(url)
+            return SEARCH_ROWS
+
+        client = LegistarIntakeClient(get_json=get_json)
+        results = client.search_matters("the Amani homeownership resolution")
+        # stopwords ("the", "resolution") dropped; both real words present, AND-joined
+        assert "substringof('Amani',MatterTitle)" in unquote(seen[0])
+        assert "substringof('homeownership',MatterTitle)" in unquote(seen[0])
+        assert " and " in unquote(seen[0])
+        assert results[0].legistar_file == "260435"
+        assert results[0].matter_status == "Passed"
+
+    def test_six_digit_query_is_treated_as_a_file_number(self) -> None:
+        seen: list[str] = []
+
+        def get_json(url: str):  # noqa: ANN202
+            seen.append(url)
+            return SEARCH_ROWS
+
+        LegistarIntakeClient(get_json=get_json).search_matters("260435")
+        assert "MatterFile eq" in unquote(seen[0])
+
+    def test_no_usable_words_is_a_helpful_refusal(self) -> None:
+        client = LegistarIntakeClient(get_json=lambda url: [])
+        with pytest.raises(IntakeLookupError, match="word or two"):
+            client.search_matters("of the a")
+
+    def test_empty_results_are_an_honest_empty_list(self) -> None:
+        client = LegistarIntakeClient(get_json=lambda url: [])
+        assert client.search_matters("unfindable words") == []

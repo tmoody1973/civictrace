@@ -1,7 +1,9 @@
 import { defineConfig, devices } from "@playwright/test";
 
-const API_PORT = 8000;
-const WEB_PORT = 3000;
+// Overridable: Tarik's machine runs several Next apps; e2e must never collide with
+// (or worse, silently reuse) a different app on 3000. CI keeps the defaults.
+const API_PORT = Number(process.env.CIVICTRACE_E2E_API_PORT ?? 8000);
+const WEB_PORT = Number(process.env.CIVICTRACE_E2E_WEB_PORT ?? 3000);
 
 export default defineConfig({
   testDir: "./e2e",
@@ -21,6 +23,9 @@ export default defineConfig({
   webServer: [
     {
       command: "bash e2e/start-backend.sh",
+      // The backend must trust the port the e2e studio actually runs on (CORS),
+      // or every browser fetch is refused while curl checks happily pass.
+      env: { CIVICTRACE_CORS_ORIGINS: `http://localhost:${WEB_PORT}` },
       url: `http://localhost:${API_PORT}/healthz`,
       reuseExistingServer: !process.env.CI,
       timeout: 180_000,

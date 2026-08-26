@@ -35,8 +35,25 @@ function envelope(data: unknown) {
   return { ok: true, data, error: null };
 }
 
+const SEARCH_RESULTS = [
+  {
+    legistar_file: "260433",
+    matter_id: 74415,
+    title: "Substitute resolution approving Amendment No. 1 to the TID 121 Project Plan",
+    matter_type: "Resolution",
+    matter_status: "Passed",
+    intro_date: "2026-06-17",
+  },
+];
+
 async function stubIntake(page: Page) {
   let approved = false;
+  await page.route("**/intake/search", (route) => {
+    const body = route.request().postDataJSON() as { query: string };
+    return route.fulfill({
+      json: envelope(body.query.toLowerCase().includes("amendment") ? SEARCH_RESULTS : []),
+    });
+  });
   await page.route("**/intake/lookup", (route) => {
     const body = route.request().postDataJSON() as { file_number: string };
     if (body.file_number !== "260433") {
@@ -67,8 +84,10 @@ test.describe("Case intake — start your own case", () => {
     await stubIntake(page);
     await page.goto("/intake");
 
-    await page.getByLabel("Milwaukee Legistar file number").fill("260433");
-    await page.getByRole("button", { name: "Look up" }).click();
+    await page.getByLabel("What are you looking into?").fill("TID 121 amendment");
+    await page.getByRole("button", { name: "Search the record" }).click();
+    await expect(page.getByTestId("search-results")).toContainText("File 260433");
+    await page.getByRole("button", { name: "Review file 260433" }).click();
     await expect(page.getByTestId("candidate-bundle")).toContainText("Amendment No. 1");
     await expect(page.getByTestId("candidate-bundle")).toContainText("Fiscal note");
 
@@ -93,11 +112,11 @@ test.describe("Case intake — start your own case", () => {
     ).toHaveAttribute("href", "/cases/case-intake-260433");
   });
 
-  test("unknown file: the official record's words, nothing invented", async ({ page }) => {
+  test("no matches: honest empty state with advice, nothing invented", async ({ page }) => {
     await stubIntake(page);
     await page.goto("/intake");
-    await page.getByLabel("Milwaukee Legistar file number").fill("999999");
-    await page.getByRole("button", { name: "Look up" }).click();
-    await expect(page.getByRole("alert").filter({ hasText: "lists no matter" })).toBeVisible();
+    await page.getByLabel("What are you looking into?").fill("unfindable topic words");
+    await page.getByRole("button", { name: "Search the record" }).click();
+    await expect(page.getByTestId("search-empty")).toContainText("lists nothing with those words");
   });
 });

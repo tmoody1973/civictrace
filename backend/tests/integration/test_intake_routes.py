@@ -10,7 +10,7 @@ from app.api.routes_intake import IntakeGateway
 from app.core.dependencies import InMemoryTraceReader
 from app.main import create_app
 from app.repositories.intake import InMemoryIntakeStore
-from app.schemas.intake import CandidateAttachment, CandidateBundle
+from app.schemas.intake import CandidateAttachment, CandidateBundle, MatterSearchResult
 from app.services.legistar_intake import IntakeLookupError
 
 NOW = datetime(2026, 8, 21, 14, 0, tzinfo=UTC)
@@ -39,6 +39,19 @@ class StubLookup:
         if file_number != "260433":
             raise IntakeLookupError("the official Legistar record lists no matter with that file")
         return _bundle()
+
+    def search_matters(self, query: str) -> list[MatterSearchResult]:
+        if "amendment" in query.lower():
+            return [
+                MatterSearchResult(
+                    legistar_file="260433",
+                    matter_id=74415,
+                    title="Amendment No. 1 to the TID 121 Project Plan",
+                    matter_type="Resolution",
+                    matter_status="Passed",
+                )
+            ]
+        return []
 
 
 def _client() -> tuple[TestClient, InMemoryIntakeStore, list[str]]:
@@ -104,3 +117,12 @@ def test_server_without_intake_says_so() -> None:
     response = TestClient(app).post("/intake/lookup", json={"file_number": "260433"})
     assert response.status_code == 503
     assert "not enabled" in response.json()["error"]
+
+
+def test_search_returns_official_matters_and_empty_is_honest() -> None:
+    client, _, _ = _client()
+    hit = client.post("/intake/search", json={"query": "the amendment"})
+    assert hit.status_code == 200
+    assert hit.json()["data"][0]["legistar_file"] == "260433"
+    miss = client.post("/intake/search", json={"query": "unfindable topic"})
+    assert miss.status_code == 200 and miss.json()["data"] == []

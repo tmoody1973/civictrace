@@ -11,6 +11,12 @@ export const intakeKeys = {
   bundle: (bundleId: string) => ["intake", "bundles", bundleId] as const,
 };
 
+export function useIntakeSearch() {
+  return useMutation({
+    mutationFn: (query: string) => api.intakeSearch(query),
+  });
+}
+
 export function useIntakeLookup() {
   const client = useQueryClient();
   return useMutation({

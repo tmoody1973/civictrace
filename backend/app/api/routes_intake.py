@@ -16,13 +16,19 @@ from pydantic import BaseModel, ConfigDict, Field
 
 from app.repositories.intake import IntakeStore
 from app.schemas.api import ApiEnvelope
-from app.schemas.intake import BundleStatus, CandidateBundle, IntakeSelection
+from app.schemas.intake import (
+    BundleStatus,
+    CandidateBundle,
+    IntakeSelection,
+    MatterSearchResult,
+)
 
 router = APIRouter()
 
 
 class BundleLookup(Protocol):
     def candidate_bundle(self, file_number: str) -> CandidateBundle: ...
+    def search_matters(self, query: str) -> list[MatterSearchResult]: ...
 
 
 class IntakeGateway:
@@ -44,6 +50,31 @@ class IntakeLookupRequest(BaseModel):
     model_config = ConfigDict(extra="forbid")
 
     file_number: str = Field(min_length=1, max_length=16)
+
+
+class IntakeSearchRequest(BaseModel):
+    model_config = ConfigDict(extra="forbid")
+
+    query: str = Field(min_length=1, max_length=200)
+
+
+@router.post("/intake/search", response_model=ApiEnvelope[list[MatterSearchResult]])
+def intake_search(
+    payload: IntakeSearchRequest, request: Request
+) -> ApiEnvelope[list[MatterSearchResult]] | JSONResponse:
+    """Plain words in, official matters out (MOO-749). An empty list is an honest answer."""
+    gateway = _gateway(request)
+    if gateway is None:
+        return _error(503, "case intake is not enabled on this server")
+    from app.services.legistar_intake import IntakeLookupError
+
+    try:
+        results = gateway.lookup.search_matters(payload.query)
+    except IntakeLookupError as exc:
+        return _error(422, str(exc))
+    except OSError:
+        return _error(502, "the official Legistar API could not be reached; try again")
+    return ApiEnvelope(ok=True, data=results, error=None)
 
 
 @router.post("/intake/lookup", response_model=ApiEnvelope[CandidateBundle])

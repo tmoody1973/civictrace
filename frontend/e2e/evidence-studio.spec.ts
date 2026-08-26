@@ -102,7 +102,9 @@ test.describe("Evidence Studio — TID 121 replay", () => {
   });
 
   test("API down: every pane says so in words, nothing is blank", async ({ page }) => {
-    await page.route("**/localhost:8000/**", (route) => route.abort("connectionrefused"));
+    // Block the port the API actually uses this run (it is env-overridable now).
+    const apiPort = Number(process.env.CIVICTRACE_E2E_API_PORT ?? 8000);
+    await page.route(`**/localhost:${apiPort}/**`, (route) => route.abort("connectionrefused"));
     await page.goto(STUDIO);
     const alerts = page.getByRole("alert").filter({ hasText: "Cannot reach the CivicTrace API" });
     await expect(alerts.first()).toBeVisible();

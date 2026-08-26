@@ -28,6 +28,23 @@ class BundleStatus(StrEnum):
     FAILED = "FAILED"
 
 
+class MatterSearchResult(BaseModel):
+    """One row from a plain-words search of the official record (MOO-749).
+
+    Everything here is verbatim Legistar data; the file number is the OUTPUT the
+    journalist clicks, never the knowledge they must arrive with.
+    """
+
+    model_config = ConfigDict(extra="forbid")
+
+    legistar_file: str
+    matter_id: int
+    title: str
+    matter_type: str | None = None
+    matter_status: str | None = None
+    intro_date: date | None = None
+
+
 class CandidateAttachment(BaseModel):
     model_config = ConfigDict(extra="forbid")
 
