@@ -188,6 +188,12 @@ resource "google_cloud_run_v2_service" "api" {
           }
         }
       }
+      # Local studio dev ports: Tarik runs several Next apps; CivicTrace may sit on
+      # 3000 or 3002 depending on what else is up (2026-08-26).
+      env {
+        name  = "CIVICTRACE_CORS_ORIGINS"
+        value = "http://localhost:3000,http://localhost:3002"
+      }
       # Case intake (MOO-719): the API enqueues one create-case task; the worker does
       # the fetching, vaulting, and pipeline run. The API itself never calls a model.
       env {
