@@ -147,7 +147,10 @@ resource "google_cloud_run_v2_service" "api" {
   template {
     service_account = var.api_service_account_email
     scaling {
-      min_instance_count = 0
+      # Documented exception to the min-instances-0 rule (Tarik, 2026-08-26): one warm
+      # API instance through the 2026-08-31 submission so reviewers and judges never
+      # wait out a cold start (~$1-3 for the week). Return to 0 at teardown.
+      min_instance_count = 1
       max_instance_count = var.max_instances
     }
     containers {
