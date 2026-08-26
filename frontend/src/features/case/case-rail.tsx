@@ -9,7 +9,16 @@ import { useCaseList } from "@/features/case/queries";
 
 export function CaseRail({ activeCaseId }: { activeCaseId?: string }) {
   const query = useCaseList();
-  if (query.isPending) return <Skeleton role="status" className="h-16 w-full" aria-label="Loading cases" />;
+  if (query.isPending)
+    return (
+      <div role="status" aria-label="Loading cases" className="space-y-2">
+        <Skeleton className="h-16 w-full" />
+        <p className="text-xs text-muted-foreground">
+          Loading your cases. If the service has been idle, it takes about 20 seconds to wake
+          up — it sleeps when unused so it costs nothing.
+        </p>
+      </div>
+    );
   if (query.isError) return <ApiErrorState error={query.error} what="the case list" />;
   if (query.data.length === 0) return <p className="text-sm text-muted-foreground">No cases in this ledger.</p>;
   return (
