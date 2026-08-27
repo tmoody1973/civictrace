@@ -20,6 +20,7 @@ locals {
     "storage.googleapis.com",
     "secretmanager.googleapis.com",
     "cloudtasks.googleapis.com",
+    "cloudscheduler.googleapis.com", # source watcher schedule (MOO-721)
     "pubsub.googleapis.com",
     "bigquery.googleapis.com",
     "aiplatform.googleapis.com",
