@@ -47,7 +47,7 @@ class CaseCreator(Protocol):
 
 
 class WatchRunner(Protocol):
-    async def run(self) -> dict[str, object]: ...
+    async def run(self) -> dict[str, int]: ...
 
 
 def create_worker_app(

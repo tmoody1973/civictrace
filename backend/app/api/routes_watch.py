@@ -46,8 +46,8 @@ def watch_status(case_id: str, request: Request) -> ApiEnvelope[WatchStatus] | J
     return ApiEnvelope(ok=True, data=WatchStatus(case_id=case_id, targets=states), error=None)
 
 
-@router.post("/watch/run", response_model=ApiEnvelope[dict])
-def watch_run(request: Request) -> ApiEnvelope[dict] | JSONResponse:
+@router.post("/watch/run", response_model=ApiEnvelope[dict[str, str]])
+def watch_run(request: Request) -> ApiEnvelope[dict[str, str]] | JSONResponse:
     gateway = _gateway(request)
     if gateway is None:
         return _error(503, "the source watcher is not enabled on this server")

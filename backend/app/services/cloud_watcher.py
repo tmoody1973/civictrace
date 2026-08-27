@@ -27,7 +27,7 @@ class CloudWatchRunner:
     def __init__(self, config: CloudConfig | None = None) -> None:
         self._config = config or CloudConfig.from_env()
 
-    async def run(self) -> dict[str, object]:
+    async def run(self) -> dict[str, int]:
         from google.cloud import firestore
 
         config = self._config
@@ -89,7 +89,7 @@ class WatchRunEnqueuer:
         return f"watch-run-{minute}"
 
 
-def _default_get_json(url: str):
+def _default_get_json(url: str) -> object:
     from app.services.legistar_intake import _default_get_json as get
 
     return get(url)
