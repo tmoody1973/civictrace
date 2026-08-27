@@ -18,6 +18,7 @@ from app.schemas.approval import ApprovalToken
 from app.schemas.evidence import EntityLink, Evidence
 from app.schemas.inquiry import InquiryProposal
 from app.schemas.source import Artifact
+from app.schemas.watch import WatchHit
 
 
 class Case(BaseModel):
@@ -156,6 +157,7 @@ class LedgerEvent(BaseModel):
     entity_link: EntityLink | None = None
     artifact: Artifact | None = None
     delta: DecisionDeltaProposal | None = None
+    watch_hit: WatchHit | None = None
     review: ReviewDecision | None = None
     inquiry: InquiryProposal | None = None
     approval: ApprovalToken | None = None

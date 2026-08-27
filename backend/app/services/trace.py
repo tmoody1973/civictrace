@@ -32,6 +32,8 @@ def build_trace(case_id: str, events: list[LedgerEvent]) -> TraceResponse:
 
 
 def _view(event: LedgerEvent, urls: dict[str, str | None]) -> TraceEventView:
+    if event.watch_hit is not None:
+        return _watch_view(event)
     if event.entity_link is not None:
         return _entity_link_view(event)
     if event.evidence is not None:
@@ -97,6 +99,22 @@ def _artifact_view(event: LedgerEvent) -> TraceEventView:
         content_hash=artifact.content_hash,
         media_type=artifact.media_type,
         reason=event.reason,
+    )
+
+
+def _watch_view(event: LedgerEvent) -> TraceEventView:
+    """A verbatim official-record observation (MOO-721) — not case evidence yet."""
+    assert event.watch_hit is not None
+    hit = event.watch_hit
+    return TraceEventView(
+        event_id=event.event_id,
+        event_type=event.event_type,
+        occurred_at=event.occurred_at,
+        actor=event.actor,
+        artifact_id=event.payload_ref,
+        canonical_url=hit.attachment_url or hit.source_url,
+        status=str(hit.kind),
+        watch_hit=hit,
     )
 
 

@@ -40,7 +40,22 @@ export const EVENT_LABEL: Record<LedgerEventType, string> = {
   INQUIRY_APPROVAL_REJECTED: "Human rejected the proposed question",
   APPROVAL_REFUSED: "Approval refused — failed closed",
   PACKET_RENDERED: "DRAFT packet rendered",
+  WATCH_HIT: "New on the official record — awaiting your review",
 };
+
+export const WATCH_COPY = {
+  panelTitle: "Watching the official record",
+  lastChecked: (when: string) => `Last checked the official record: ${when}`,
+  neverChecked: "The official record has not been checked yet.",
+  nothingNew: "Nothing new since the last check.",
+  checkNow: "Check the official record now",
+  checking: "Checking…",
+  checkQueued: "Check requested — new findings appear in the trace within a minute.",
+  watchedMatters: (count: number) => `Watching ${count} matter${count === 1 ? "" : "s"} from this case`,
+  notEvidence: "From the official record — not yet part of this case's evidence.",
+  addViaIntake: "To add a new document to the case, look the file up again in case intake.",
+  candidateNote: "A possible match for an expected record — a human decides if it is the one.",
+} as const;
 
 export const EVIDENCE_STATUS_LABEL: Record<string, string> = {
   SUPPORTED: "Supported by the record",

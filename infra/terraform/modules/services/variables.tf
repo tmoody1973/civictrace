@@ -39,3 +39,15 @@ variable "max_instances" {
   type        = number
   default     = 2
 }
+
+variable "watcher_schedule" {
+  description = "Cron for the source watcher (MOO-721). A few read-only API calls per run."
+  type        = string
+  default     = "0 6,12,18 * * *" # three checks a day is plenty for a city record
+}
+
+variable "watcher_paused" {
+  description = "Pause the source watcher schedule (teardown sets this true)."
+  type        = bool
+  default     = false
+}

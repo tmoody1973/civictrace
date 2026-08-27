@@ -18,6 +18,7 @@ from app.api import (
     routes_health,
     routes_intake,
     routes_transcripts,
+    routes_watch,
 )
 from app.api.routes_approval import ApprovalGateway
 from app.core.dependencies import (
@@ -35,6 +36,7 @@ def create_app(
     trace_reader: TraceReader,
     approval: ApprovalGateway | None = None,
     intake: object | None = None,
+    watch: object | None = None,
     cors_origins: Sequence[str] | None = None,
     bearer_token: str | None = None,
     uri_resolver: object | None = None,
@@ -43,6 +45,7 @@ def create_app(
     app.state.trace_reader = trace_reader
     app.state.approval = approval
     app.state.intake = intake
+    app.state.watch = watch
     if uri_resolver is not None:
         app.state.uri_resolver = uri_resolver
     # strip(): secret values created with `openssl ... | gcloud secrets versions add`
@@ -61,6 +64,7 @@ def create_app(
     app.include_router(routes_artifacts.router)
     app.include_router(routes_transcripts.router)
     app.include_router(routes_intake.router)
+    app.include_router(routes_watch.router)
     app.include_router(routes_approval.router)
     app.add_exception_handler(HTTPException, _http_error_as_envelope)  # type: ignore[arg-type]
     return app
@@ -122,8 +126,11 @@ def _cloud_app() -> FastAPI:
     from google.cloud import storage  # type: ignore[attr-defined]
 
     from app.api.routes_intake import IntakeGateway
+    from app.api.routes_watch import WatchGateway
     from app.repositories.firestore_trace_reader import FirestoreTraceReader
     from app.repositories.intake import FirestoreIntakeStore
+    from app.repositories.watch import FirestoreWatchStore
+    from app.services.cloud_watcher import WatchRunEnqueuer
     from app.services.approval_session import ApprovalSession
     from app.services.cloud import CloudConfig, build_cloud_ledger
     from app.services.cloud_intake import CreateCaseEnqueuer
@@ -152,6 +159,10 @@ def _cloud_app() -> FastAPI:
             lookup=LegistarIntakeClient(),
             store=FirestoreIntakeStore(firestore_client),
             start_creation=CreateCaseEnqueuer(config),
+        ),
+        watch=WatchGateway(
+            states_for_case=FirestoreWatchStore(firestore_client).states_for_case,
+            start_run=WatchRunEnqueuer(config),
         ),
         bearer_token=os.environ.get("CIVICTRACE_API_BEARER"),
         uri_resolver=resolver,

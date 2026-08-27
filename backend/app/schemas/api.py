@@ -16,6 +16,7 @@ from app.domain.enums import (
     LedgerEventType,
     ReviewOutcome,
 )
+from app.schemas.watch import WatchHit
 
 
 class ApiEnvelope[T](BaseModel):
@@ -80,6 +81,8 @@ class TraceEventView(BaseModel):
     review_outcome: ReviewOutcome | None = None
     blocking_issues: list[str] = Field(default_factory=list)
     review_notes: list[str] = Field(default_factory=list)
+    # watch rows (MOO-721): the verbatim official-record observation, awaiting review
+    watch_hit: WatchHit | None = None
 
 
 class TraceResponse(BaseModel):

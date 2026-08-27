@@ -39,6 +39,7 @@ const GAP_STEPS: ReadonlySet<LedgerEventType> = new Set([
 
 /** Gaps and human steps are never shown as "complete". */
 export function stepStatusFor(eventType: LedgerEventType, status: string): StepStatus {
+  if (eventType === "WATCH_HIT") return "active"; // an unreviewed observation is never settled
   if (HUMAN_STEPS.has(eventType)) return "active";
   if (GAP_STEPS.has(eventType)) return "pending";
   if (status === "UNKNOWN" || status === "CONFLICTING" || status === "HUMAN_REVIEW") return "pending";

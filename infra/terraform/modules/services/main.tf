@@ -277,6 +277,34 @@ resource "google_pubsub_subscription" "source_events_push" {
   }
 }
 
+# --- Source watcher schedule (MOO-721) --------------------------------------------
+# A few read-only Legistar API calls per run; results are ledger observations behind
+# the human gate. Paused via var.watcher_paused (teardown sets it) rather than deleted,
+# so the demo state is reproducible.
+
+resource "google_cloud_scheduler_job" "source_watcher" {
+  project   = var.project_id
+  region    = var.region
+  name      = "civictrace-source-watcher"
+  schedule  = var.watcher_schedule
+  time_zone = "America/Chicago"
+  paused    = var.watcher_paused
+
+  http_target {
+    http_method = "POST"
+    uri         = "${google_cloud_run_v2_service.worker.uri}/tasks/watch"
+    body        = base64encode("{}")
+    headers     = { "Content-Type" = "application/json" }
+    oidc_token {
+      service_account_email = var.worker_service_account_email
+    }
+  }
+
+  retry_config {
+    retry_count = 1
+  }
+}
+
 output "api_url" {
   value = google_cloud_run_v2_service.api.uri
 }

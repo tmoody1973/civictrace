@@ -21,7 +21,8 @@ export type LedgerEventType =
   | "INQUIRY_APPROVAL_ISSUED"
   | "INQUIRY_APPROVAL_REJECTED"
   | "APPROVAL_REFUSED"
-  | "PACKET_RENDERED";
+  | "PACKET_RENDERED"
+  | "WATCH_HIT";
 
 export type InquiryType = "SOURCE_QUESTION" | "RECORDS_REQUEST_OUTLINE" | "WATCH_REMINDER" | "HUMAN_RESEARCH_TASK";
 
@@ -36,6 +37,44 @@ export interface HealthResponse {
 export interface AnchorView {
   anchor_type: AnchorType;
   anchor_value: string;
+}
+
+export type WatchHitKind = "NEW_ACTION" | "NEW_ATTACHMENT" | "STATUS_CHANGE" | "EXPECTED_RECORD_CANDIDATE";
+
+export interface WatchHitView {
+  kind: WatchHitKind;
+  case_id: string;
+  matter_id: number | null;
+  legistar_file: string | null;
+  observed_at: string;
+  source_url: string;
+  history_id: number | null;
+  action_name: string | null;
+  action_date: string | null;
+  passed_flag: string | null;
+  attachment_id: number | null;
+  attachment_name: string | null;
+  attachment_url: string | null;
+  status_before: string | null;
+  status_after: string | null;
+  expected_artifact_id: string | null;
+  candidate_title: string | null;
+}
+
+export interface WatchStateView {
+  case_id: string;
+  matter_id: number | null;
+  legistar_file: string | null;
+  seen_history_ids: number[];
+  seen_attachment_ids: number[];
+  seen_candidate_matter_ids: number[];
+  matter_status: string | null;
+  checked_at: string | null;
+}
+
+export interface WatchStatusView {
+  case_id: string;
+  targets: WatchStateView[];
 }
 
 export interface TraceEventView {
@@ -76,6 +115,7 @@ export interface TraceEventView {
   review_outcome: ReviewOutcome | null;
   blocking_issues: string[];
   review_notes: string[];
+  watch_hit?: WatchHitView | null;
 }
 
 export interface InquiryProposalView {

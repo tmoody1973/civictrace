@@ -3,6 +3,7 @@
 import {
   Link2,
   AlertTriangle,
+  Radar,
   Ban,
   CheckCircle2,
   CircleDashed,
@@ -20,7 +21,7 @@ import {
 import { ChainOfThoughtStep } from "@/components/ai-elements/chain-of-thought";
 import { Badge } from "@/components/ui/badge";
 import { CATEGORY_COPY, REVIEW_OUTCOME_COPY } from "@/features/case/copy";
-import { EVIDENCE_STATUS_LABEL, TRACE_COPY } from "@/features/trace/copy";
+import { EVIDENCE_STATUS_LABEL, TRACE_COPY, WATCH_COPY } from "@/features/trace/copy";
 import { EvidenceAnchorLink } from "@/features/trace/evidence-anchor-link";
 import type { TraceRow } from "@/features/trace/row-model";
 import type { LedgerEventType } from "@/lib/api-types";
@@ -42,6 +43,7 @@ const ICONS: Record<LedgerEventType, typeof CheckCircle2> = {
   INQUIRY_APPROVAL_REJECTED: UserX,
   APPROVAL_REFUSED: ShieldX,
   PACKET_RENDERED: FileText,
+  WATCH_HIT: Radar,
 };
 
 export function TraceRowView({ row, highlighted }: { row: TraceRow; highlighted: boolean }) {
@@ -93,6 +95,7 @@ export function TraceRowView({ row, highlighted }: { row: TraceRow; highlighted:
         </Detail>
       )}
       {event.event_type === "EVIDENCE_ACCEPTED" && <EvidenceBody row={row} />}
+      {event.event_type === "WATCH_HIT" && event.watch_hit && <WatchHitBody row={row} />}
       {event.event_type === "ENTITY_LINKED" && (
         <Detail
           label={
@@ -174,6 +177,55 @@ function DeltaBody({ row }: { row: TraceRow }) {
       <ListDetail label={TRACE_COPY.blockingIssues} items={event.blocking_issues} />
       <ListDetail label={TRACE_COPY.reviewNotes} items={event.review_notes} />
     </div>
+  );
+}
+
+function WatchHitBody({ row }: { row: TraceRow }) {
+  const hit = row.event.watch_hit;
+  if (!hit) return null;
+  const file = hit.legistar_file ? `file ${hit.legistar_file}` : null;
+  return (
+    <Detail label={WATCH_COPY.notEvidence}>
+      <p className="text-xs leading-relaxed" data-testid="watch-hit-detail">
+        {hit.kind === "NEW_ACTION" && (
+          <>
+            The official record lists <strong>{hit.action_name ?? "an action"}</strong>
+            {hit.passed_flag ? ` (${hit.passed_flag})` : null}
+            {hit.action_date ? ` on ${hit.action_date.slice(0, 10)}` : null}
+            {file ? ` — ${file}` : null}.
+          </>
+        )}
+        {hit.kind === "NEW_ATTACHMENT" && (
+          <>
+            A document this case has not reviewed: <strong>{hit.attachment_name ?? "unnamed"}</strong>
+            {file ? ` — ${file}` : null}. {WATCH_COPY.addViaIntake}
+          </>
+        )}
+        {hit.kind === "STATUS_CHANGE" && (
+          <>
+            The matter&apos;s official status changed: <strong>{hit.status_before}</strong> →{" "}
+            <strong>{hit.status_after}</strong>
+            {file ? ` — ${file}` : null}.
+          </>
+        )}
+        {hit.kind === "EXPECTED_RECORD_CANDIDATE" && (
+          <>
+            <strong>{hit.candidate_title ?? "A matter"}</strong>
+            {file ? ` (${file})` : null}. {WATCH_COPY.candidateNote}
+          </>
+        )}
+      </p>
+      {(hit.attachment_url ?? hit.source_url) ? (
+        <a
+          className="mt-1 inline-flex items-center gap-1 text-xs underline underline-offset-2"
+          href={hit.attachment_url ?? hit.source_url}
+          target="_blank"
+          rel="noopener noreferrer"
+        >
+          {TRACE_COPY.openSource}
+        </a>
+      ) : null}
+    </Detail>
   );
 }
 

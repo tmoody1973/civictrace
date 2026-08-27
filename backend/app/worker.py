@@ -46,11 +46,16 @@ class CaseCreator(Protocol):
     async def run(self, bundle_id: str) -> dict[str, str]: ...
 
 
+class WatchRunner(Protocol):
+    async def run(self) -> dict[str, object]: ...
+
+
 def create_worker_app(
     *,
     ingestor: SourceEventIngestor,
     enqueuer: TaskEnqueuer,
     case_creator: CaseCreator | None = None,
+    watch_runner: WatchRunner | None = None,
 ) -> FastAPI:
     app = FastAPI(title="CivicTrace worker", version="0.1.0")
 
@@ -104,6 +109,16 @@ def create_worker_app(
             return _json(200, ok=False, error=f"payload refused: {type(exc).__name__}")
         result = await case_creator.run(bundle_id)
         return _json(200, ok=result.get("status") == "CASE_CREATED", data=result)
+
+    @app.post("/tasks/watch")
+    async def watch(request: Request) -> JSONResponse:
+        """Source watcher (MOO-721): one bounded, read-only pass over every case's
+        watched matters. Idempotent — watermarks plus ledger event-id dedupe make a
+        retry a no-op, so any failure may simply raise for a bounded Tasks retry."""
+        if watch_runner is None:
+            return _json(200, ok=False, error="the source watcher is not enabled on this worker")
+        result = await watch_runner.run()
+        return _json(200, ok=True, data=result)
 
     return app
 
@@ -236,11 +251,13 @@ def _default_app() -> FastAPI | None:
     # must reach Cloud Logging, so the worker opts in explicitly.
     logging.basicConfig(level=logging.INFO)
     from app.services.cloud_intake import CloudCaseCreator
+    from app.services.cloud_watcher import CloudWatchRunner
 
     return create_worker_app(
         ingestor=WorkflowIngestor(),
         enqueuer=CloudTasksEnqueuer(),
         case_creator=CloudCaseCreator(),
+        watch_runner=CloudWatchRunner(),
     )
 
 

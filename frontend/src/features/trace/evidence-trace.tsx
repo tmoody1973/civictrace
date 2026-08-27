@@ -10,13 +10,19 @@ import { useCaseTrace } from "@/features/case/queries";
 import { TRACE_COPY } from "@/features/trace/copy";
 import { countArtifacts, toTraceRow } from "@/features/trace/row-model";
 import { TraceRowView } from "@/features/trace/trace-row";
+import { WatchPanel } from "@/features/watch/watch-panel";
 import type { TraceEventView } from "@/lib/api-types";
 
 export function EvidenceTrace({ caseId }: { caseId: string }) {
   const query = useCaseTrace(caseId);
   if (query.isPending) return <Skeleton role="status" className="h-10 w-full" aria-label="Loading Evidence Trace" />;
   if (query.isError) return <ApiErrorState error={query.error} what="the Evidence Trace" />;
-  return <EvidenceTraceView events={query.data.events} />;
+  return (
+    <>
+      <WatchPanel caseId={caseId} />
+      <EvidenceTraceView events={query.data.events} />
+    </>
+  );
 }
 
 /** Collapsed by default; opens on demand; a delta chip click opens it and highlights the row. */
